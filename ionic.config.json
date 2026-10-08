@@ -1,0 +1,7 @@
+{
+  "name": "movify-movil",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

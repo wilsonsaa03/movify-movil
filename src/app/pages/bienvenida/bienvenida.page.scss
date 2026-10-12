@@ -1,0 +1,504 @@
+// Pantalla "Principal" de MoviFY: entrada animada + logo 3D + deslizar para comenzar
+
+$navy: #03274d;
+$teal: #02aab4;
+$teal-d: #007c85;
+$orange: #fe7b13;
+
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+$ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+ion-content {
+  --background: #ffffff;
+}
+
+.escena {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background:
+    radial-gradient(120% 60% at 50% 32%, rgba($teal, 0.08) 0%, rgba($teal, 0) 60%),
+    #ffffff;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+// ---------- Marca ----------
+.marca {
+  position: relative;
+  z-index: 2;
+  margin-top: calc(22vh + env(safe-area-inset-top));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition:
+    transform 280ms $ease-out,
+    opacity 280ms ease;
+}
+
+.logo {
+  position: relative;
+  width: min(58vw, 236px);
+  aspect-ratio: 1220 / 1520; // mismo viewBox de las 3 capas
+}
+
+.capa,
+.flota,
+.brillo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.capa {
+  pointer-events: none;
+}
+
+// Punto de giro del sol = centro del arco
+.sol {
+  transform-origin: 50% 39%;
+}
+// El pin se aplasta desde la punta al caer
+.pin {
+  transform-origin: 50% 86%;
+}
+
+// Ondas que salen del anillo (agua)
+.onda {
+  position: absolute;
+  left: 6.6%;
+  top: 76%;
+  width: 86.8%;
+  height: 15.8%;
+  border-radius: 50%;
+  border: 2px solid rgba($teal, 0.55);
+  opacity: 0;
+  pointer-events: none;
+}
+
+// Brillo que barre el logo una vez (recortado con la silueta del logo)
+.brillo {
+  overflow: hidden;
+  -webkit-mask: url('/assets/marca/logo-mascara.svg') center / 100% 100% no-repeat;
+  mask: url('/assets/marca/logo-mascara.svg') center / 100% 100% no-repeat;
+  pointer-events: none;
+
+  span {
+    position: absolute;
+    top: -10%;
+    bottom: -10%;
+    left: 0;
+    width: 45%;
+    background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.75) 50%, transparent 100%);
+    transform: translateX(-120%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+
+// Flotación suave en reposo
+.flota {
+  animation: flotar 4.2s ease-in-out 2.2s infinite;
+}
+
+.nombre {
+  margin: 18px 0 0;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.5px;
+
+  .movi {
+    color: $navy;
+  }
+  .fy {
+    color: $teal;
+  }
+}
+
+.lema {
+  margin: 8px 0 0;
+  font-family: 'Nunito', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: rgba($navy, 0.6);
+}
+
+// ---------- Fondo inferior ----------
+.fondo-inferior {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba($navy, 0) 0%,
+    rgba($navy, 0.35) 38%,
+    rgba($navy, 0.88) 78%,
+    $navy 100%
+  );
+}
+
+// ---------- Deslizador ----------
+.deslizador {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: calc(34px + env(safe-area-inset-bottom));
+  width: min(calc(100% - 48px), 360px);
+  height: 64px;
+  margin-left: calc(min(calc(100% - 48px), 360px) / -2);
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 12px 30px rgba(0, 10, 30, 0.35);
+}
+
+.relleno {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba($teal, 0) 0%, rgba($teal, 0.55) 55%, rgba($teal, 0.95) 100%);
+  transform: translateX(-100%);
+  will-change: transform;
+}
+
+.texto {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 52px;
+  font-family: 'Nunito', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.2px;
+  pointer-events: none;
+  // Texto con reflejo que pasa (shimmer)
+  color: transparent;
+  background: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.55) 40%,
+      #ffffff 50%,
+      rgba(255, 255, 255, 0.55) 60%,
+      rgba(255, 255, 255, 0.55) 100%
+    )
+    0 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: reflejo 2.6s linear 2.2s infinite;
+}
+
+.flechas {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  display: flex;
+  margin-top: -9px;
+  pointer-events: none;
+
+  svg {
+    width: 14px;
+    height: 18px;
+    margin-left: -5px;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.2;
+    animation: flecha 1.4s ease-in-out infinite;
+  }
+  svg:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  svg:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+.perilla {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none; // el gesto lo manejamos nosotros
+  will-change: transform;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 45%),
+    linear-gradient(160deg, #ffa448 0%, $orange 50%, #d9560a 100%);
+  box-shadow:
+    inset 0 2px 1px rgba(255, 255, 255, 0.45),
+    inset 0 -3px 6px rgba(140, 50, 0, 0.35),
+    0 6px 14px rgba(160, 60, 0, 0.45),
+    0 2px 3px rgba(0, 0, 0, 0.25);
+  outline: none;
+
+  &:focus-visible {
+    box-shadow:
+      0 0 0 3px #ffffff,
+      0 0 0 6px rgba($teal, 0.8);
+  }
+
+  .icono {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 1px 1px rgba(120, 40, 0, 0.4));
+    transition:
+      opacity 200ms ease,
+      transform 200ms $ease-out,
+      filter 200ms ease;
+  }
+  .check {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+// Al presionar: se hunde un poco (respuesta inmediata)
+.deslizador.arrastrando .perilla {
+  cursor: grabbing;
+  scale: 0.96;
+}
+.perilla {
+  transition: scale 140ms $ease-out;
+}
+
+// Al completar: la flecha se convierte en check
+.deslizador.hecho {
+  .perilla .flecha {
+    opacity: 0;
+    transform: scale(0.6);
+    filter: blur(2px);
+  }
+  .perilla .check {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .flechas {
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+}
+
+// ---------- Salida hacia la siguiente pantalla ----------
+.saliendo {
+  .marca {
+    transform: translateY(-12px) scale(0.97);
+    opacity: 0;
+  }
+  .deslizador {
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity 240ms ease,
+      transform 240ms $ease-out;
+  }
+}
+
+// =====================================================
+// Entrada animada (solo la primera vez que abre la app)
+// =====================================================
+.intro {
+  .anillo {
+    animation: anillo-entra 520ms $ease-out both;
+  }
+  .onda-1 {
+    animation: onda 900ms $ease-out 120ms both;
+  }
+  .pin {
+    animation: pin-cae 760ms 260ms both;
+  }
+  .onda-2 {
+    animation: onda 1000ms $ease-out 700ms both;
+  }
+  .sol {
+    animation: sol-sale 700ms $ease-out 820ms both;
+  }
+  .brillo span {
+    animation: barrido 900ms $ease-in-out 1300ms both;
+  }
+  .nombre {
+    animation: sube 520ms $ease-out 1250ms both;
+  }
+  .lema {
+    animation: sube 520ms $ease-out 1340ms both;
+  }
+  .fondo-inferior {
+    animation: aparece 700ms ease 1350ms both;
+  }
+  .deslizador {
+    animation: sube 560ms $ease-out 1550ms both;
+  }
+}
+
+@keyframes anillo-entra {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes onda {
+  from {
+    opacity: 0.9;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+// Cae, se aplasta al tocar el agua y rebota un poco
+@keyframes pin-cae {
+  0% {
+    opacity: 0;
+    transform: translateY(-75%) scale(0.96);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.5);
+  }
+  15% {
+    opacity: 1;
+  }
+  55% {
+    transform: translateY(0) scale(1.05, 0.9);
+    animation-timing-function: $ease-out;
+  }
+  75% {
+    transform: translateY(-5%) scale(0.98, 1.03);
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sol-sale {
+  from {
+    opacity: 0;
+    transform: rotate(-50deg) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+@keyframes barrido {
+  0% {
+    opacity: 1;
+    transform: translateX(-120%) skewX(-12deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(260%) skewX(-12deg);
+  }
+}
+
+@keyframes sube {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes aparece {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3.5%);
+  }
+}
+
+@keyframes reflejo {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -150% 0;
+  }
+}
+
+@keyframes flecha {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+// Movimiento reducido: solo desvanecidos, sin caídas ni flotación
+@media (prefers-reduced-motion: reduce) {
+  .intro .anillo,
+  .intro .pin,
+  .intro .sol,
+  .intro .nombre,
+  .intro .lema,
+  .intro .deslizador {
+    animation: aparece 400ms ease both;
+  }
+  .intro .onda-1,
+  .intro .onda-2,
+  .intro .brillo span,
+  .flota,
+  .texto {
+    animation: none;
+  }
+  .texto {
+    color: #ffffff;
+    background: none;
+  }
+}

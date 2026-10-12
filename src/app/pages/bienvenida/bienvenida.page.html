@@ -1,0 +1,52 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <main class="escena" [class.intro]="conIntro" [class.saliendo]="saliendo()" (click)="saltarIntro()">
+
+    <!-- Logo 3D: 3 capas que se animan por separado (anillo, sol y pin) -->
+    <section class="marca" aria-label="MoviFY">
+      <div class="logo">
+        <img class="capa anillo" src="assets/marca/logo-anillo.svg" alt="" draggable="false" />
+        <span class="onda onda-1" aria-hidden="true"></span>
+        <span class="onda onda-2" aria-hidden="true"></span>
+
+        <div class="flota">
+          <img class="capa sol" src="assets/marca/logo-sol.svg" alt="" draggable="false" />
+          <img class="capa pin" src="assets/marca/logo-pin.svg" alt="" draggable="false" />
+          <div class="brillo" aria-hidden="true"><span></span></div>
+        </div>
+      </div>
+
+      <h1 class="nombre"><span class="movi">Movi</span><span class="fy">FY</span></h1>
+      <p class="lema">Viaja, envía y recibe en Buenaventura</p>
+    </section>
+
+    <div class="fondo-inferior" aria-hidden="true"></div>
+
+    <!-- Deslizar para comenzar -->
+    <div class="deslizador" #pista [class.arrastrando]="arrastrando()" [class.hecho]="hecho()">
+      <div class="relleno" #relleno aria-hidden="true"></div>
+
+      <span class="texto" #texto>Desliza para comenzar</span>
+
+      <span class="flechas" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
+        <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
+      </span>
+
+      <button
+        #perilla
+        class="perilla"
+        type="button"
+        aria-label="Desliza para comenzar"
+        (pointerdown)="alPresionar($event)"
+        (pointermove)="alMover($event)"
+        (pointerup)="alSoltar($event)"
+        (pointercancel)="alSoltar($event)"
+        (keydown)="alTeclado($event)"
+      >
+        <svg class="icono flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+        <svg class="icono check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+      </button>
+    </div>
+  </main>
+</ion-content>

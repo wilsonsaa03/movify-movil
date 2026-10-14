@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { ApiService } from '../core/api.service';
+import { ApiService, ErrorApi } from '../core/api.service';
 import { RespuestaSesion, SesionService } from '../core/sesion.service';
 
 export type Rol = 'cliente' | 'conductor';
@@ -7,20 +7,19 @@ export type Rol = 'cliente' | 'conductor';
 export interface DatosPersonales {
   nombre: string;
   apellido: string;
-  correo: string; // opcional: '' si no lo escribió
+  correo: string;
+  ciudad: string;
   foto: string | null; // dataURL de la foto (opcional)
 }
 
 /**
  * Guarda lo que el usuario va llenando en los 4 pasos del registro
- * (celular → código → datos → clave) para que no se pierda al cambiar de pantalla,
- * y hace las llamadas al backend:
- *   1. POST /auth/codigo            { celular, proposito: "registro" }
- *   2. POST /auth/codigo/verificar  → verificacionToken
- *   3. POST /auth/registro-movil    → sesión (token + refreshToken)
- *   4. POST /usuarios/perfil/foto   (solo si eligió foto)
+ * (celular → código → datos → clave) y habla con el backend:
  *
- * Los métodos lanzan el error HTTP tal cual; las páginas muestran ApiService.mensaje(err).
+ *   1. POST /auth/codigo            { celular, proposito: "registro" }   → llega un SMS (Twilio)
+ *   2. POST /auth/codigo/verificar  { celular, proposito, codigo }        → verificacionToken
+ *   3. POST /auth/registro-movil    { verificacionToken, datos, clave }  → sesión (JWT)
+ *   4. POST /usuarios/perfil/foto   (si eligió foto)
  */
 @Injectable({ providedIn: 'root' })
 export class RegistroService {
@@ -33,8 +32,9 @@ export class RegistroService {
   readonly datos = signal<DatosPersonales | null>(null);
   readonly cuentaCreada = signal(false);
 
-  /** Prueba de que el celular se verificó por SMS; dura poco y solo sirve para registro-movil. */
-  private verificacionToken = '';
+  /** Solo en desarrollo (SMS_CONSOLA=true en el backend): el código llega en la respuesta. */
+  readonly codigoDesarrollo = signal<string | null>(null);
+  private verificacionToken: string | null = null;
 
   /** "3001234567" → "+57 300 123 4567" */
   readonly celularVisible = computed(() => formatearCelular(this.celular()));
@@ -45,25 +45,22 @@ export class RegistroService {
     this.celularVerificado.set(false);
     this.datos.set(null);
     this.cuentaCreada.set(false);
-    this.verificacionToken = '';
+    this.codigoDesarrollo.set(null);
+    this.verificacionToken = null;
   }
 
-  // ---------------- Llamadas a la API ----------------
-
-  /** Si el número ya tiene cuenta el backend responde 409 ("Ya existe una cuenta con ese celular"). */
+  /** Lanza ErrorApi con el mensaje del backend (p. ej. "Ya existe una cuenta con ese celular"). */
   async enviarCodigo(celular: string): Promise<void> {
-    const r = await this.api.post<{ codigoDesarrollo?: string }>('/auth/codigo', {
+    const r = await this.api.post<{ vigenciaSeg: number; codigoDesarrollo?: string }>('/auth/codigo', {
       celular,
       proposito: 'registro',
     });
-    // Solo llega con SMS_CONSOLA=true en el backend (desarrollo)
-    if (r.codigoDesarrollo) console.info(`[MoviFY dev] Código SMS: ${r.codigoDesarrollo}`);
     this.celular.set(celular);
     this.celularVerificado.set(false);
-    this.verificacionToken = '';
+    this.codigoDesarrollo.set(r.codigoDesarrollo ?? null);
   }
 
-  /** Código errado, vencido o demasiados intentos → lanza el error con el mensaje del backend. */
+  /** Lanza ErrorApi si el código no es correcto (el mensaje dice cuántos intentos quedan). */
   async verificarCodigo(codigo: string): Promise<void> {
     const r = await this.api.post<{ verificacionToken: string }>('/auth/codigo/verificar', {
       celular: this.celular(),
@@ -78,37 +75,34 @@ export class RegistroService {
     this.datos.set(datos);
   }
 
-  /** La clave viaja al backend, que la guarda con hash (BCrypt). Nunca se guarda en el celular. */
-  async crearCuenta(clave: string): Promise<void> {
+  /** Crea la cuenta y deja la sesión iniciada. La clave viaja una sola vez y el backend la guarda con BCrypt. */
+  async crearCuenta(clave: string): Promise<RespuestaSesion> {
     const d = this.datos();
-    const res = await this.api.post<RespuestaSesion>('/auth/registro-movil', {
+    if (!d || !this.verificacionToken) throw new ErrorApi('Vuelve a empezar el registro', 400);
+    const r = await this.api.post<RespuestaSesion>('/auth/registro-movil', {
       verificacionToken: this.verificacionToken,
       rol: this.rol() ?? 'cliente',
-      nombres: d?.nombre ?? '',
-      apellidos: d?.apellido ?? '',
-      correo: d?.correo || null,
+      nombres: d.nombre,
+      apellidos: d.apellido,
+      correo: d.correo || null,
       clave,
-      aceptaTerminos: true, // se marcó en el paso 3; sin eso no se llega aquí
+      aceptaTerminos: true,
     });
-    this.sesion.guardar(res);
-    this.verificacionToken = '';
-    this.cuentaCreada.set(true);
-
-    // La foto es opcional: si falla, la cuenta ya quedó creada y la puede subir luego desde el perfil
-    if (d?.foto) {
+    this.sesion.guardar(r);
+    if (d.foto) {
+      // La foto es opcional: si falla, la cuenta igual queda creada
       try {
-        await this.subirFoto(d.foto);
-      } catch (err) {
-        console.warn('No se pudo subir la foto de perfil', err);
+        const blob = await (await fetch(d.foto)).blob();
+        const form = new FormData();
+        form.append('foto', blob, 'perfil.jpg');
+        const f = await this.api.post<{ foto: string }>('/usuarios/perfil/foto', form);
+        this.sesion.guardar({ ...r, foto: f.foto });
+      } catch {
+        /* se puede subir después desde el perfil */
       }
     }
-  }
-
-  /** El backend guarda el archivo y deja su dirección en usuarios.foto_url. */
-  private async subirFoto(dataUrl: string): Promise<void> {
-    const blob = await (await fetch(dataUrl)).blob();
-    const r = await this.api.postArchivo<{ foto: string }>('/usuarios/perfil/foto', 'foto', blob, 'foto.jpg');
-    this.sesion.actualizarFoto(r.foto);
+    this.cuentaCreada.set(true);
+    return r;
   }
 }
 

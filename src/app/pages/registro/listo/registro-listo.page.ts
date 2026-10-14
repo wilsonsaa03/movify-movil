@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { IonContent, NavController } from '@ionic/angular';
 import { RegistroService } from '../../../servicios/registro.service';
+import { SesionService } from '../../../core/sesion.service';
 
 /** Registro terminado: la cuenta ya existe. */
 @Component({
@@ -12,8 +13,10 @@ import { RegistroService } from '../../../servicios/registro.service';
 export class RegistroListoPage {
   private readonly nav = inject(NavController);
   readonly registro = inject(RegistroService);
+  private readonly sesion = inject(SesionService);
 
-  readonly nombre = computed(() => this.registro.datos()?.nombre.split(' ')[0] ?? '');
+  /** El nombre como quedó guardado en el backend (capitalizado), o el que escribió. */
+  readonly nombre = computed(() => (this.sesion.datos()?.nombres ?? this.registro.datos()?.nombre ?? '').split(' ')[0]);
   readonly esConductor = computed(() => this.registro.rol() === 'conductor');
 
   /** Confeti: posición (%), tamaño (px), color y retraso de cada punto. */
@@ -35,7 +38,7 @@ export class RegistroListoPage {
   }
 
   subirDocumentos(): void {
-    this.nav.navigateRoot('/conductor/documentos');
+    this.nav.navigateRoot('/conductor');
   }
 
   irAlInicio(): void {

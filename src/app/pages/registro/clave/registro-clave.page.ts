@@ -6,7 +6,7 @@ import { HeroCieloComponent } from '../../../componentes/hero-cielo/hero-cielo.c
 import { TecladoNumericoComponent } from '../../../componentes/teclado-numerico/teclado-numerico.component';
 import { PuntosClaveComponent } from '../../../componentes/puntos-clave/puntos-clave.component';
 import { RegistroService, claveDebil } from '../../../servicios/registro.service';
-import { ApiService } from '../../../core/api.service';
+import { ErrorApi } from '../../../core/api.service';
 
 const LARGO = 4;
 
@@ -79,9 +79,9 @@ export class RegistroClavePage {
       this.primera = '';
       Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
       this.router.navigateByUrl('/registro/listo', { replaceUrl: true });
-    } catch (err) {
-      // Correo ya registrado, verificación del celular vencida, clave rechazada... se vuelve a crear la clave
-      this.fallar(ApiService.mensaje(err, 'No pudimos crear tu cuenta. Intenta de nuevo.'));
+    } catch (e) {
+      // Si el backend la rechaza (p. ej. clave débil o el código venció) se vuelve a crear
+      this.fallar((e as ErrorApi).message);
       this.fase.set('crear');
       this.primera = '';
     } finally {

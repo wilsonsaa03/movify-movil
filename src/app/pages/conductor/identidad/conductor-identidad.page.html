@@ -1,0 +1,91 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo
+      [etiqueta]="etiqueta()"
+      [paso]="1"
+      [total]="5"
+      titulo="Confirma quién eres"
+      subtitulo="Así cuidamos a pasajeros y conductores."
+      volverA="/conductor/tipo"
+    />
+
+    <main class="cuerpo">
+      <form class="formulario" novalidate (submit)="$event.preventDefault(); continuar()">
+        <div class="grupo entra" style="--d: 100ms">
+          <span class="rotulo" id="rotulo-tipo-id">Tipo de documento</span>
+          <div class="segmento" role="group" aria-labelledby="rotulo-tipo-id">
+            @for (t of tiposId; track t.codigo) {
+              <button type="button" [attr.aria-pressed]="tipoId() === t.codigo" (click)="tipoId.set(t.codigo)">{{ t.texto }}</button>
+            }
+          </div>
+        </div>
+
+        <div class="grupo entra" style="--d: 140ms">
+          <label class="rotulo" for="numero-id">Número de documento</label>
+          <input
+            id="numero-id" class="entrada" type="text" [attr.inputmode]="tipoId() === 'CC' ? 'numeric' : 'text'"
+            autocomplete="off" placeholder="1.111.222.333"
+            [class.con-error]="!!ver('numero')" [value]="numero()" (input)="escribirNumero($event)"
+          />
+          @if (ver('numero')) { <p class="ayuda error">{{ ver('numero') }}</p> }
+        </div>
+
+        <div class="grupo entra" style="--d: 180ms">
+          <label class="rotulo" for="nacimiento">Fecha de nacimiento</label>
+          <input
+            id="nacimiento" class="entrada" type="date" [max]="maxNacimiento" min="1940-01-01"
+            [class.con-error]="!!ver('nacimiento')" [value]="nacimiento()" (input)="nacimiento.set($any($event.target).value)"
+          />
+          @if (ver('nacimiento')) { <p class="ayuda error">{{ ver('nacimiento') }}</p> }
+        </div>
+
+        <div class="grupo entra" style="--d: 220ms">
+          <span class="rotulo">Foto del documento</span>
+          <div class="fotos">
+            <app-foto-tile
+              etiqueta="Frente" camara="environment"
+              [estado]="registro.fila('cedula')?.estado ?? 'falta'"
+              [avance]="registro.subiendo('cedula')"
+              [vista]="registro.vistas()['cedula'] ?? null"
+              (elegida)="subir('cedula', $event)"
+            />
+            <app-foto-tile
+              etiqueta="Reverso" camara="environment"
+              [estado]="registro.fila('cedula_reverso')?.estado ?? 'falta'"
+              [avance]="registro.subiendo('cedula_reverso')"
+              [vista]="registro.vistas()['cedula_reverso'] ?? null"
+              (elegida)="subir('cedula_reverso', $event)"
+            />
+          </div>
+        </div>
+
+        <div class="entra" style="--d: 260ms">
+          <app-fila-documento
+            nombre="Tómate una selfie" ayuda="Buena luz, sin gafas ni gorra" icono="persona"
+            [archivo]="true" camara="user"
+            [estado]="registro.fila('selfie')?.estado ?? 'falta'"
+            [observacion]="registro.fila('selfie')?.subido?.observacion ?? null"
+            [avance]="registro.subiendo('selfie')"
+            (elegida)="subir('selfie', $event)"
+          />
+        </div>
+
+        @if (error()) {
+          <p class="aviso-error" role="alert">{{ error() }}</p>
+        }
+        <button type="submit" hidden></button>
+      </form>
+
+      <div class="final">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 300ms" [disabled]="guardando()" (click)="continuar()">
+          @if (guardando()) {
+            <span class="cargando" aria-hidden="true"></span> Guardando…
+          } @else {
+            Continuar
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          }
+        </button>
+      </div>
+    </main>
+  </div>
+</ion-content>

@@ -28,6 +28,8 @@
           <span class="verificando"><span class="cargando" aria-hidden="true"></span> Verificando…</span>
         } @else if (error()) {
           <span class="ayuda error">{{ error() }}</span>
+        } @else if (registro.codigoDesarrollo()) {
+          <span class="ayuda pista-dev">Modo desarrollo · código: <b>{{ registro.codigoDesarrollo() }}</b></span>
         }
       </p>
 

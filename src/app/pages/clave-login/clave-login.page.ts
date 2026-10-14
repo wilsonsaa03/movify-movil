@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { IonContent, NavController } from '@ionic/angular';
 import { Haptics, NotificationType } from '@capacitor/haptics';
@@ -6,16 +6,16 @@ import { HeroCieloComponent } from '../../componentes/hero-cielo/hero-cielo.comp
 import { TecladoNumericoComponent } from '../../componentes/teclado-numerico/teclado-numerico.component';
 import { PuntosClaveComponent } from '../../componentes/puntos-clave/puntos-clave.component';
 import { formatearCelular } from '../../servicios/registro.service';
+import { ApiService, ErrorApi } from '../../core/api.service';
+import { RespuestaSesion, SesionService } from '../../core/sesion.service';
 
 const LARGO = 4;
-const MAX_INTENTOS = 5;
 
 /**
  * Iniciar sesión · Paso 2 de 2: la clave de 4 dígitos.
  *
- * ⚠️ MODO DEMO (sin backend): acepta cualquier clave menos 0000 (para poder probar el error).
- * TODO backend: POST /api/auth/login { celular, clave } → token JWT.
- * El límite de intentos de verdad lo debe controlar el backend, no la app.
+ * POST /api/auth/login-celular { celular, clave } → sesión (JWT + refresh).
+ * El backend cuenta los intentos fallidos y bloquea un rato (429); la app solo muestra su mensaje.
  */
 @Component({
   selector: 'app-clave-login',
@@ -26,6 +26,8 @@ const MAX_INTENTOS = 5;
 export class ClaveLoginPage {
   private readonly nav = inject(NavController);
   private readonly ruta = inject(ActivatedRoute);
+  private readonly api = inject(ApiService);
+  private readonly sesion = inject(SesionService);
 
   readonly celular = this.ruta.snapshot.queryParamMap.get('celular') ?? '';
   private readonly servicio = this.ruta.snapshot.queryParamMap.get('servicio');
@@ -35,8 +37,8 @@ export class ClaveLoginPage {
   readonly entrando = signal(false);
   readonly error = signal('');
   readonly sacudir = signal(false);
-  readonly intentos = signal(0);
-  readonly bloqueado = computed(() => this.intentos() >= MAX_INTENTOS);
+  /** El backend respondió 429: demasiados intentos. */
+  readonly bloqueado = signal(false);
 
   agregar(d: string): void {
     if (this.entrando() || this.bloqueado() || this.clave().length >= LARGO) return;
@@ -52,30 +54,34 @@ export class ClaveLoginPage {
   }
 
   private async entrar(): Promise<void> {
+    if (this.entrando()) return;
     this.entrando.set(true);
-    await new Promise((r) => setTimeout(r, 800)); // DEMO: simula la llamada al backend
-    const ok = this.clave() !== '0000';
-    this.entrando.set(false);
-
-    if (ok) {
+    try {
+      const r = await this.api.post<RespuestaSesion>('/auth/login-celular', {
+        celular: this.celular,
+        clave: this.clave(),
+      });
+      this.sesion.guardar(r);
       Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
-      this.nav.navigateRoot('/cliente', { queryParams: this.servicio ? { servicio: this.servicio } : {} });
-      return;
+      this.nav.navigateRoot(this.destino(r), { queryParams: this.servicio ? { servicio: this.servicio } : {} });
+    } catch (e) {
+      const err = e as ErrorApi;
+      Haptics.notification({ type: NotificationType.Error }).catch(() => undefined);
+      this.bloqueado.set(err.status === 429);
+      this.error.set(err.message);
+      this.sacudir.set(true);
+      setTimeout(() => {
+        this.sacudir.set(false);
+        this.clave.set('');
+      }, 420);
+    } finally {
+      this.entrando.set(false);
     }
+  }
 
-    Haptics.notification({ type: NotificationType.Error }).catch(() => undefined);
-    this.intentos.update((n) => n + 1);
-    const quedan = MAX_INTENTOS - this.intentos();
-    this.error.set(
-      quedan > 0
-        ? `Clave incorrecta. Te quedan ${quedan} ${quedan === 1 ? 'intento' : 'intentos'}.`
-        : 'Hiciste demasiados intentos. Recupera tu clave para entrar.',
-    );
-    this.sacudir.set(true);
-    setTimeout(() => {
-      this.sacudir.set(false);
-      this.clave.set('');
-    }, 420);
+  /** Conductor → su panel (o documentos si aún no lo aprueban); cliente → inicio. */
+  private destino(r: RespuestaSesion): string {
+    return r.rol === 'conductor' ? (r.conductor?.estado === 'aprobado' ? '/conductor/inicio' : '/conductor') : '/cliente';
   }
 
   olvide(): void {

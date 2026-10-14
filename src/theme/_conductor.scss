@@ -1,0 +1,213 @@
+// Estilos compartidos por las pantallas del registro del conductor.
+// Se importan con:  @use '../../../../theme/conductor' as *;
+@forward 'registro';
+@use 'registro' as *;
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.entrada {
+  width: 100%;
+  height: 52px;
+  padding: 0 14px;
+  border: 2px solid $borde;
+  border-radius: 16px;
+  background: #f6f9fc;
+  font-family: inherit;
+  font-size: 16px; // 16px evita el zoom de iOS
+  font-weight: 700;
+  color: $navy;
+  outline: none;
+  appearance: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+
+  &::placeholder {
+    color: #8a9bb0;
+    font-weight: 600;
+  }
+  &:focus {
+    border-color: $teal;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba($teal, 0.15);
+  }
+  &.con-error {
+    border-color: $rojo;
+  }
+}
+
+.selector {
+  position: relative;
+
+  select {
+    padding-right: 44px;
+    cursor: pointer;
+  }
+  svg {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    fill: none;
+    stroke: $navy;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+}
+
+// Botones de opción tipo "píldora" (tipo de documento, categoría, color)
+.pildoras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pildora {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid $borde;
+  border-radius: 22px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    transform 140ms $ease-out;
+
+  small {
+    font-size: 12px;
+    font-weight: 600;
+    color: $gris;
+  }
+  &:active {
+    transform: scale(0.96);
+  }
+  &[aria-pressed='true'] {
+    border-color: $teal;
+    background: rgba($teal, 0.1);
+    color: $teal-d;
+
+    small {
+      color: $teal-d;
+    }
+  }
+  &:focus-visible {
+    outline: 3px solid rgba($teal, 0.4);
+    outline-offset: 2px;
+  }
+}
+
+.aviso-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba($rojo, 0.08);
+  border: 1.5px solid rgba($rojo, 0.25);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: $rojo;
+}
+
+.seccion {
+  margin: 6px 0 -4px;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $gris;
+}
+
+// Selector de 2-3 opciones (Cédula / C. extranjería / PPT · Moto / Taxi)
+.segmento {
+  padding: 4px;
+  border-radius: 16px;
+  background: #eef3f8;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+
+  button {
+    height: 42px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    color: $gris;
+    cursor: pointer;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease,
+      box-shadow 160ms ease;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    &[aria-pressed='true'] {
+      background: #ffffff;
+      color: $navy;
+      box-shadow: 0 2px 6px rgba($navy, 0.12);
+    }
+    &:focus-visible {
+      outline: 3px solid rgba($teal, 0.4);
+      outline-offset: 1px;
+    }
+  }
+}
+
+// Dos o cuatro casillas de foto en fila
+.fotos {
+  display: grid;
+  grid-template-columns: repeat(var(--columnas, 2), minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cargando-pagina {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: $teal-d;
+}

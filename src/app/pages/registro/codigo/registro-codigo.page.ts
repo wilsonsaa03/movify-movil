@@ -5,7 +5,7 @@ import { Haptics, NotificationType } from '@capacitor/haptics';
 import { HeroCieloComponent } from '../../../componentes/hero-cielo/hero-cielo.component';
 import { TecladoNumericoComponent } from '../../../componentes/teclado-numerico/teclado-numerico.component';
 import { RegistroService } from '../../../servicios/registro.service';
-import { ApiService } from '../../../core/api.service';
+import { ErrorApi } from '../../../core/api.service';
 
 const LARGO = 6;
 const ESPERA_REENVIO = 45; // segundos
@@ -75,10 +75,9 @@ export class RegistroCodigoPage implements OnDestroy {
       await this.registro.verificarCodigo(this.codigo());
       Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
       this.router.navigateByUrl('/registro/datos');
-    } catch (err) {
-      // El backend dice qué pasó: código errado (y cuántos intentos quedan), vencido, demasiados intentos...
+    } catch (e) {
       Haptics.notification({ type: NotificationType.Error }).catch(() => undefined);
-      this.error.set(ApiService.mensaje(err, 'Ese código no es correcto. Revisa el SMS e inténtalo de nuevo.'));
+      this.error.set((e as ErrorApi).message);
       this.sacudir.set(true);
       setTimeout(() => {
         this.sacudir.set(false);
@@ -97,8 +96,8 @@ export class RegistroCodigoPage implements OnDestroy {
       this.codigo.set('');
       this.error.set('');
       this.iniciarReloj();
-    } catch (err) {
-      this.error.set(ApiService.mensaje(err, 'No pudimos reenviar el código. Intenta de nuevo.'));
+    } catch (e) {
+      this.error.set((e as ErrorApi).message);
     } finally {
       this.reenviando.set(false);
     }

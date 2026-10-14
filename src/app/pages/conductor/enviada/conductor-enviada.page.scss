@@ -1,0 +1,276 @@
+@use '../../../../theme/conductor' as *;
+
+.cielo {
+  position: relative;
+  padding: calc(env(safe-area-inset-top) + 40px) 24px 74px;
+  background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 50%, #fe7b13 100%);
+  text-align: center;
+  overflow: hidden;
+  transition: background 400ms ease;
+
+  &.verde {
+    background: linear-gradient(180deg, #8ee6ea 0%, #3cc4cc 55%, #02aab4 100%);
+  }
+  &.alerta {
+    background: linear-gradient(180deg, #ffd36e 0%, #ff9a52 55%, #f0643a 100%);
+  }
+
+  h1 {
+    position: relative;
+    margin: 18px 0 6px;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 32px;
+    line-height: 1.1;
+    font-weight: 800;
+    color: $navy;
+  }
+  p {
+    position: relative;
+    margin: 0 auto;
+    max-width: 280px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: $navy;
+  }
+}
+
+.gaviotas {
+  position: absolute;
+  left: 50%;
+  top: calc(env(safe-area-inset-top) + 34px);
+  width: 300px;
+  margin-left: -150px;
+  fill: none;
+  stroke: $navy;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+
+  .lejos {
+    opacity: 0.55;
+  }
+}
+
+// El "sol" con el reloj (o el chulo cuando aprueban)
+.sello {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 18px auto 0;
+  display: grid;
+  place-items: center;
+}
+.aro {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 241, 194, 0.95) 0%, rgba(255, 241, 194, 0.4) 55%, rgba(255, 241, 194, 0) 72%);
+  animation: latir 3.2s ease-in-out infinite;
+}
+.disco {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 24px rgba($navy, 0.18);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 12px;
+    border-radius: 50%;
+    background: $orange;
+    transition: background-color 300ms ease;
+  }
+  svg {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    fill: none;
+    stroke: $navy;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+.verde .disco::before {
+  background: $teal-d;
+}
+.verde .disco svg {
+  stroke: #ffffff;
+  stroke-width: 3;
+}
+
+.olas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 64px;
+}
+.ola {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+
+  &.o1 {
+    fill: #5fd6dc;
+    animation: olear 9s linear infinite;
+  }
+  &.o2 {
+    fill: #ffffff;
+    height: 72%;
+    animation: olear 6s linear infinite reverse;
+  }
+}
+
+// ---------- Línea de tiempo ----------
+.linea {
+  margin: 0;
+  padding: 16px 16px 6px;
+  border: 1.5px solid $borde;
+  border-radius: 18px;
+  list-style: none;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba($navy, 0.06);
+
+  li {
+    position: relative;
+    padding: 0 0 18px 38px;
+    min-height: 34px;
+
+    // Conector vertical entre puntos
+    &:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 26px;
+      bottom: 2px;
+      width: 2px;
+      background: #d5dee8;
+    }
+    &.hecho:not(:last-child)::before {
+      background: $teal-d;
+    }
+  }
+}
+
+.punto {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2.5px solid #c9d5e2;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 3.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+.hecho .punto {
+  border-color: $teal-d;
+  background: $teal-d;
+}
+.actual .punto {
+  border-color: $orange;
+  box-shadow: 0 0 0 0 rgba($orange, 0.45);
+  animation: pulso 1.8s ease-out infinite;
+}
+
+.textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+
+  b {
+    font-size: 15px;
+    font-weight: 800;
+    color: $navy;
+  }
+  small {
+    font-size: 12px;
+    font-weight: 600;
+    color: $gris;
+  }
+}
+.actual .textos b {
+  color: #d9620a;
+}
+.futuro .textos b {
+  color: $gris;
+}
+
+.actualizar {
+  align-self: center;
+  height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 20px;
+  background: #eef3f8;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $teal-d;
+  cursor: pointer;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .cargando {
+    width: 16px;
+    height: 16px;
+    border-width: 2.5px;
+  }
+}
+
+@keyframes latir {
+  50% {
+    transform: scale(1.08);
+  }
+}
+@keyframes olear {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes pulso {
+  70% {
+    box-shadow: 0 0 0 9px rgba($orange, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($orange, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aro,
+  .ola,
+  .actual .punto {
+    animation: none;
+  }
+}

@@ -8,13 +8,18 @@
 
         <app-campo-celular
           [digitos]="digitos()"
-          (digitosChange)="cambiarDigitos($event)"
+          (digitosChange)="cambio($event)"
           [error]="!!error()"
           [listo]="valido()"
         />
 
         @if (error()) {
-          <p id="ayuda-celular" class="ayuda error" role="alert">{{ error() }}</p>
+          <p id="ayuda-celular" class="ayuda error" role="alert">
+            {{ error() }}
+            @if (yaRegistrado()) {
+              <button type="button" class="enlace-error" (click)="irALogin()">Iniciar sesión</button>
+            }
+          </p>
         } @else {
           <p id="ayuda-celular" class="ayuda">Con este número entrarás a MoviFY, sin correo ni contraseñas largas.</p>
         }

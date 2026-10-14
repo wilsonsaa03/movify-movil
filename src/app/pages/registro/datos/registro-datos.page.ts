@@ -7,7 +7,7 @@ import { RegistroService } from '../../../servicios/registro.service';
 const SOLO_LETRAS = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' -]{2,40}$/;
 const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/** Registro · Paso 3 de 4: foto (opcional), nombre, apellido y correo electrónico (opcional). */
+/** Registro · Paso 3 de 4: foto, nombre, apellido, correo y ciudad. */
 @Component({
   selector: 'app-registro-datos',
   templateUrl: 'registro-datos.page.html',
@@ -22,6 +22,9 @@ export class RegistroDatosPage {
   readonly nombre = signal(this.previos?.nombre ?? '');
   readonly apellido = signal(this.previos?.apellido ?? '');
   readonly correo = signal(this.previos?.correo ?? '');
+  /** Por ahora MoviFY solo opera en Buenaventura. */
+  readonly ciudades = ['Buenaventura'];
+  readonly ciudad = signal(this.previos?.ciudad ?? 'Buenaventura');
   readonly foto = signal<string | null>(this.previos?.foto ?? null);
   readonly acepta = signal(this.previos !== null);
 
@@ -79,6 +82,7 @@ export class RegistroDatosPage {
       nombre: capitalizar(this.nombre()),
       apellido: capitalizar(this.apellido()),
       correo: this.correo().trim().toLowerCase(),
+      ciudad: this.ciudad(),
       foto: this.foto(),
     });
     this.router.navigateByUrl('/registro/clave');

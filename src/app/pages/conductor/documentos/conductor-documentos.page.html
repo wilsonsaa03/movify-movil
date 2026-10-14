@@ -1,0 +1,98 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo
+      [etiqueta]="etiqueta()"
+      [paso]="4"
+      [total]="5"
+      titulo="Tus documentos"
+      subtitulo="Fotos claras, sin reflejos."
+      volverA="/conductor/vehiculo"
+    />
+
+    <main class="cuerpo">
+      @if (corrigiendo()) {
+        <div class="corregir entra" style="--d: 60ms" role="status">
+          <b>Hay algo por corregir</b>
+          <span>{{ registro.progreso()?.motivo_estado || 'Revisa los documentos marcados en rojo y vuelve a subirlos.' }}</span>
+        </div>
+      }
+
+      @if (rechazadosOtros().length) {
+        <div class="lista entra" style="--d: 80ms">
+          @for (f of rechazadosOtros(); track f.tipo.codigo) {
+            <app-fila-documento
+              [nombre]="f.tipo.nombre" [icono]="icono(f)" estado="rechazado"
+              [observacion]="f.subido?.observacion ?? null"
+              (tocar)="irA(f)"
+            />
+          }
+        </div>
+      }
+
+      @if (cargando() && !documentos().length) {
+        <div class="cargando-pagina"><span class="cargando"></span></div>
+      } @else {
+        <div class="lista">
+          @for (f of documentos(); track f.tipo.codigo; let i = $index) {
+            <app-fila-documento
+              class="entra" [style.--d]="100 + i * 50 + 'ms'"
+              [nombre]="f.tipo.nombre" [ayuda]="f.tipo.ayuda" [icono]="icono(f)"
+              [estado]="f.estado" [vence]="f.subido?.fecha_vencimiento ?? null"
+              [observacion]="f.subido?.observacion ?? null"
+              [avance]="registro.subiendo(f.tipo.codigo)"
+              (tocar)="abrir(f)"
+            />
+          }
+        </div>
+        <p class="ayuda entra" style="--d: 320ms">Puedes guardar y terminar después. Tu avance no se pierde.</p>
+      }
+
+      @if (error()) {
+        <p class="aviso-error" role="alert">{{ error() }}</p>
+      }
+
+      <div class="final">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 340ms" (click)="continuar()">
+          Continuar
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Hoja inferior: fecha de vencimiento + cámara o galería -->
+  @if (abierto(); as f) {
+    <div slot="fixed" class="capa">
+    <div class="velo" (click)="cerrar()" aria-hidden="true"></div>
+    <section class="hoja" role="dialog" aria-modal="true" [attr.aria-label]="f.tipo.nombre">
+      <span class="agarre" aria-hidden="true"></span>
+      <h2>{{ f.tipo.nombre }}</h2>
+      <p class="consejo">Que se vean las 4 esquinas, sin reflejos ni dedos encima.</p>
+
+      @if (f.tipo.requiere_vencimiento) {
+        <div class="grupo">
+          <label class="rotulo" for="vence-doc">Fecha de vencimiento</label>
+          <input id="vence-doc" class="entrada" type="date" [min]="hoy" [value]="vence()" (input)="vence.set($any($event.target).value); errorHoja.set('')" />
+        </div>
+      }
+      @if (errorHoja()) {
+        <p class="ayuda error" role="alert">{{ errorHoja() }}</p>
+      }
+
+      <div class="acciones">
+        <label class="mv-boton mv-boton--naranja">
+          <input type="file" accept="image/*" capture="environment" (click)="revisarFecha($event)" (change)="elegido($event)" />
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
+          Tomar foto
+        </label>
+        <label class="mv-boton boton-claro">
+          <input type="file" [attr.accept]="f.tipo.solo_imagen ? 'image/*' : 'image/*,application/pdf'" (click)="revisarFecha($event)" (change)="elegido($event)" />
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" /><path d="M4 16l5-5 4 4 3-3 4 4" /></svg>
+          {{ f.tipo.solo_imagen ? 'Elegir de la galería' : 'Galería o PDF' }}
+        </label>
+        <button type="button" class="cancelar" (click)="cerrar()">Cancelar</button>
+      </div>
+    </section>
+    </div>
+  }
+</ion-content>

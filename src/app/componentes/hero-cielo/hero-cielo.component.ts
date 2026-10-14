@@ -11,20 +11,24 @@ import { NavController } from '@ionic/angular';
 @Component({
   selector: 'app-hero-cielo',
   template: `
-    <header class="cielo" [class.compacto]="!!paso()">
+    <header class="cielo" [class.compacto]="!!paso() || !!etiqueta()">
       <button type="button" class="volver" aria-label="Volver" (click)="volver()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
       </button>
 
       @if (paso(); as p) {
         <div class="progreso" role="progressbar" [attr.aria-valuenow]="p" aria-valuemin="1" [attr.aria-valuemax]="total()" [attr.aria-label]="'Paso ' + p + ' de ' + total()">
-          <span class="paso">Paso {{ p }} de {{ total() }}</span>
+          <span class="paso">{{ etiqueta() ? etiqueta() + ' · ' : '' }}Paso {{ p }} de {{ total() }}</span>
           <span class="barras">
             @for (b of barras(); track $index) {
               <span class="barra" [class.llena]="$index < p" [class.actual]="$index === p - 1"></span>
             }
           </span>
         </div>
+      }
+
+      @if (!paso() && etiqueta()) {
+        <div class="progreso"><span class="paso">{{ etiqueta() }}</span></div>
       }
 
       <div class="sol" aria-hidden="true"></div>
@@ -40,7 +44,7 @@ import { NavController } from '@ionic/angular';
         }
       </div>
 
-      @if (!paso()) {
+      @if (!paso() && !etiqueta()) {
         <div class="insignia entra" style="--d: 80ms">
           <img src="assets/marca/logo-3d.svg" alt="" draggable="false" />
         </div>
@@ -63,6 +67,8 @@ export class HeroCieloComponent {
   /** Si se indica, se muestra "Paso X de N" con barra de progreso (y sin logo). */
   readonly paso = input<number | null>(null);
   readonly total = input(4);
+  /** Texto pequeño arriba, p. ej. "Conductor de moto" (se combina con "Paso X de N"). */
+  readonly etiqueta = input<string>('');
   readonly barras = computed(() => Array.from({ length: this.total() }));
   /** A dónde ir si no hay historial (por ejemplo, si abrieron la pantalla directamente). */
   readonly volverA = input<string>('/inicio');

@@ -51,6 +51,29 @@
   }
 }
 
+.selector {
+  position: relative;
+
+  select {
+    padding-right: 44px;
+    cursor: pointer;
+  }
+  svg {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    fill: none;
+    stroke: $navy;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+}
+
 // ---------- Foto ----------
 .foto {
   display: flex;

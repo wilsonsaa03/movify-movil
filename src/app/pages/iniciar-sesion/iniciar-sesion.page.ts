@@ -24,7 +24,7 @@ export class IniciarSesionPage {
   private readonly servicio = this.ruta.snapshot.queryParamMap.get('servicio');
 
   /** Solo los dígitos, sin espacios. Ej: "3001234567" */
-  readonly digitos = signal('');
+  readonly digitos = signal((this.ruta.snapshot.queryParamMap.get('celular') ?? '').replace(/\D/g, '').slice(0, 10));
   readonly intentoEnviar = signal(false);
 
   /** Celular colombiano: 10 dígitos y empieza por 3. */

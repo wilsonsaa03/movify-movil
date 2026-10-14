@@ -1,0 +1,130 @@
+@use '../../../../theme/conductor' as *;
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.corregir {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba($rojo, 0.07);
+  border: 1.5px solid rgba($rojo, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  b {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: $rojo;
+  }
+  span {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: $navy;
+  }
+}
+
+// ---------- Hoja inferior ----------
+.capa {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.velo {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba($navy, 0.45);
+  animation: aparecer 200ms ease;
+}
+
+.hoja {
+  position: fixed;
+  z-index: 21;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 24px calc(22px + env(safe-area-inset-bottom));
+  border-radius: 26px 26px 0 0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: 'Nunito', system-ui, sans-serif;
+  box-shadow: 0 -10px 30px rgba($navy, 0.2);
+  animation: hoja 320ms $ease-out;
+
+  h2 {
+    margin: 4px 0 0;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: $navy;
+  }
+}
+
+.agarre {
+  align-self: center;
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: #d5dee8;
+}
+
+.consejo {
+  margin: -6px 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: $gris;
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+
+  label {
+    position: relative;
+
+    input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+  }
+}
+
+.boton-claro {
+  color: $navy;
+  background: #eef3f8;
+  box-shadow: inset 0 0 0 2px #d5dee8;
+
+  &:active {
+    transform: translateY(2px);
+  }
+}
+
+.cancelar {
+  height: 44px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  color: $gris;
+  cursor: pointer;
+}
+
+@keyframes hoja {
+  from {
+    transform: translateY(100%);
+  }
+}

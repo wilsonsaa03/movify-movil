@@ -1,73 +1,61 @@
-import { Injectable } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 
-/** Lo que responde el backend al entrar o registrarse (/auth/registro-movil, /auth/login-celular). */
+/** Lo que responde el backend al entrar o registrarse. */
 export interface RespuestaSesion {
   token: string;
   refreshToken: string;
-  expiraEnSeg: number;
   id: number;
-  rol: string;
+  rol: 'cliente' | 'conductor' | 'soporte' | 'admin';
+  roles: string[];
   nombre: string;
-  telefono: string;
+  nombres: string;
+  apellidos: string | null;
+  correo: string | null;
+  telefono: string | null;
   foto: string | null;
+  conductor: { estado: string; motivo: string | null } | null;
   siguientePaso?: string;
 }
 
+const CLAVE = 'movify.sesion';
+
 /**
- * Sesión guardada en el celular (localStorage del WebView de Capacitor).
- * El backend es quien decide; esto solo guía la navegación.
+ * Sesión guardada en el celular (localStorage del WebView). La clave NUNCA se guarda:
+ * solo el token (JWT) y el refresh token que entrega el backend.
  */
 @Injectable({ providedIn: 'root' })
 export class SesionService {
-  private ls(): Storage | null {
+  readonly datos = signal<RespuestaSesion | null>(this.leer());
+  readonly activa = computed(() => !!this.datos()?.token);
+
+  get token(): string | null {
+    return this.datos()?.token ?? null;
+  }
+
+  guardar(s: RespuestaSesion): void {
+    this.datos.set(s);
     try {
-      return typeof localStorage === 'undefined' ? null : localStorage;
+      localStorage.setItem(CLAVE, JSON.stringify(s));
     } catch {
-      return null;
+      /* sin almacenamiento: la sesión dura mientras la app esté abierta */
     }
-  }
-
-  get token(): string {
-    return this.ls()?.getItem('token') || '';
-  }
-
-  get refreshToken(): string {
-    return this.ls()?.getItem('refreshToken') || '';
-  }
-
-  get rol(): string {
-    return this.ls()?.getItem('rol') || '';
-  }
-
-  /** Hay token y no venció (se lee el exp del JWT sin validarlo: eso lo hace el backend). */
-  get activa(): boolean {
-    const t = this.token;
-    if (!t || t.split('.').length !== 3) return false;
-    try {
-      const payload = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-      return typeof payload.exp !== 'number' || payload.exp * 1000 > Date.now();
-    } catch {
-      return false;
-    }
-  }
-
-  guardar(res: RespuestaSesion): void {
-    const ls = this.ls();
-    if (!ls) return;
-    ls.setItem('token', res.token || '');
-    ls.setItem('refreshToken', res.refreshToken || '');
-    ls.setItem('id', res.id != null ? String(res.id) : '');
-    ls.setItem('rol', res.rol || '');
-    ls.setItem('nombre', res.nombre || '');
-    ls.setItem('telefono', res.telefono || '');
-    ls.setItem('foto', res.foto || '');
-  }
-
-  actualizarFoto(url: string): void {
-    this.ls()?.setItem('foto', url);
   }
 
   cerrar(): void {
-    this.ls()?.clear();
+    this.datos.set(null);
+    try {
+      localStorage.removeItem(CLAVE);
+    } catch {
+      /* nada */
+    }
+  }
+
+  private leer(): RespuestaSesion | null {
+    try {
+      const t = localStorage.getItem(CLAVE);
+      return t ? (JSON.parse(t) as RespuestaSesion) : null;
+    } catch {
+      return null;
+    }
   }
 }

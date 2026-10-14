@@ -49,10 +49,10 @@
 
         <!-- Correo -->
         <div class="grupo entra" style="--d: 180ms">
-          <label class="rotulo" for="dato-correo">Correo electrónico <small>(opcional)</small></label>
+          <label class="rotulo" for="dato-correo">Correo <small>(opcional)</small></label>
           <input
             id="dato-correo" class="entrada" type="email" inputmode="email" autocomplete="email" autocapitalize="off"
-            placeholder="ana@correo.com" maxlength="120"
+            placeholder="ana@correo.com" maxlength="80"
             [class.con-error]="!!error('correo')" [value]="correo()" (input)="correo.set(texto($event))"
           />
           @if (error('correo')) {
@@ -62,8 +62,21 @@
           }
         </div>
 
+        <!-- Ciudad -->
+        <div class="grupo entra" style="--d: 220ms">
+          <label class="rotulo" for="dato-ciudad">Ciudad</label>
+          <div class="selector">
+            <select id="dato-ciudad" class="entrada" [value]="ciudad()" (change)="ciudad.set(texto($event))">
+              @for (c of ciudades; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </div>
+        </div>
+
         <!-- Términos -->
-        <div class="entra" style="--d: 220ms">
+        <div class="entra" style="--d: 260ms">
           <label class="casilla" [class.con-error]="!!error('acepta')">
             <input id="dato-acepta" type="checkbox" [checked]="acepta()" (change)="acepta.set($any($event.target).checked)" />
             <span class="cuadro" aria-hidden="true">
@@ -81,7 +94,7 @@
       </form>
 
       <div class="final">
-        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 260ms" (click)="continuar()">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 300ms" (click)="continuar()">
           Continuar
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         </button>

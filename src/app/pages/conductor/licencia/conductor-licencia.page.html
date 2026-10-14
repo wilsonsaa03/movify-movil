@@ -1,0 +1,87 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo
+      [etiqueta]="etiqueta()"
+      [paso]="2"
+      [total]="5"
+      titulo="Tu licencia"
+      subtitulo="Debe estar vigente y a tu nombre."
+      volverA="/conductor/identidad"
+    />
+
+    <main class="cuerpo">
+      <form class="formulario" novalidate (submit)="$event.preventDefault(); continuar()">
+        <div class="grupo entra" style="--d: 100ms">
+          <span class="rotulo" id="rotulo-categoria">Categoría</span>
+          <div class="categorias" role="radiogroup" aria-labelledby="rotulo-categoria">
+            @for (c of categorias(); track c.codigo) {
+              <button type="button" role="radio" class="categoria" [attr.aria-checked]="categoria() === c.codigo" (click)="categoria.set(c.codigo)">
+                <b>{{ c.codigo }}</b>
+                <small>{{ c.texto }}</small>
+              </button>
+            }
+          </div>
+          @if (ver('categoria')) { <p class="ayuda error">{{ ver('categoria') }}</p> }
+        </div>
+
+        <div class="grupo entra" style="--d: 140ms">
+          <label class="rotulo" for="numero-licencia">Número de licencia</label>
+          <input
+            id="numero-licencia" class="entrada" type="text" inputmode="numeric" autocomplete="off" placeholder="1111222333"
+            [class.con-error]="!!ver('numero')" [value]="numero()" (input)="escribirNumero($event)"
+          />
+          @if (ver('numero')) {
+            <p class="ayuda error">{{ ver('numero') }}</p>
+          } @else {
+            <p class="ayuda">En Colombia suele ser el mismo número de tu cédula.</p>
+          }
+        </div>
+
+        <div class="grupo entra" style="--d: 180ms">
+          <label class="rotulo" for="vence-licencia">Fecha de vencimiento</label>
+          <input
+            id="vence-licencia" class="entrada" type="date" [min]="hoy"
+            [class.con-error]="!!ver('vence')" [value]="vence()" (input)="vence.set($any($event.target).value)"
+          />
+          @if (ver('vence')) { <p class="ayuda error">{{ ver('vence') }}</p> }
+        </div>
+
+        <div class="grupo entra" style="--d: 220ms">
+          <span class="rotulo">Foto de la licencia</span>
+          <div class="fotos">
+            <app-foto-tile
+              etiqueta="Frente" camara="environment"
+              [estado]="registro.fila('licencia_conduccion')?.estado ?? 'falta'"
+              [avance]="registro.subiendo('licencia_conduccion')"
+              [vista]="registro.vistas()['licencia_conduccion'] ?? null"
+              (elegida)="subir('licencia_conduccion', $event)"
+            />
+            <app-foto-tile
+              etiqueta="Reverso" camara="environment"
+              [estado]="registro.fila('licencia_reverso')?.estado ?? 'falta'"
+              [avance]="registro.subiendo('licencia_reverso')"
+              [vista]="registro.vistas()['licencia_reverso'] ?? null"
+              (elegida)="subir('licencia_reverso', $event)"
+            />
+          </div>
+        </div>
+
+        @if (error()) {
+          <p class="aviso-error" role="alert">{{ error() }}</p>
+        }
+        <button type="submit" hidden></button>
+      </form>
+
+      <div class="final">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 260ms" [disabled]="guardando()" (click)="continuar()">
+          @if (guardando()) {
+            <span class="cargando" aria-hidden="true"></span> Guardando…
+          } @else {
+            Continuar
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          }
+        </button>
+      </div>
+    </main>
+  </div>
+</ion-content>

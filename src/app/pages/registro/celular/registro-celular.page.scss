@@ -32,3 +32,15 @@
     color: #8a3d06;
   }
 }
+
+.enlace-error {
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}

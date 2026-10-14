@@ -1,0 +1,29 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo titulo="Ingresa tu clave" [subtitulo]="celularVisible" volverA="/login" />
+
+    <main class="cuerpo">
+      <div class="zona-clave entra" style="--d: 120ms">
+        <p class="rotulo-clave">Tu clave de 4 dígitos</p>
+        <app-puntos-clave [cantidad]="clave().length" [error]="!!error()" [sacudir]="sacudir()" />
+
+        <p class="estado" aria-live="polite">
+          @if (entrando()) {
+            <span class="entrando"><span class="cargando" aria-hidden="true"></span> Entrando…</span>
+          } @else if (error()) {
+            <span class="ayuda error">{{ error() }}</span>
+          }
+        </p>
+
+        <div class="enlaces">
+          <button type="button" class="enlace" (click)="olvide()">¿Olvidaste tu clave?</button>
+          <button type="button" class="enlace" (click)="cambiarNumero()">Cambiar número</button>
+        </div>
+      </div>
+
+      <div class="final">
+        <app-teclado-numerico class="entra" style="--d: 180ms" [deshabilitado]="entrando() || bloqueado()" (digito)="agregar($event)" (borrar)="quitar()" />
+      </div>
+    </main>
+  </div>
+</ion-content>

@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  /** Backend local. En el celular físico cambiar localhost por la IP del PC (ej. http://192.168.1.10:8080/api). */
+  apiUrl: 'http://localhost:8080/api',
 };
 
 /*

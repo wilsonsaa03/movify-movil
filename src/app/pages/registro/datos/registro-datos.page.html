@@ -1,0 +1,91 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo
+      titulo="Cuéntanos de ti"
+      [subtitulo]="esConductor() ? 'Así te reconocerán tus pasajeros.' : 'Así te reconocerá tu conductor.'"
+      [paso]="3"
+      volverA="/registro/codigo"
+    />
+
+    <main class="cuerpo">
+      <form class="formulario" novalidate (submit)="$event.preventDefault(); continuar()">
+        <!-- Foto -->
+        <label class="foto entra" style="--d: 100ms">
+          <input type="file" accept="image/*" (change)="elegirFoto($event)" />
+          <span class="circulo" [class.con-foto]="!!foto()">
+            @if (foto(); as f) {
+              <img [src]="f" alt="Tu foto" />
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
+            }
+          </span>
+          <span class="foto-textos">
+            <b>{{ foto() ? 'Cambiar foto' : 'Agrega una foto' }}</b>
+            <small>Opcional · {{ esConductor() ? 'tus pasajeros sabrán quién los recoge' : 'el conductor sabrá a quién recoge' }}</small>
+          </span>
+        </label>
+
+        <!-- Nombre y apellido -->
+        <div class="fila entra" style="--d: 140ms">
+          <div class="grupo">
+            <label class="rotulo" for="dato-nombre">Nombre</label>
+            <input
+              id="dato-nombre" class="entrada" type="text" autocomplete="given-name" autocapitalize="words"
+              placeholder="Ana" maxlength="40"
+              [class.con-error]="!!error('nombre')" [value]="nombre()" (input)="nombre.set(texto($event))"
+            />
+            @if (error('nombre')) { <p class="ayuda error">{{ error('nombre') }}</p> }
+          </div>
+          <div class="grupo">
+            <label class="rotulo" for="dato-apellido">Apellido</label>
+            <input
+              id="dato-apellido" class="entrada" type="text" autocomplete="family-name" autocapitalize="words"
+              placeholder="Riascos" maxlength="40"
+              [class.con-error]="!!error('apellido')" [value]="apellido()" (input)="apellido.set(texto($event))"
+            />
+            @if (error('apellido')) { <p class="ayuda error">{{ error('apellido') }}</p> }
+          </div>
+        </div>
+
+        <!-- Correo -->
+        <div class="grupo entra" style="--d: 180ms">
+          <label class="rotulo" for="dato-correo">Correo electrónico <small>(opcional)</small></label>
+          <input
+            id="dato-correo" class="entrada" type="email" inputmode="email" autocomplete="email" autocapitalize="off"
+            placeholder="ana@correo.com" maxlength="120"
+            [class.con-error]="!!error('correo')" [value]="correo()" (input)="correo.set(texto($event))"
+          />
+          @if (error('correo')) {
+            <p class="ayuda error">{{ error('correo') }}</p>
+          } @else {
+            <p class="ayuda">Para enviarte los recibos de tus viajes.</p>
+          }
+        </div>
+
+        <!-- Términos -->
+        <div class="entra" style="--d: 220ms">
+          <label class="casilla" [class.con-error]="!!error('acepta')">
+            <input id="dato-acepta" type="checkbox" [checked]="acepta()" (change)="acepta.set($any($event.target).checked)" />
+            <span class="cuadro" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+            </span>
+            <span>
+              Acepto los <button type="button" class="enlace" (click)="ver('/terminos')">Términos</button>
+              y la <button type="button" class="enlace" (click)="ver('/privacidad')">Política de privacidad</button>.
+            </span>
+          </label>
+          @if (error('acepta')) { <p class="ayuda error">{{ error('acepta') }}</p> }
+        </div>
+
+        <button type="submit" hidden></button>
+      </form>
+
+      <div class="final">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 260ms" (click)="continuar()">
+          Continuar
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </button>
+      </div>
+    </main>
+  </div>
+</ion-content>

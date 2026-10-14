@@ -1,0 +1,55 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo
+      titulo="Escribe el código"
+      [subtitulo]="'Lo enviamos al ' + registro.celularVisible() + '.'"
+      [paso]="2"
+      volverA="/registro/celular"
+    />
+
+    <main class="cuerpo">
+      <div
+        class="casillas entra"
+        style="--d: 120ms"
+        [class.sacudir]="sacudir()"
+        [class.con-error]="!!error()"
+        role="group"
+        aria-label="Código de 6 dígitos"
+      >
+        @for (c of casillas(); track $index) {
+          <span class="casilla" [class.llena]="c !== ''" [class.actual]="$index === codigo().length && !verificando()">
+            {{ c }}
+          </span>
+        }
+      </div>
+
+      <p class="estado" aria-live="polite">
+        @if (verificando()) {
+          <span class="verificando"><span class="cargando" aria-hidden="true"></span> Verificando…</span>
+        } @else if (error()) {
+          <span class="ayuda error">{{ error() }}</span>
+        }
+      </p>
+
+      <div class="acciones-codigo entra" style="--d: 160ms">
+        @if (segundos() > 0) {
+          <span class="ayuda">Reenviar en <b>{{ cuentaRegresiva() }}</b></span>
+        } @else {
+          <button type="button" class="enlace" [disabled]="reenviando()" (click)="reenviar()">
+            {{ reenviando() ? 'Reenviando…' : 'Reenviar código' }}
+          </button>
+        }
+        <button type="button" class="enlace" (click)="cambiarNumero()">Cambiar número</button>
+      </div>
+
+      <div class="final">
+        <app-teclado-numerico class="entra" style="--d: 200ms" [deshabilitado]="verificando()" (digito)="agregar($event)" (borrar)="quitar()" />
+
+        <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!completo() || verificando()" (click)="verificar()">
+          Verificar
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </button>
+      </div>
+    </main>
+  </div>
+</ion-content>

@@ -1,0 +1,51 @@
+@use '../../../../theme/registro' as *;
+
+.zona-clave {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding-top: 8px;
+}
+
+.estado {
+  min-height: 34px;
+  margin: 0;
+  text-align: center;
+}
+
+.pista {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #eef3f8;
+  font-size: 13px;
+  font-weight: 700;
+  color: $gris;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: $gris;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+  }
+}
+
+.creando {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: $teal-d;
+
+  .cargando {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+}

@@ -1,4 +1,10 @@
 import { Routes } from '@angular/router';
+import { celularVerificado, conCelular, conDatos, conRol, cuentaCreada } from './servicios/registro.guards';
+
+const pendiente = (titulo: string) => ({
+  loadComponent: () => import('./pages/pendiente/pendiente.page').then((m) => m.PendientePage),
+  data: { titulo },
+});
 
 export const routes: Routes = [
   {
@@ -6,9 +12,60 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/bienvenida/bienvenida.page').then((m) => m.BienvenidaPage),
   },
   {
-    path: 'login',
-    loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
+    path: 'inicio',
+    loadComponent: () => import('./pages/inicio/inicio.page').then((m) => m.InicioPage),
   },
+
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/iniciar-sesion/iniciar-sesion.page').then((m) => m.IniciarSesionPage),
+  },
+  {
+    path: 'registro',
+    loadComponent: () => import('./pages/crear-cuenta/crear-cuenta.page').then((m) => m.CrearCuentaPage),
+  },
+
+  {
+    path: 'login/clave',
+    loadComponent: () => import('./pages/clave-login/clave-login.page').then((m) => m.ClaveLoginPage),
+  },
+
+  // Registro (cliente y conductor comparten estos 4 pasos)
+  {
+    path: 'registro/celular',
+    canActivate: [conRol],
+    loadComponent: () => import('./pages/registro/celular/registro-celular.page').then((m) => m.RegistroCelularPage),
+  },
+  {
+    path: 'registro/codigo',
+    canActivate: [conRol, conCelular],
+    loadComponent: () => import('./pages/registro/codigo/registro-codigo.page').then((m) => m.RegistroCodigoPage),
+  },
+  {
+    path: 'registro/datos',
+    canActivate: [conRol, celularVerificado],
+    loadComponent: () => import('./pages/registro/datos/registro-datos.page').then((m) => m.RegistroDatosPage),
+  },
+  {
+    path: 'registro/clave',
+    canActivate: [conRol, conDatos],
+    loadComponent: () => import('./pages/registro/clave/registro-clave.page').then((m) => m.RegistroClavePage),
+  },
+  {
+    path: 'registro/listo',
+    canActivate: [cuentaCreada],
+    loadComponent: () => import('./pages/registro/listo/registro-listo.page').then((m) => m.RegistroListoPage),
+  },
+
+  // Pantallas que siguen (por ahora son provisionales)
+  { path: 'login/recuperar', ...pendiente('Recuperar clave') },
+  { path: 'login/google', ...pendiente('Entrar con Google') },
+  { path: 'cliente', ...pendiente('Inicio del cliente') },
+  { path: 'conductor/documentos', ...pendiente('Documentos del conductor') },
+  { path: 'explorar', ...pendiente('Explorar como invitado') },
+  { path: 'terminos', ...pendiente('Términos y condiciones') },
+  { path: 'privacidad', ...pendiente('Política de privacidad') },
+
   {
     // Plantilla original de Ionic (se borrará cuando existan las pantallas reales)
     path: '',

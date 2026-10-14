@@ -1,0 +1,95 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+
+    <!-- Cielo del Pacífico al atardecer -->
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+
+      <svg class="gaviotas g1" viewBox="0 0 70 26" aria-hidden="true">
+        <path d="M2 12q6-8 12 0q6-8 12 0" />
+        <path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" />
+      </svg>
+      <svg class="gaviotas g2" viewBox="0 0 70 26" aria-hidden="true">
+        <path d="M2 12q6-8 12 0q6-8 12 0" />
+        <path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" />
+      </svg>
+
+      <div class="insignia entra" style="--d: 60ms">
+        <img src="assets/marca/logo-3d.svg" alt="Logo de MoviFY" draggable="false" />
+      </div>
+
+      <div class="titulo entra" style="--d: 160ms">
+        <h1 class="nombre"><span class="movi">Movi</span><span class="fy">FY</span></h1>
+        <p class="lema">Tu transporte y tus envíos, en un solo lugar.</p>
+      </div>
+
+      <!-- Olas que se mueven (3 capas) -->
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path [attr.d]="ola" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path [attr.d]="ola" /></svg>
+        <svg class="ola o3" viewBox="0 0 804 140" preserveAspectRatio="none"><path [attr.d]="ola" /></svg>
+      </div>
+    </header>
+
+    <!-- Mar: servicios y acciones -->
+    <main class="mar">
+      <h2 class="pregunta entra" style="--d: 240ms">¿Pa' dónde vamos hoy?</h2>
+
+      <nav class="servicios" aria-label="Servicios de MoviFY">
+        @for (s of servicios; track s.id; let i = $index) {
+          <button
+            type="button"
+            class="servicio entra"
+            [style.--d]="300 + i * 50 + 'ms'"
+            [style.--c]="s.color"
+            [style.--c-osc]="s.colorOscuro"
+            (click)="elegirServicio(s.id)"
+          >
+            <span class="baldosa">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                @switch (s.id) {
+                  @case ('taxi') {
+                    <svg:path d="M5 17h14v-4l-2-5H7l-2 5v4z" /><svg:path d="M9 5h6v3" />
+                    <svg:circle cx="8" cy="17" r="1.6" /><svg:circle cx="16" cy="17" r="1.6" />
+                  }
+                  @case ('moto') {
+                    <svg:circle cx="5.5" cy="16.5" r="3" /><svg:circle cx="18.5" cy="16.5" r="3" />
+                    <svg:path d="M5.5 16.5l4-6h5l4 6" /><svg:path d="M14.5 10.5l-1.5-4h3" />
+                  }
+                  @case ('domicilio') {
+                    <svg:path d="M6 8h12l-1 12H7L6 8z" /><svg:path d="M9 8V6a3 3 0 0 1 6 0v2" />
+                  }
+                  @case ('encomienda') {
+                    <svg:path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" /><svg:path d="M3 8l9 5 9-5" /><svg:path d="M12 13v8" />
+                  }
+                }
+              </svg>
+            </span>
+            <span class="etiqueta">{{ s.nombre }}</span>
+          </button>
+        }
+      </nav>
+
+      <div class="acciones">
+        <button type="button" class="boton naranja entra" style="--d: 520ms" (click)="ir('/login')">
+          Iniciar sesión
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </button>
+
+        <button type="button" class="boton contorno entra" style="--d: 570ms" (click)="ir('/registro')">
+          Soy nuevo, crear mi cuenta
+        </button>
+
+        <button type="button" class="enlace entra" style="--d: 620ms" (click)="ir('/explorar')">
+          Solo quiero mirar primero
+        </button>
+
+        <p class="legal entra" style="--d: 660ms">
+          Al continuar aceptas nuestros
+          <button type="button" (click)="ir('/terminos')">Términos</button> y la
+          <button type="button" (click)="ir('/privacidad')">Política de privacidad</button>.
+        </p>
+      </div>
+    </main>
+  </div>
+</ion-content>

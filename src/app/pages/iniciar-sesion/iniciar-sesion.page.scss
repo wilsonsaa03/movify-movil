@@ -1,0 +1,128 @@
+$navy: #03274d;
+$teal: #02aab4;
+$teal-d: #007c85;
+$rojo: #d92d3a;
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+ion-content {
+  --background: #ffffff;
+}
+
+.pantalla {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Nunito', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cuerpo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 8px 24px calc(20px + env(safe-area-inset-bottom));
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rotulo {
+  font-size: 14px;
+  font-weight: 800;
+  color: $navy;
+}
+
+.ayuda {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b6b80;
+
+  &.error {
+    color: $rojo;
+    font-weight: 700;
+  }
+}
+
+// ---------- "o entra con" ----------
+.divisor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8a9bb0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #d5dee8;
+  }
+}
+
+.google {
+  align-self: center;
+  min-width: 170px;
+  height: 52px;
+  padding: 0 22px;
+  border: 2px solid #d5dee8;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #d5dee8;
+  transition:
+    transform 140ms $ease-out,
+    box-shadow 140ms $ease-out;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  &:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #d5dee8;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 3px;
+  }
+}
+
+.pie {
+  margin-top: auto;
+}
+
+.entra {
+  animation: subir 520ms $ease-out var(--d, 0ms) backwards;
+}
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .entra {
+    animation: aparecer 300ms ease backwards;
+  }
+}
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}

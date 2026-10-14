@@ -1,0 +1,168 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo
+      [etiqueta]="etiqueta()"
+      [paso]="3"
+      [total]="5"
+      [titulo]="titulo()"
+      subtitulo="Los pasajeros lo reconocerán al llegar."
+      volverA="/conductor/licencia"
+    />
+
+    <main class="cuerpo">
+      <form class="formulario" novalidate (submit)="$event.preventDefault(); continuar()">
+        <div class="grupo entra" style="--d: 80ms">
+          <span class="rotulo" id="rotulo-tipo">¿Con qué vas a trabajar?</span>
+          <div class="segmento" role="group" aria-labelledby="rotulo-tipo">
+            <button type="button" [attr.aria-pressed]="tipo() === 'moto'" (click)="cambiarTipo('moto')">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="16" r="3.2" /><circle cx="18" cy="16" r="3.2" /><path d="M6 16l4-6h4l4 6M10 10l-1.5-2.5H6" /></svg>
+              Moto
+            </button>
+            <button type="button" [attr.aria-pressed]="tipo() === 'taxi'" (click)="cambiarTipo('taxi')">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3l2.5-5h11l2.5 5v3z" /><circle cx="7.5" cy="16" r="1.8" /><circle cx="16.5" cy="16" r="1.8" /></svg>
+              Taxi
+            </button>
+          </div>
+        </div>
+
+        <!-- Placa y color -->
+        <div class="fila-placa entra" style="--d: 120ms">
+          <div class="grupo">
+            <label class="rotulo" for="placa">Placa</label>
+            <label class="placa" [class.con-error]="!!ver('placa')" [class.vacia]="!placa()">
+              <input
+                id="placa" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="7"
+                [placeholder]="tipo() === 'taxi' ? 'ABC 123' : 'ABC 12D'"
+                [value]="placa()" (input)="escribirPlaca($event)"
+              />
+              <span class="ciudad" aria-hidden="true">BUENAVENTURA</span>
+            </label>
+          </div>
+          <div class="grupo">
+            <label class="rotulo" for="color">Color</label>
+            <input
+              id="color" class="entrada" type="text" list="lista-colores" autocapitalize="words" maxlength="30" placeholder="Negra"
+              [class.con-error]="!!ver('color')" [value]="color()" (input)="color.set(valor($event))"
+            />
+            <datalist id="lista-colores">
+              @for (c of colores; track c) { <option [value]="c"></option> }
+            </datalist>
+          </div>
+        </div>
+        @if (ver('placa') || ver('color')) {
+          <p class="ayuda error">{{ ver('placa') || ver('color') }}</p>
+        }
+
+        <!-- Marca, modelo, año / cilindraje -->
+        <div class="tres entra" style="--d: 160ms">
+          <div class="grupo">
+            <label class="rotulo" for="marca">Marca</label>
+            <input
+              id="marca" class="entrada" type="text" list="lista-marcas" autocapitalize="words" maxlength="40"
+              [placeholder]="tipo() === 'taxi' ? 'Chevrolet' : 'Yamaha'"
+              [class.con-error]="!!ver('marca')" [value]="marca()" (input)="marca.set(valor($event))"
+            />
+            <datalist id="lista-marcas">
+              @for (m of marcas(); track m) { <option [value]="m"></option> }
+            </datalist>
+          </div>
+          <div class="grupo">
+            <label class="rotulo" for="linea">Modelo</label>
+            <input
+              id="linea" class="entrada" type="text" autocapitalize="characters" maxlength="40"
+              [placeholder]="tipo() === 'taxi' ? 'Spark GT' : 'FZ 2.0'" [value]="linea()" (input)="linea.set(valor($event))"
+            />
+          </div>
+          <div class="grupo">
+            <label class="rotulo" for="anio">Año</label>
+            <input
+              id="anio" class="entrada" type="number" inputmode="numeric" min="1990" [max]="anioMax" placeholder="2019"
+              [class.con-error]="!!ver('anio')" [value]="anio()" (input)="anio.set(valor($event))"
+            />
+          </div>
+        </div>
+        @if (ver('marca') || ver('anio')) {
+          <p class="ayuda error">{{ ver('marca') || ver('anio') }}</p>
+        }
+
+        @if (tipo() === 'moto') {
+          <div class="grupo entra" style="--d: 180ms">
+            <label class="rotulo" for="cilindraje">Cilindraje</label>
+            <div class="con-sufijo">
+              <input
+                id="cilindraje" class="entrada" type="number" inputmode="numeric" min="50" max="2000" placeholder="150"
+                [class.con-error]="!!ver('cilindraje')" [value]="cilindraje()" (input)="cilindraje.set(valor($event))"
+              />
+              <span aria-hidden="true">cc</span>
+            </div>
+            @if (ver('cilindraje')) { <p class="ayuda error">{{ ver('cilindraje') }}</p> }
+          </div>
+        } @else {
+          <div class="fila entra" style="--d: 180ms">
+            <div class="grupo">
+              <label class="rotulo" for="empresa">Empresa afiliadora</label>
+              <input
+                id="empresa" class="entrada" type="text" autocapitalize="words" maxlength="80" placeholder="Taxis del Puerto"
+                [class.con-error]="!!ver('empresa')" [value]="empresa()" (input)="empresa.set(valor($event))"
+              />
+            </div>
+            <div class="grupo">
+              <label class="rotulo" for="interno">N.º interno <small>(opcional)</small></label>
+              <input id="interno" class="entrada" type="text" maxlength="10" placeholder="045" [value]="interno()" (input)="interno.set(valor($event))" />
+            </div>
+          </div>
+          @if (ver('empresa')) { <p class="ayuda error">{{ ver('empresa') }}</p> }
+        }
+
+        <!-- Fotos -->
+        <div class="grupo entra" style="--d: 220ms">
+          <span class="rotulo">
+            Fotos {{ tipo() === 'taxi' ? 'del vehículo' : 'de la moto' }}
+            <small>· {{ fotosListas() }} de {{ fotos().length || 4 }}</small>
+          </span>
+          <div class="fotos" style="--columnas: 4">
+            @for (f of fotos(); track f.tipo.codigo) {
+              <app-foto-tile
+                [etiqueta]="corto(f.tipo.nombre)" camara="environment" [mostrarAyuda]="false"
+                [estado]="f.estado"
+                [avance]="registro.subiendo(f.tipo.codigo)"
+                [vista]="registro.vistas()[f.tipo.codigo] ?? null"
+                (elegida)="subir(f.tipo.codigo, $event)"
+              />
+            }
+          </div>
+        </div>
+
+        @if (tipo() === 'moto') {
+          <label class="casco entra" style="--d: 260ms">
+            <span class="icono-casco" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 15a8 8 0 0 1 16 0v2H4z" /><path d="M12 7v4M4 17h16" /></svg>
+            </span>
+            <span class="textos-casco">
+              <b>Casco para el pasajero</b>
+              <small>Es obligatorio llevar uno extra.</small>
+            </span>
+            <input type="checkbox" role="switch" [checked]="casco()" (change)="casco.set($any($event.target).checked)" />
+            <span class="interruptor" aria-hidden="true"></span>
+          </label>
+        }
+
+        @if (error()) {
+          <p class="aviso-error" role="alert">{{ error() }}</p>
+        }
+        <button type="submit" hidden></button>
+      </form>
+
+      <div class="final">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 300ms" [disabled]="guardando()" (click)="continuar()">
+          @if (guardando()) {
+            <span class="cargando" aria-hidden="true"></span> Guardando…
+          } @else {
+            Continuar
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          }
+        </button>
+      </div>
+    </main>
+  </div>
+</ion-content>

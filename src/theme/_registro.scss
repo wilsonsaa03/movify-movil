@@ -1,0 +1,127 @@
+// Estilos compartidos por las pantallas del registro y la clave.
+// Se importan en cada página con:  @use '../../../../theme/registro' as *;
+
+$navy: #03274d;
+$teal: #02aab4;
+$teal-d: #007c85;
+$orange: #fe7b13;
+$rojo: #d92d3a;
+$gris: #5b6b80;
+$borde: #d5dee8;
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+ion-content {
+  --background: #ffffff;
+}
+
+.pantalla {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Nunito', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cuerpo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 24px calc(20px + env(safe-area-inset-bottom));
+}
+
+.final {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rotulo {
+  font-size: 14px;
+  font-weight: 800;
+  color: $navy;
+
+  small {
+    font-size: 13px;
+    font-weight: 600;
+    color: $gris;
+  }
+}
+
+.ayuda {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: $gris;
+
+  &.error {
+    color: $rojo;
+    font-weight: 700;
+  }
+}
+
+.enlace {
+  border: 0;
+  background: none;
+  padding: 6px 2px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $teal-d;
+  cursor: pointer;
+
+  &:disabled {
+    color: $gris;
+    font-weight: 600;
+    cursor: default;
+  }
+}
+
+.cargando {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid currentColor;
+  border-right-color: transparent;
+  animation: girar 600ms linear infinite;
+}
+
+.entra {
+  animation: subir 520ms $ease-out var(--d, 0ms) backwards;
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes sacudir {
+  20%,
+  60% {
+    transform: translateX(-8px);
+  }
+  40%,
+  80% {
+    transform: translateX(8px);
+  }
+}
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entra {
+    animation: aparecer 300ms ease backwards;
+  }
+}

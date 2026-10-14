@@ -1,0 +1,294 @@
+$navy: #03274d;
+$teal: #02aab4;
+$teal-claro: #5fd6dc;
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+:host {
+  display: block;
+}
+
+.cielo {
+  position: relative;
+  height: calc(300px + env(safe-area-inset-top));
+  padding: calc(env(safe-area-inset-top) + 92px) 24px 0;
+  background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 45%, #fe7b13 100%);
+  overflow: hidden;
+}
+
+// Versión con barra de pasos (registro)
+.cielo.compacto {
+  height: calc(236px + env(safe-area-inset-top));
+  padding-top: calc(env(safe-area-inset-top) + 86px);
+
+  .texto {
+    max-width: none;
+    h1 {
+      font-size: 32px;
+    }
+  }
+  .sol {
+    right: -60px;
+    top: calc(env(safe-area-inset-top) - 70px);
+    width: 200px;
+    height: 200px;
+  }
+  .gaviotas {
+    display: none;
+  }
+}
+
+.progreso {
+  position: absolute;
+  z-index: 3;
+  left: 76px;
+  right: 24px;
+  top: calc(env(safe-area-inset-top) + 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .paso {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: $navy;
+  }
+  .barras {
+    display: flex;
+    gap: 6px;
+  }
+  .barra {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba($navy, 0.18);
+    overflow: hidden;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: $navy;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 400ms $ease-out;
+    }
+    &.llena::after {
+      transform: scaleX(1);
+    }
+    // La barra del paso actual se llena al entrar
+    &.actual::after {
+      animation: llenar 600ms $ease-out 250ms backwards;
+    }
+  }
+}
+
+.volver {
+  position: absolute;
+  z-index: 3;
+  left: 20px;
+  top: calc(env(safe-area-inset-top) + 20px);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba($navy, 0.14);
+  cursor: pointer;
+  transition:
+    transform 140ms $ease-out,
+    background-color 140ms ease;
+
+  &:active {
+    transform: scale(0.94);
+    background: rgba($navy, 0.22);
+  }
+  &:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: $navy;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.sol {
+  position: absolute;
+  right: -10px;
+  top: calc(env(safe-area-inset-top) + 18px);
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #fff1c2 0%, #ffc94d 58%, rgba(255, 201, 77, 0) 72%);
+  animation: latir 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.gaviotas {
+  position: absolute;
+  left: 42%;
+  top: calc(env(safe-area-inset-top) + 34px);
+  width: 64px;
+  height: 24px;
+  fill: none;
+  stroke: $navy;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  animation: planear 6s ease-in-out infinite;
+  .lejos {
+    stroke-width: 2;
+    stroke-opacity: 0.7;
+  }
+}
+
+.texto {
+  position: relative;
+  z-index: 2;
+  max-width: 58%;
+
+  h1 {
+    margin: 0;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-weight: 800;
+    font-size: 36px;
+    line-height: 1;
+    color: $navy;
+  }
+  p {
+    margin: 8px 0 0;
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: $navy;
+  }
+}
+
+.insignia {
+  position: absolute;
+  z-index: 2;
+  right: 28px;
+  top: calc(env(safe-area-inset-top) + 76px);
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 38% 30%, #ffffff 0%, #ffffff 55%, #eef3f7 100%);
+  box-shadow:
+    inset 0 -5px 10px rgba(3, 39, 77, 0.08),
+    inset 0 3px 2px rgba(255, 255, 255, 0.9),
+    0 12px 26px rgba(140, 60, 0, 0.35),
+    0 3px 6px rgba(3, 39, 77, 0.15);
+
+  img {
+    width: 74%;
+    display: block;
+    animation: flotar 4.2s ease-in-out 1s infinite;
+  }
+}
+
+.olas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 92px;
+  pointer-events: none;
+}
+
+.ola {
+  position: absolute;
+  left: 0;
+  width: 200%;
+  height: 120px;
+  will-change: transform;
+
+  &.o1 {
+    top: 0;
+    fill: $teal-claro;
+    animation: deriva 18s linear infinite;
+  }
+  &.o2 {
+    top: 12px;
+    fill: $teal;
+    animation: deriva 11s linear infinite reverse;
+  }
+  &.o3 {
+    top: 24px;
+    fill: #ffffff;
+    animation: deriva 14s linear infinite;
+  }
+}
+
+.entra {
+  animation: subir 520ms $ease-out var(--d, 0ms) backwards;
+}
+.insignia.entra {
+  animation-name: aparecer-insignia;
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes aparecer-insignia {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+@keyframes llenar {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes deriva {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes latir {
+  50% {
+    transform: scale(1.06);
+  }
+}
+@keyframes planear {
+  50% {
+    transform: translate(6px, -5px);
+  }
+}
+@keyframes flotar {
+  50% {
+    transform: translateY(-4%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entra,
+  .insignia.entra {
+    animation: aparecer 300ms ease backwards;
+  }
+  .sol,
+  .gaviotas,
+  .ola,
+  .insignia img {
+    animation: none;
+  }
+}
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}

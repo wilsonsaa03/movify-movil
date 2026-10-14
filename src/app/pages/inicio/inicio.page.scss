@@ -1,0 +1,458 @@
+// Pantalla "inicio" de MoviFY: cielo al atardecer, olas, servicios y acceso
+
+$navy: #03274d;
+$teal: #02aab4;
+$teal-claro: #5fd6dc;
+$orange: #fe7b13;
+$orange-osc: #c2560a;
+
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+ion-content {
+  --background: #{$navy};
+}
+
+.pantalla {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: $navy;
+  font-family: 'Nunito', system-ui, sans-serif;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+// ================= Cielo =================
+.cielo {
+  position: relative;
+  flex-shrink: 0;
+  height: max(50vh, 420px);
+  padding-top: env(safe-area-inset-top);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-bottom: 70px; // espacio para las olas
+  background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 45%, #fe7b13 100%);
+  overflow: hidden;
+}
+
+.sol {
+  position: absolute;
+  left: 50%;
+  top: calc(env(safe-area-inset-top) + 28%);
+  width: 290px;
+  height: 290px;
+  margin: -145px 0 0 -145px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #fff1c2 0%, #ffc94d 58%, rgba(255, 201, 77, 0) 72%);
+  animation: latir 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.gaviotas {
+  position: absolute;
+  width: 70px;
+  height: 26px;
+  fill: none;
+  stroke: $navy;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  .lejos {
+    stroke-width: 2;
+    stroke-opacity: 0.7;
+  }
+  &.g1 {
+    left: 9%;
+    top: calc(env(safe-area-inset-top) + 13%);
+    animation: planear 6s ease-in-out infinite;
+  }
+  &.g2 {
+    right: 8%;
+    top: calc(env(safe-area-inset-top) + 24%);
+    animation: planear 7s ease-in-out -2s infinite;
+  }
+}
+
+// Insignia blanca con el logo 3D
+.insignia {
+  position: relative;
+  z-index: 1;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 38% 30%, #ffffff 0%, #ffffff 55%, #eef3f7 100%);
+  box-shadow:
+    inset 0 -6px 12px rgba(3, 39, 77, 0.08),
+    inset 0 3px 2px rgba(255, 255, 255, 0.9),
+    0 14px 30px rgba(140, 60, 0, 0.35),
+    0 4px 8px rgba(3, 39, 77, 0.15);
+
+  img {
+    width: 74%;
+    height: auto;
+    display: block;
+    animation: flotar 4.2s ease-in-out 1s infinite;
+  }
+}
+
+.titulo {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.nombre {
+  margin: 0;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: -1px;
+  color: $navy;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.25);
+
+  .fy {
+    color: #ffffff;
+    // contorno azul como en el Figma
+    text-shadow:
+      0 3px 0 $navy,
+      3px 0 0 $navy,
+      -2px 0 0 $navy,
+      0 -2px 0 $navy;
+  }
+}
+
+.lema {
+  margin: 8px 24px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: $navy;
+}
+
+// ---------- Olas ----------
+.olas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 116px;
+  pointer-events: none;
+}
+
+.ola {
+  position: absolute;
+  left: 0;
+  width: 200%;
+  height: 140px;
+  will-change: transform;
+
+  &.o1 {
+    top: 0;
+    fill: $teal-claro;
+    animation: deriva 18s linear infinite;
+  }
+  &.o2 {
+    top: 14px;
+    fill: $teal;
+    animation: deriva 11s linear infinite reverse;
+  }
+  &.o3 {
+    top: 26px;
+    fill: $navy;
+    animation: deriva 14s linear infinite;
+  }
+}
+
+// ================= Mar =================
+.mar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 24px calc(20px + env(safe-area-inset-bottom));
+}
+
+.pregunta {
+  margin: 0;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.1;
+  color: #ffffff;
+}
+
+// ---------- Baldosas de servicio (3D) ----------
+.servicios {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.servicio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+
+  &:focus-visible .baldosa {
+    outline: 3px solid #ffffff;
+    outline-offset: 3px;
+  }
+}
+
+.baldosa {
+  width: min(70px, 100%);
+  aspect-ratio: 1;
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(120% 90% at 30% 15%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 55%),
+    var(--c);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.12),
+    0 6px 0 var(--c-osc),
+    0 12px 18px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 140ms $ease-out,
+    box-shadow 140ms $ease-out;
+
+  svg {
+    width: 48%;
+    height: 48%;
+    fill: none;
+    stroke: $navy;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+// Al tocar, la baldosa se hunde (como un botón real)
+.servicio:active .baldosa {
+  transform: translateY(4px);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.12),
+    0 2px 0 var(--c-osc),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.etiqueta {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+// ---------- Botones ----------
+.acciones {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.boton {
+  height: 56px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  cursor: pointer;
+  outline: none;
+  transition:
+    transform 140ms $ease-out,
+    box-shadow 140ms $ease-out,
+    background-color 140ms ease;
+
+  &:focus-visible {
+    outline: 3px solid $teal-claro;
+    outline-offset: 3px;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.naranja {
+  border: 0;
+  color: $navy;
+  background: linear-gradient(180deg, #ff9638 0%, $orange 60%, #f06d0a 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    0 6px 0 $orange-osc,
+    0 14px 24px rgba(254, 123, 19, 0.35);
+
+  &:active {
+    transform: translateY(4px);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.4),
+      0 2px 0 $orange-osc,
+      0 6px 12px rgba(254, 123, 19, 0.3);
+  }
+}
+
+.contorno {
+  height: 54px;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  background: transparent;
+  font-size: 18px;
+
+  &:active {
+    transform: scale(0.97);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.enlace {
+  align-self: center;
+  border: 0;
+  background: none;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  color: $teal-claro;
+  cursor: pointer;
+  transition: transform 140ms $ease-out;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.legal {
+  margin: -6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #a9b8cc;
+  text-align: center;
+
+  button {
+    border: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 700;
+    color: #ffffff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+}
+
+// ================= Entrada (escalonada) =================
+.entra {
+  animation: subir 520ms $ease-out var(--d, 0ms) backwards; // "backwards" para no bloquear el :active
+}
+.insignia.entra {
+  animation-name: aparecer-insignia;
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes aparecer-insignia {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes deriva {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes latir {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes planear {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(6px, -5px);
+  }
+}
+
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entra,
+  .insignia.entra {
+    animation: aparecer 300ms ease both;
+  }
+  .sol,
+  .gaviotas,
+  .ola,
+  .insignia img {
+    animation: none;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

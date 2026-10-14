@@ -1,0 +1,57 @@
+@use '../../../../theme/conductor' as *;
+
+.categorias {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.categoria {
+  min-height: 76px;
+  padding: 10px;
+  border: 2px solid $borde;
+  border-radius: 16px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: inherit;
+  color: $navy;
+  cursor: pointer;
+  transition:
+    transform 140ms $ease-out,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+
+  b {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 800;
+  }
+  small {
+    font-size: 12px;
+    font-weight: 600;
+    color: $gris;
+    text-align: center;
+  }
+  &:active {
+    transform: scale(0.97);
+  }
+  &[aria-checked='true'] {
+    border-color: $navy;
+    background: linear-gradient(160deg, #ffd66b 0%, #ffc53d 100%);
+    box-shadow: 0 4px 0 $navy;
+
+    small {
+      color: $navy;
+    }
+  }
+  &:focus-visible {
+    outline: 3px solid rgba($teal, 0.4);
+    outline-offset: 2px;
+  }
+}

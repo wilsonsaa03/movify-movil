@@ -1,0 +1,76 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      @for (p of confeti; track $index) {
+        <span
+          class="confeti"
+          aria-hidden="true"
+          [style.left.%]="p.x"
+          [style.top.%]="p.y"
+          [style.width.px]="p.t"
+          [style.height.px]="p.t"
+          [style.background]="p.c"
+          [style.animation-delay.ms]="500 + p.d"
+        ></span>
+      }
+
+      <div class="medalla" aria-hidden="true">
+        <span class="anillo"></span>
+        <span class="centro">
+          <svg viewBox="0 0 24 24"><path class="trazo" d="M6 12.5l4 4L18 8" /></svg>
+        </span>
+      </div>
+
+      <h1 class="titulo">¡Listo{{ nombre() ? ', ' + nombre() : '' }}!</h1>
+      <p class="sub">Ya eres parte de MoviFY.</p>
+
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o3" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="mar">
+      <div class="tarjeta entra" style="--d: 700ms">
+        <span class="icono" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5" /><path d="M11 18.5h2" /></svg>
+        </span>
+        <span>
+          <small>Entrarás con tu celular y tu clave</small>
+          <b>{{ registro.celularVisible() }}</b>
+        </span>
+      </div>
+
+      @if (esConductor()) {
+        <div class="tarjeta aviso entra" style="--d: 760ms">
+          <span class="icono naranja" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M10 12h5M10 16h5" /></svg>
+          </span>
+          <span>
+            <small>Antes de recibir viajes</small>
+            <b>Sube tu licencia y los papeles de tu taxi o moto</b>
+          </span>
+        </div>
+      }
+
+      <div class="final">
+        @if (esConductor()) {
+          <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 820ms" (click)="subirDocumentos()">
+            Subir mis documentos
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </button>
+          <button type="button" class="mv-boton contorno entra" style="--d: 870ms" (click)="irAlInicio()">Lo haré después</button>
+        } @else {
+          <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 820ms" (click)="pedirViaje()">
+            Pedir mi primer viaje
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </button>
+          <button type="button" class="mv-boton contorno entra" style="--d: 870ms" (click)="subirDocumentos()">
+            ¿Vas a conducir? Sube tus documentos
+          </button>
+        }
+      </div>
+    </main>
+  </div>
+</ion-content>

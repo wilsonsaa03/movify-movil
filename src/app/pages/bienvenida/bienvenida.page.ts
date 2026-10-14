@@ -139,7 +139,7 @@ export class BienvenidaPage {
     this.vibrar(ImpactStyle.Medium);
 
     setTimeout(() => this.saliendo.set(true), 320);
-    setTimeout(() => this.router.navigateByUrl('/login', { replaceUrl: true }), 620);
+    setTimeout(() => this.router.navigateByUrl('/inicio', { replaceUrl: true }), 620);
   }
 
   private empujoncito(): void {

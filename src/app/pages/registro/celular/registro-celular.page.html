@@ -1,0 +1,52 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo titulo="¿Cuál es tu celular?" subtitulo="Te enviaremos un código por SMS." [paso]="1" volverA="/registro" />
+
+    <main class="cuerpo">
+      <form class="formulario entra" style="--d: 120ms" novalidate (submit)="$event.preventDefault(); enviarCodigo()">
+        <label for="celular" class="rotulo">Número de celular</label>
+
+        <app-campo-celular
+          [digitos]="digitos()"
+          (digitosChange)="cambio($event)"
+          [error]="!!error()"
+          [listo]="valido()"
+        />
+
+        @if (error()) {
+          <p id="ayuda-celular" class="ayuda error" role="alert">
+            {{ error() }}
+            @if (yaRegistrado()) {
+              <button type="button" class="enlace-error" (click)="irALogin()">Iniciar sesión</button>
+            }
+          </p>
+        } @else {
+          <p id="ayuda-celular" class="ayuda">Con este número entrarás a MoviFY, sin correo ni contraseñas largas.</p>
+        }
+
+        <!-- botón invisible para que "Enter" en el teclado envíe el formulario -->
+        <button type="submit" hidden></button>
+      </form>
+
+      <aside class="aviso entra" style="--d: 180ms">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg>
+        <p>Nunca te pediremos tu código por llamada ni por WhatsApp.</p>
+      </aside>
+
+      <div class="final">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 240ms" [disabled]="enviando()" (click)="enviarCodigo()">
+          @if (enviando()) {
+            <span class="cargando" aria-hidden="true"></span> Enviando…
+          } @else {
+            Enviar código
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          }
+        </button>
+
+        <p class="mv-pie entra" style="--d: 280ms">
+          ¿Ya tienes cuenta? <button type="button" (click)="irALogin()">Inicia sesión</button>
+        </p>
+      </div>
+    </main>
+  </div>
+</ion-content>

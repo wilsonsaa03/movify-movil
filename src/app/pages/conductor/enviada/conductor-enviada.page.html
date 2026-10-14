@@ -1,0 +1,84 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo" [class.verde]="aprobado()" [class.alerta]="corregir()">
+      <svg class="gaviotas" viewBox="0 0 120 30" aria-hidden="true">
+        <path d="M4 14q6-8 12 0q6-8 12 0" />
+        <path d="M84 10q5-6 10 0q5-6 10 0" />
+        <path class="lejos" d="M100 22q4-5 8 0q4-5 8 0" />
+      </svg>
+
+      <div class="sello entra" aria-hidden="true">
+        <span class="aro"></span>
+        <span class="disco">
+          @if (aprobado()) {
+            <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+          } @else if (corregir()) {
+            <svg viewBox="0 0 24 24"><path d="M12 7v6M12 16.5v.5" /></svg>
+          } @else {
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 8v4.5l3 2" /></svg>
+          }
+        </span>
+      </div>
+
+      <h1 class="entra" style="--d: 120ms">
+        {{ aprobado() ? '¡Ya puedes trabajar!' : corregir() ? 'Falta un detalle' : '¡Solicitud enviada!' }}
+      </h1>
+      <p class="entra" style="--d: 160ms">
+        {{
+          aprobado()
+            ? 'Tu cuenta de conductor está activa.'
+            : corregir()
+              ? 'Corrige lo que te indicamos y vuelve a enviarla.'
+              : 'Revisaremos tus documentos para activar tu cuenta.'
+        }}
+      </p>
+
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      <ol class="linea entra" style="--d: 220ms" aria-label="Estado de tu solicitud">
+        @for (h of hitos(); track h.titulo) {
+          <li [class]="h.estado">
+            <span class="punto" aria-hidden="true">
+              @if (h.estado === 'hecho') {
+                <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+              }
+            </span>
+            <span class="textos">
+              <b>{{ h.titulo }}</b>
+              @if (h.detalle) {
+                <small>{{ h.detalle }}</small>
+              }
+            </span>
+          </li>
+        }
+      </ol>
+
+      @if (!aprobado()) {
+        <button type="button" class="actualizar entra" style="--d: 260ms" [disabled]="actualizando()" (click)="actualizar()">
+          @if (actualizando()) {
+            <span class="cargando" aria-hidden="true"></span>
+          } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" /></svg>
+          }
+          Actualizar estado
+        </button>
+      }
+
+      @if (error()) {
+        <p class="aviso-error" role="alert">{{ error() }}</p>
+      }
+
+      <div class="final">
+        <button type="button" class="mv-boton entra" style="--d: 300ms" [class.mv-boton--navy]="!corregir()" [class.mv-boton--naranja]="corregir()" (click)="principal()">
+          {{ aprobado() ? 'Empezar a trabajar' : corregir() ? 'Corregir documentos' : 'Entendido' }}
+        </button>
+        <p class="mv-pie entra" style="--d: 340ms">¿Dudas? <a href="mailto:soporte@movify.co">Escríbenos</a></p>
+      </div>
+    </main>
+  </div>
+</ion-content>

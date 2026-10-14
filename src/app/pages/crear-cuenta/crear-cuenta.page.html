@@ -1,0 +1,64 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo titulo="¡Únete a MoviFY!" subtitulo="Muévete fácil y seguro" />
+
+    <main class="cuerpo">
+      <h2 id="pregunta-rol" class="pregunta entra" style="--d: 120ms">¿Cómo quieres usar MoviFY?</h2>
+
+      <div class="roles" role="radiogroup" aria-labelledby="pregunta-rol">
+        @for (o of opciones; track o.id; let i = $index) {
+          <button
+            type="button"
+            role="radio"
+            class="rol entra"
+            [id]="'rol-' + o.id"
+            [class.cliente]="o.id === 'cliente'"
+            [class.conductor]="o.id === 'conductor'"
+            [class.activo]="elegido() === o.id"
+            [class.apagado]="elegido() !== null && elegido() !== o.id"
+            [attr.aria-checked]="elegido() === o.id"
+            [attr.tabindex]="elegido() === o.id || (elegido() === null && i === 0) ? 0 : -1"
+            [style.--d]="180 + i * 60 + 'ms'"
+            (click)="elegir(o.id)"
+            (keydown)="alTeclado($event, i)"
+          >
+            <span class="icono" aria-hidden="true">
+              @if (o.id === 'cliente') {
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" /></svg>
+              } @else {
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="2.2" /><path d="M3.5 10.5h6.3M14.2 10.5h6.3M12 14.2V21" /></svg>
+              }
+            </span>
+
+            <span class="textos">
+              <span class="etiqueta">{{ o.etiqueta }}</span>
+              <span class="titulo">{{ o.titulo }}</span>
+              <span class="detalle">{{ o.detalle }}</span>
+            </span>
+
+            <span class="radio" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 12.5l4 4L18 8" /></svg>
+            </span>
+          </button>
+        }
+      </div>
+
+      <div class="final">
+        <button
+          type="button"
+          class="mv-boton mv-boton--navy entra"
+          style="--d: 320ms"
+          [disabled]="!elegido()"
+          (click)="continuar()"
+        >
+          Continuar
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </button>
+
+        <p class="mv-pie entra" style="--d: 360ms">
+          ¿Ya tienes cuenta? <button type="button" (click)="irALogin()">Inicia sesión</button>
+        </p>
+      </div>
+    </main>
+  </div>
+</ion-content>

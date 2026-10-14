@@ -1,0 +1,71 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo
+      etiqueta="Registro de conductor"
+      titulo="¿Con qué vas a trabajar?"
+      subtitulo="Te pedimos solo los papeles que necesitas."
+      volverA="/inicio"
+    />
+
+    <main class="cuerpo">
+      <div class="opciones" role="radiogroup" aria-label="Tipo de vehículo">
+        @for (o of opciones; track o.tipo; let i = $index) {
+          <button
+            type="button"
+            role="radio"
+            class="opcion entra"
+            [class.moto]="o.tipo === 'moto'"
+            [class.taxi]="o.tipo === 'taxi'"
+            [class.elegida]="elegido() === o.tipo"
+            [attr.aria-checked]="elegido() === o.tipo"
+            [style.--d]="120 + i * 60 + 'ms'"
+            (click)="elegido.set(o.tipo)"
+          >
+            <span class="figura" aria-hidden="true">
+              @if (o.tipo === 'moto') {
+                <svg viewBox="0 0 32 32">
+                  <circle cx="8" cy="21" r="4.5" />
+                  <circle cx="24" cy="21" r="4.5" />
+                  <path d="M8 21l5-8h6l5 8M13 13l-2-3H8M19 13l2-4h3" />
+                </svg>
+              } @else {
+                <svg viewBox="0 0 32 32">
+                  <path d="M5 20v-4l3-6h16l3 6v4z" />
+                  <path d="M12 10l1-3h6l1 3" />
+                  <circle cx="10" cy="21.5" r="2.5" />
+                  <circle cx="22" cy="21.5" r="2.5" />
+                </svg>
+              }
+            </span>
+
+            <span class="textos">
+              <small>{{ o.licencia }}</small>
+              <b>{{ o.nombre }}</b>
+              <ul>
+                @for (p of o.puntos; track p) {
+                  <li>{{ p }}</li>
+                }
+              </ul>
+            </span>
+
+            <span class="marca" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+            </span>
+          </button>
+        }
+      </div>
+
+      <p class="nota entra" style="--d: 260ms">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" /><path d="M12 11v5M12 8v.5" /></svg>
+        En MoviFY solo trabajan motos y taxis verificados.
+      </p>
+
+      <div class="final">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 300ms" [disabled]="!elegido()" (click)="continuar()">
+          Continuar
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </button>
+      </div>
+    </main>
+  </div>
+</ion-content>

@@ -15,6 +15,8 @@
 
         @if (error()) {
           <p id="ayuda-celular" class="ayuda error" role="alert">{{ error() }}</p>
+        } @else if (sesionVencida) {
+          <p id="ayuda-celular" class="ayuda error" role="status">Tu sesión venció. Entra de nuevo con tu celular y tu clave.</p>
         } @else {
           <p id="ayuda-celular" class="ayuda">Usa el número con el que te registraste. Después te pediremos tu clave.</p>
         }

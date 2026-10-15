@@ -1,33 +1,44 @@
 import { Routes } from '@angular/router';
 import { celularVerificado, conCelular, conDatos, conRol, cuentaCreada } from './servicios/registro.guards';
 import { conSesion, irAlPaso } from './servicios/conductor.guards';
+import { invitadoGuard, rolGuard } from './core/auth.guards';
 
-const pendiente = (titulo: string) => ({
+const pendiente = (titulo: string, roles: string[] = []) => ({
   loadComponent: () => import('./pages/pendiente/pendiente.page').then((m) => m.PendientePage),
-  data: { titulo },
+  data: { titulo, roles },
 });
 
 export const routes: Routes = [
   {
     path: 'bienvenida',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/bienvenida/bienvenida.page').then((m) => m.BienvenidaPage),
   },
   {
     path: 'inicio',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/inicio/inicio.page').then((m) => m.InicioPage),
   },
 
   {
     path: 'login',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/iniciar-sesion/iniciar-sesion.page').then((m) => m.IniciarSesionPage),
   },
   {
     path: 'registro',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/crear-cuenta/crear-cuenta.page').then((m) => m.CrearCuentaPage),
   },
 
   {
+    path: 'login/google',
+    canActivate: [invitadoGuard],
+    loadComponent: () => import('./pages/login-google/login-google.page').then((m) => m.LoginGooglePage),
+  },
+  {
     path: 'login/clave',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/clave-login/clave-login.page').then((m) => m.ClaveLoginPage),
   },
 
@@ -95,15 +106,22 @@ export const routes: Routes = [
     canActivate: [conSesion],
     loadComponent: () => import('./pages/conductor/enviada/conductor-enviada.page').then((m) => m.ConductorEnviadaPage),
   },
-  { path: 'conductor/inicio', ...pendiente('Panel del conductor') },
+  { path: 'conductor/inicio', canActivate: [rolGuard], ...pendiente('Panel del conductor', ['conductor']) },
 
   // Pantallas que siguen (por ahora son provisionales)
   { path: 'login/recuperar', ...pendiente('Recuperar clave') },
-  { path: 'login/google', ...pendiente('Entrar con Google') },
-  { path: 'cliente', ...pendiente('Inicio del cliente') },
+  { path: 'cliente', canActivate: [rolGuard], ...pendiente('Inicio del cliente', ['cliente', 'admin', 'soporte']) },
   { path: 'explorar', ...pendiente('Explorar como invitado') },
-  { path: 'terminos', ...pendiente('Términos y condiciones') },
-  { path: 'privacidad', ...pendiente('Política de privacidad') },
+  {
+    path: 'terminos',
+    data: { tipo: 'terminos' },
+    loadComponent: () => import('./pages/legal/legal.page').then((m) => m.LegalPage),
+  },
+  {
+    path: 'privacidad',
+    data: { tipo: 'privacidad' },
+    loadComponent: () => import('./pages/legal/legal.page').then((m) => m.LegalPage),
+  },
 
   {
     // Plantilla original de Ionic (se borrará cuando existan las pantallas reales)

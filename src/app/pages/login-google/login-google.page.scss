@@ -1,0 +1,131 @@
+@use '../../../theme/registro' as *;
+
+// ---------- Los 3 pasos ----------
+.pasos {
+  margin: 0;
+  padding: 16px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1.5px solid $borde;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba($navy, 0.06);
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  b {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+    color: $navy;
+  }
+  small {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: $gris;
+  }
+}
+
+.num {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e6f7f8;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: $teal-d;
+}
+
+// ---------- Botón de Google y estados ----------
+.zona-google {
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.boton-google {
+  width: 100%;
+  max-width: 400px;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+
+  &.oculto {
+    // display:none impediría que Google mida el ancho; así queda invisible pero medible
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+.estado {
+  margin: 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: $teal-d;
+
+  .cargando {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+}
+
+.aviso {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff4e8;
+  text-align: left;
+
+  b {
+    font-size: 15px;
+    font-weight: 800;
+    color: $navy;
+  }
+  p {
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: $gris;
+  }
+}
+
+.legal {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: $gris;
+
+  button {
+    border: 0;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 800;
+    color: $teal-d;
+    cursor: pointer;
+  }
+}

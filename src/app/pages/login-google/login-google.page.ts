@@ -3,8 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { IonContent, NavController } from '@ionic/angular';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { HeroCieloComponent } from '../../componentes/hero-cielo/hero-cielo.component';
-import { ApiService, ErrorApi } from '../../core/api.service';
-import { RespuestaSesion, SesionService } from '../../core/sesion.service';
+import { ErrorApi } from '../../core/api.service';
 import { GoogleAuthService } from '../../servicios/google-auth.service';
 
 type Estado = 'cargando' | 'listo' | 'entrando' | 'sin-google' | 'nativo';
@@ -25,8 +24,6 @@ type Estado = 'cargando' | 'listo' | 'entrando' | 'sin-google' | 'nativo';
 export class LoginGooglePage implements AfterViewInit {
   private readonly nav = inject(NavController);
   private readonly ruta = inject(ActivatedRoute);
-  private readonly api = inject(ApiService);
-  private readonly sesion = inject(SesionService);
   private readonly google = inject(GoogleAuthService);
 
   private readonly contenedor = viewChild.required<ElementRef<HTMLElement>>('botonGoogle');
@@ -56,10 +53,7 @@ export class LoginGooglePage implements AfterViewInit {
     this.estado.set('entrando');
     this.error.set('');
     try {
-      const r = await this.api.post<RespuestaSesion>('/auth/login-google', { token: idToken });
-      this.sesion.guardar(r);
-      Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
-      this.nav.navigateRoot(this.sesion.rutaInicio(), { queryParams: this.servicio ? { servicio: this.servicio } : {} });
+      await this.google.entrar(idToken, this.servicio);
     } catch (e) {
       Haptics.notification({ type: NotificationType.Error }).catch(() => undefined);
       this.error.set((e as ErrorApi).message);

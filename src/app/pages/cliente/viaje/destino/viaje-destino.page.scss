@@ -372,6 +372,30 @@
   }
 }
 
+// Lo que coincide con lo escrito
+mark {
+  padding: 0;
+  border-radius: 3px;
+  background: #ffe3cc;
+  color: inherit;
+}
+.buscando-mas {
+  margin: 0;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: $gris;
+
+  .cargando {
+    width: 14px;
+    height: 14px;
+    color: $orange;
+  }
+}
+
 // ---------- Punto de referencia ----------
 .referencia {
   margin-top: 8px;

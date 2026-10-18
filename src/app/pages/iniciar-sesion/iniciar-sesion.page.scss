@@ -103,6 +103,81 @@ ion-content {
   }
 }
 
+// ---------- Google ----------
+.zona-google {
+  position: relative;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+// El botón oficial lo dibuja Google (no se le pueden cambiar colores ni letra)
+.boton-google {
+  width: 100%;
+  max-width: 320px;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+
+  &.oculto {
+    // display:none impediría que Google mida el ancho: así queda invisible pero medible
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+// Mientras carga, una píldora del mismo tamaño para que la pantalla no salte
+.google-cargando {
+  width: 100%;
+  max-width: 320px;
+  height: 44px;
+  border-radius: 22px;
+  background: linear-gradient(90deg, #f2f6fa 0%, #e6edf4 50%, #f2f6fa 100%);
+  background-size: 200% 100%;
+  animation: brillo 1.2s linear infinite;
+}
+.estado {
+  margin: 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  color: $teal-d;
+
+  .cargando {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2.5px solid currentColor;
+    border-right-color: transparent;
+    animation: girar 700ms linear infinite;
+  }
+}
+.reintentar {
+  border: 0;
+  background: none;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $teal-d;
+  cursor: pointer;
+}
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .pie {
   margin-top: auto;
 }

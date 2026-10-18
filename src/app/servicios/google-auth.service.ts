@@ -1,6 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
+import { Haptics, NotificationType } from '@capacitor/haptics';
+import { NavController } from '@ionic/angular';
 import { environment } from '../../environments/environment';
+import { ApiService } from '../core/api.service';
+import { RespuestaSesion, SesionService } from '../core/sesion.service';
 
 const SCRIPT_GOOGLE = 'https://accounts.google.com/gsi/client';
 
@@ -35,6 +39,9 @@ declare global {
  */
 @Injectable({ providedIn: 'root' })
 export class GoogleAuthService {
+  private readonly api = inject(ApiService);
+  private readonly sesion = inject(SesionService);
+  private readonly nav = inject(NavController);
   private carga: Promise<GoogleId> | null = null;
 
   /** false dentro del APK (todavía sin plugin nativo) o si no hay Client ID configurado. */
@@ -65,6 +72,18 @@ export class GoogleAuthService {
       locale: 'es',
       width: Math.min(Math.max(contenedor.clientWidth, 200), 400),
     });
+  }
+
+  /**
+   * Cambia el id_token de Google por la sesión de MoviFY (POST /api/auth/login-google), la guarda y lleva
+   * a la pantalla de inicio según el rol. Lanza ErrorApi con el mensaje del backend si no se pudo.
+   * `servicio`: lo que había tocado en la pantalla de inicio (moto, taxi…) para llevarlo directo ahí.
+   */
+  async entrar(idToken: string, servicio: string | null): Promise<void> {
+    const r = await this.api.post<RespuestaSesion>('/auth/login-google', { token: idToken });
+    this.sesion.guardar(r);
+    Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
+    this.nav.navigateRoot(this.sesion.rutaInicio(), { queryParams: servicio ? { servicio } : {} });
   }
 
   /** Carga el script de Google una sola vez (solo cuando alguien abre esta pantalla). */

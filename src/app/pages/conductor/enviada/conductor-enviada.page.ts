@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { IonContent, NavController } from '@ionic/angular';
-import { ErrorApi } from '../../../core/api.service';
+import { ApiService, ErrorApi } from '../../../core/api.service';
 import { ConductorRegistroService } from '../../../servicios/conductor-registro.service';
 
 interface Hito {
@@ -21,6 +21,7 @@ interface Hito {
 })
 export class ConductorEnviadaPage {
   private readonly nav = inject(NavController);
+  private readonly api = inject(ApiService);
   readonly registro = inject(ConductorRegistroService);
 
   readonly actualizando = signal(false);
@@ -64,9 +65,27 @@ export class ConductorEnviadaPage {
     }
   }
 
-  principal(): void {
-    if (this.aprobado()) this.nav.navigateRoot('/conductor/inicio');
-    else if (this.corregir()) this.nav.navigateForward('/conductor/documentos');
-    else this.nav.navigateRoot('/inicio');
+  async principal(): Promise<void> {
+    if (this.aprobado()) {
+      // El rol "conductor" lo da la BD al aprobarlo: el token actual no lo trae, se pide uno nuevo
+      this.actualizando.set(true);
+      try {
+        await this.api.renovarSesion();
+      } finally {
+        this.actualizando.set(false);
+      }
+      this.nav.navigateRoot('/conductor/inicio');
+    } else if (this.corregir()) this.nav.navigateForward('/conductor/documentos');
+    else this.salirAlInicio();
+  }
+
+  /**
+   * "Entendido": /inicio es solo para invitados (invitadoGuard), así que con la sesión abierta
+   * el guard lo devolvía a esta misma pantalla. Se cierra la sesión y queda en el inicio;
+   * cuando vuelva a entrar con su clave, rutaInicio() lo trae aquí a ver el estado.
+   */
+  private salirAlInicio(): void {
+    this.api.cerrarSesion(); // borra la sesión de una vez; el logout al backend sigue en segundo plano
+    this.nav.navigateRoot('/inicio', { animationDirection: 'back' });
   }
 }

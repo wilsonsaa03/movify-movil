@@ -8,6 +8,9 @@ const pendiente = (titulo: string, roles: string[] = []) => ({
   data: { titulo, roles },
 });
 
+/** Admin y soporte trabajan en la web; en el celular entran como cliente. */
+const CLIENTE = ['cliente', 'admin', 'soporte'];
+
 export const routes: Routes = [
   {
     path: 'bienvenida',
@@ -106,11 +109,38 @@ export const routes: Routes = [
     canActivate: [conSesion],
     loadComponent: () => import('./pages/conductor/enviada/conductor-enviada.page').then((m) => m.ConductorEnviadaPage),
   },
-  { path: 'conductor/inicio', canActivate: [rolGuard], ...pendiente('Panel del conductor', ['conductor']) },
+  // App del conductor (Conductor app 1 · Inicio)
+  {
+    path: 'conductor/inicio',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'] },
+    loadComponent: () => import('./pages/conductor/inicio/conductor-inicio.page').then((m) => m.ConductorInicioPage),
+  },
+  // Siguen en el flujo del conductor (provisionales)
+  { path: 'conductor/viaje/solicitud', canActivate: [rolGuard], ...pendiente('Nueva solicitud', ['conductor']) },
+  { path: 'conductor/viajes', canActivate: [rolGuard], ...pendiente('Mis viajes', ['conductor']) },
+  { path: 'conductor/ganancias', canActivate: [rolGuard], ...pendiente('Ganancias', ['conductor']) },
+  { path: 'conductor/perfil', canActivate: [rolGuard], ...pendiente('Mi perfil', ['conductor']) },
+  { path: 'conductor/notificaciones', canActivate: [rolGuard], ...pendiente('Notificaciones', ['conductor']) },
+
+  // App del cliente (Viaje 1 · Inicio)
+  {
+    path: 'cliente',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/inicio/cliente-inicio.page').then((m) => m.ClienteInicioPage),
+  },
+  // Siguen en el flujo del cliente (provisionales)
+  { path: 'cliente/viaje/destino', canActivate: [rolGuard], ...pendiente('¿A dónde vas?', CLIENTE) },
+  { path: 'cliente/domicilio', canActivate: [rolGuard], ...pendiente('Domicilio', CLIENTE) },
+  { path: 'cliente/encomienda', canActivate: [rolGuard], ...pendiente('Encomienda', CLIENTE) },
+  { path: 'cliente/lugares', canActivate: [rolGuard], ...pendiente('Tus lugares', CLIENTE) },
+  { path: 'cliente/pedidos', canActivate: [rolGuard], ...pendiente('Mis pedidos', CLIENTE) },
+  { path: 'cliente/perfil', canActivate: [rolGuard], ...pendiente('Mi perfil', CLIENTE) },
+  { path: 'cliente/notificaciones', canActivate: [rolGuard], ...pendiente('Notificaciones', CLIENTE) },
 
   // Pantallas que siguen (por ahora son provisionales)
   { path: 'login/recuperar', ...pendiente('Recuperar clave') },
-  { path: 'cliente', canActivate: [rolGuard], ...pendiente('Inicio del cliente', ['cliente', 'admin', 'soporte']) },
   { path: 'explorar', ...pendiente('Explorar como invitado') },
   {
     path: 'terminos',

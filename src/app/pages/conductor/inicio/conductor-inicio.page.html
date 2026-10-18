@@ -1,0 +1,94 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <!-- Encabezado azul de noche con el sol y el interruptor "en línea" -->
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+
+      <div class="fila">
+        <div class="saludo entra">
+          <span class="avatar">
+            @if (foto(); as f) {
+              <img [src]="f" alt="" />
+            } @else {
+              {{ iniciales() }}
+            }
+          </span>
+          <span class="textos">
+            <small>Modo conductor</small>
+            <b>Hola, {{ nombre() }}</b>
+          </span>
+        </div>
+        <button type="button" class="campana entra" style="--d: 60ms" aria-label="Notificaciones" (click)="notificaciones()">
+          <app-icono nombre="campana" />
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="interruptor entra"
+        style="--d: 100ms"
+        role="switch"
+        [attr.aria-checked]="enLinea()"
+        [class.activo]="enLinea()"
+        [disabled]="cambiando()"
+        (click)="alternar()"
+      >
+        <span class="luz" aria-hidden="true"></span>
+        <span class="estado">
+          <b>{{ enLinea() ? 'Estás en línea' : 'Estás desconectado' }}</b>
+          <small>{{ cambiando() ? '· un momento…' : enLinea() ? '· recibiendo viajes' : '· toca para trabajar' }}</small>
+        </span>
+        <span class="palanca" aria-hidden="true"><span class="bola"></span></span>
+      </button>
+
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <!-- Mapa con su vehículo y las zonas con más pedidos -->
+    <section class="mapa" aria-label="Mapa">
+      <app-mapa-ciudad [marcador]="vehiculo()" [centro]="miPunto()" [precision]="precision()" [zonas]="enLinea() ? zonas() : []" [class.apagado]="!enLinea()" />
+      @if (enLinea() && zonas().length) {
+        <p class="zonas entra"><span class="anillo" aria-hidden="true"></span>Zonas con más pedidos</p>
+      }
+    </section>
+
+    <!-- Hoja con lo de hoy -->
+    <main class="hoja">
+      <span class="asa" aria-hidden="true"></span>
+
+      @if (aviso()) {
+        <p class="aviso" role="alert">{{ aviso() }}</p>
+      }
+
+      <section class="ganado entra" style="--d: 140ms" aria-label="Lo que llevas hoy">
+        <div class="cifras">
+          <div>
+            <h2 class="rotulo">Hoy llevas</h2>
+            <p class="monto">{{ ganadoTexto() }}</p>
+          </div>
+          <div class="meta">
+            <small>Meta del día</small>
+            <b>{{ metaTexto }}</b>
+          </div>
+        </div>
+        <div class="barra" role="progressbar" aria-label="Avance de la meta" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="porcentaje()">
+          <span [style.transform]="'scaleX(' + avance() + ')'"></span>
+        </div>
+        <p class="falta">{{ falta() }}</p>
+      </section>
+
+      <ul class="datos entra" style="--d: 190ms">
+        <li><b>{{ viajes() }}</b><small>viajes</small></li>
+        <li><b>{{ horasTexto() }}</b><small>en línea</small></li>
+        <li><b>{{ calificacionTexto() }}</b><small>calificación</small></li>
+      </ul>
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <app-barra-inferior [items]="barra" activa="/conductor/inicio" />
+</ion-footer>

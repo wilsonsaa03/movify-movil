@@ -115,7 +115,7 @@ export const RUTA_PASO: Record<PasoConductor, string> = {
  * Registro del conductor (moto o taxi) contra el backend:
  *
  *   GET  /conductor/registro        → en qué paso va y qué documentos/fotos le faltan
- *   POST /conductor/identidad       → paso 1 (crea el perfil: la BD le da el rol conductor → renovar token)
+ *   POST /conductor/identidad       → paso 1 (crea el perfil "pendiente"; el rol conductor llega al aprobarlo)
  *   POST /conductor/licencia        → paso 2
  *   POST /conductor/vehiculos       → paso 3 (moto o taxi)
  *   POST /conductor/documentos      → una foto o PDF por documento (multipart, con avance)
@@ -177,7 +177,7 @@ export class ConductorRegistroService {
 
   async guardarIdentidad(d: DatosIdentidad): Promise<void> {
     const r = await this.api.post<{ requiereNuevoToken?: boolean }>('/conductor/identidad', d);
-    // La base le asignó el rol "conductor": el token actual no lo tiene todavía
+    // Hoy el backend responde false (el rol "conductor" llega cuando el admin aprueba); se deja por si cambia
     if (r.requiereNuevoToken) await this.api.renovarSesion();
     await this.cargar();
   }

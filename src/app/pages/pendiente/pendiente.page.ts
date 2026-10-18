@@ -22,6 +22,7 @@ import { SesionService } from '../../core/sesion.service';
         }
         <p>Pantalla por construir.</p>
         @if (sesion.datos(); as s) {
+          <button type="button" class="volver" (click)="volver()">← Volver</button>
           <p class="quien">Entraste como <b>{{ s.nombres || s.nombre }}</b> · {{ s.rol }}</p>
           <button type="button" class="salir" [disabled]="saliendo()" (click)="salir()">
             {{ saliendo() ? 'Cerrando…' : 'Cerrar sesión' }}
@@ -45,6 +46,7 @@ import { SesionService } from '../../core/sesion.service';
       background: #03274d; color: #fff; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer;
     }
     .salir:disabled { opacity: .6; }
+    .volver { margin-top: 12px; border: 0; background: none; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: #007c85; cursor: pointer; }
   `,
 })
 export class PendientePage {
@@ -56,6 +58,12 @@ export class PendientePage {
   readonly titulo: string = this.ruta.snapshot.data['titulo'] ?? 'Próximamente';
   readonly servicio: string | null = this.ruta.snapshot.queryParamMap.get('servicio');
   readonly saliendo = signal(false);
+
+  /** Regresa a la pantalla anterior; si se abrió directo, a su inicio. */
+  volver(): void {
+    if (window.history.length > 1) this.nav.back();
+    else this.nav.navigateRoot(this.sesion.rutaInicio(), { animationDirection: 'back' });
+  }
 
   async salir(): Promise<void> {
     this.saliendo.set(true);

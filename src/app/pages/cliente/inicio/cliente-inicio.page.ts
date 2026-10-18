@@ -1,6 +1,6 @@
-import { Component, computed, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IonContent, IonFooter, NavController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
+import { Gesture, GestureController, IonContent, IonFooter, NavController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ApiService } from '../../../core/api.service';
 import { SesionService } from '../../../core/sesion.service';
@@ -38,10 +38,17 @@ export const BARRA_CLIENTE: ItemBarra[] = [
   { texto: 'Perfil', icono: 'persona', ruta: '/cliente/perfil' },
 ];
 
+/** Velocidad (px/ms) a partir de la cual un "lanzamiento" corto decide abrir o cerrar la hoja. */
+const LANZAMIENTO = 0.35;
+/** Mapa que queda a la vista con la hoja abierta (px). */
+const FRANJA_MAPA = 96;
+
 /**
  * Viaje 1 · Inicio del cliente.
- * Saludo, mapa con su ubicación y el menú de servicios. Moto y taxi siguen a "¿A dónde vas?" (Viaje 2);
- * domicilio y encomienda abren su propio flujo. "Tus lugares" sale de las direcciones favoritas del backend.
+ * Saludo, mapa en tiempo real y la hoja de servicios. Empieza abajo (título + "Hacer viaje") con el mapa grande;
+ * "Hacer viaje" la sube y el botón se recoge. También se arrastra o se toca la barrita.
+ * Moto y taxi siguen a "¿A dónde vas?" (Viaje 2); domicilio y encomienda abren su propio flujo.
+ * "Tus lugares" sale de las direcciones favoritas del backend.
  */
 @Component({
   selector: 'app-cliente-inicio',
@@ -49,7 +56,33 @@ export const BARRA_CLIENTE: ItemBarra[] = [
   styleUrls: ['cliente-inicio.page.scss'],
   imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent, BarraInferiorComponent],
 })
-export class ClienteInicioPage implements ViewDidEnter, ViewWillLeave {
+export class ClienteInicioPage implements AfterViewInit, OnDestroy, ViewDidEnter, ViewWillLeave {
+  private readonly gestos = inject(GestureController);
+  private readonly pantallaRef = viewChild.required<ElementRef<HTMLElement>>('pantalla');
+  private readonly cieloRef = viewChild.required<ElementRef<HTMLElement>>('cielo');
+  private readonly hojaRef = viewChild.required<ElementRef<HTMLElement>>('hoja');
+  private readonly agarreRef = viewChild.required<ElementRef<HTMLElement>>('agarre');
+  private readonly botonViajeRef = viewChild.required<ElementRef<HTMLElement>>('botonViaje');
+  private gesto?: Gesture;
+  private medidor?: ResizeObserver;
+  private inicioArrastre = 0;
+
+  // ---------- Hoja deslizable ----------
+  /** false (al entrar) = abajo, pequeña: título + "Hacer viaje". true = arriba con todos los servicios. */
+  readonly abierta = signal(false);
+  /** Hasta medir la hoja no se muestra, para que no aparezca abierta un instante. */
+  readonly medida = signal(false);
+  readonly arrastrando = signal(false);
+  /** Cuánto baja la hoja (px). 0 = abierta del todo. */
+  readonly desplazamiento = signal(0);
+  /** Lo máximo que puede bajar: alto de la hoja menos la parte que queda visible cerrada. */
+  private readonly recorrido = signal(0);
+  private readonly altoHoja = signal(0);
+  /** Para que la hoja abierta no tape el saludo. */
+  readonly altoMaximo = signal<number | null>(null);
+  /** Lo que tapa la hoja sobre el mapa (se actualiza al soltarla, no en cada píxel del arrastre). */
+  readonly altoVisibleHoja = signal(0);
+
   private readonly nav = inject(NavController);
   private readonly ruta = inject(ActivatedRoute);
   private readonly api = inject(ApiService);
@@ -106,10 +139,87 @@ export class ClienteInicioPage implements ViewDidEnter, ViewWillLeave {
     }
   }
 
+  ngAfterViewInit(): void {
+    this.gesto = this.gestos.create({
+      el: this.agarreRef().nativeElement,
+      gestureName: 'hoja-servicios',
+      direction: 'y',
+      threshold: 6,
+      onStart: () => {
+        this.inicioArrastre = this.desplazamiento();
+        this.arrastrando.set(true);
+      },
+      onMove: (e) => {
+        // Se puede estirar un poco más allá de los topes, con resistencia (como una hoja nativa)
+        const d = this.inicioArrastre + e.deltaY;
+        const max = this.recorrido();
+        this.desplazamiento.set(d < 0 ? d / 4 : d > max ? max + (d - max) / 4 : d);
+      },
+      onEnd: (e) => {
+        this.arrastrando.set(false);
+        const mitad = this.recorrido() / 2;
+        const abrir = e.velocityY < -LANZAMIENTO ? true : e.velocityY > LANZAMIENTO ? false : this.desplazamiento() < mitad;
+        this.fijarHoja(abrir);
+      },
+    });
+    this.gesto.enable();
+
+    // Se vuelve a medir si cambia la pantalla (rotación, teclado) o el contenido (llegan "Tus lugares")
+    this.medidor = new ResizeObserver(() => this.medir());
+    this.medidor.observe(this.pantallaRef().nativeElement);
+    this.medidor.observe(this.hojaRef().nativeElement);
+    // El botón crece/se recoge con animación: al terminar cambia lo que se ve con la hoja abajo
+    this.medidor.observe(this.botonViajeRef().nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    this.gesto?.destroy();
+    this.medidor?.disconnect();
+  }
+
   ionViewDidEnter(): void {
     this.saludo.set(this.saludoSegunHora());
     this.cargarLugares();
     this.gps.seguir(); // el punto del mapa se mueve en tiempo real mientras esta pantalla está abierta
+    this.medir();
+  }
+
+  alternarHoja(): void {
+    Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
+    this.fijarHoja(!this.abierta());
+  }
+
+  /** "Hacer viaje": sube la hoja con los servicios y el botón se recoge (vuelve si la bajan de nuevo). */
+  hacerViaje(): void {
+    Haptics.impact({ style: ImpactStyle.Medium }).catch(() => undefined);
+    this.fijarHoja(true);
+  }
+
+  private fijarHoja(abrir: boolean): void {
+    this.abierta.set(abrir);
+    if (!abrir) this.hojaRef().nativeElement.scrollTop = 0;
+    this.desplazamiento.set(abrir ? 0 : this.recorrido());
+    this.altoVisibleHoja.set(this.altoHoja() - this.desplazamiento());
+  }
+
+  /** Calcula hasta dónde puede subir la hoja y cuánto baja al cerrarse. */
+  private medir(): void {
+    const pantalla = this.pantallaRef().nativeElement;
+    const cielo = this.cieloRef().nativeElement;
+    // Abierta deja siempre una franja de mapa con el aviso "Estás en…" (lo demás se desplaza dentro de la hoja)
+    this.altoMaximo.set(Math.max(240, pantalla.clientHeight - cielo.offsetHeight - FRANJA_MAPA));
+
+    requestAnimationFrame(() => {
+      const hoja = this.hojaRef().nativeElement;
+      // Abajo se ve: asa + título + "Hacer viaje". Se usa el alto completo del botón (scrollHeight)
+      // aunque en este momento esté recogido, para que la cuenta sirva en los dos estados.
+      const boton = this.botonViajeRef().nativeElement;
+      const visibleCerrada = boton.offsetTop + (boton.firstElementChild as HTMLElement).scrollHeight + 6;
+      this.altoHoja.set(hoja.offsetHeight);
+      this.recorrido.set(Math.max(0, hoja.offsetHeight - visibleCerrada));
+      if (!this.arrastrando()) this.fijarHoja(this.abierta());
+      this.medida.set(true);
+    });
   }
 
   ionViewWillLeave(): void {

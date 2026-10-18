@@ -1,7 +1,21 @@
 @use '../../../../theme/inicio-app' as *;
 
+// ---------- Pantalla fija: encabezado arriba, mapa en todo lo demás y la hoja encima ----------
+.pantalla {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.mapa {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
 // ---------- Cielo con saludo ----------
 .cielo {
+  flex-shrink: 0;
   position: relative;
   display: flex;
   align-items: center;
@@ -103,12 +117,12 @@
     animation: girar 700ms linear infinite;
   }
 }
-// Botón "mi ubicación" (esquina del mapa, por encima de la hoja)
+// Botón "mi ubicación": viaja pegado encima de la hoja
 .centrar {
   position: absolute;
   z-index: 1;
   right: 16px;
-  bottom: 50px;
+  top: -58px;
   width: 44px;
   height: 44px;
   border: 0;
@@ -163,7 +177,108 @@
   }
 }
 
-// ---------- Hoja ----------
+// ---------- Hoja deslizable ----------
+.envoltura {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  will-change: transform;
+  transition: transform 380ms $ease-out;
+
+  // Mientras el dedo arrastra, la hoja lo sigue sin retraso
+  &.arrastrando {
+    transition: none;
+  }
+  // Antes de medirla no se muestra (si no, se vería abierta un instante y luego bajaría)
+  &.sin-medir {
+    visibility: hidden;
+    transition: none;
+  }
+}
+.hoja {
+  margin-top: 0;
+  padding-top: 0;
+  overflow: hidden;
+  overscroll-behavior: contain;
+
+  // Abierta y más alta que la pantalla: el contenido de abajo se desplaza dentro de la hoja
+  &.abierta {
+    overflow-y: auto;
+  }
+}
+
+// Zona para arrastrar: la barrita y el título
+.agarre {
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+.asa {
+  display: block;
+  width: 100%;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+
+  span {
+    display: block;
+    width: 44px;
+    height: 5px;
+    margin: 0 auto;
+    border-radius: 3px;
+    background: #c9d5e2;
+    transition:
+      background-color 150ms ease,
+      width 200ms $ease-out;
+  }
+  &:hover span,
+  &:focus-visible span {
+    width: 56px;
+    background: #9fb2c6;
+  }
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+// "Hacer viaje" se recoge (alto → 0) cuando la hoja sube, sin saltos en el contenido
+.boton-viaje {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 320ms $ease-out,
+    opacity 200ms ease;
+
+  // Sin padding: con padding la fila no llega a 0 y queda un hueco al recogerse
+  > div {
+    min-height: 0;
+    overflow: hidden;
+  }
+  &.oculto {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+.hacer-viaje {
+  margin: 2px 0 22px; // (el margen queda dentro del contenedor que se recoge)
+}
+
+.resto {
+  transition: opacity 250ms ease;
+}
+.envoltura:not(.arrastrando) .hoja:not(.abierta) .resto {
+  opacity: 0;
+}
+
 h1 {
   margin: 0;
   font-family: 'Baloo 2', system-ui, sans-serif;

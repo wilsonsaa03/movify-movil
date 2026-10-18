@@ -1,7 +1,7 @@
-<ion-content [fullscreen]="true" [scrollY]="true">
-  <div class="pantalla">
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="pantalla" #pantalla>
     <!-- Cielo con saludo -->
-    <header class="cielo">
+    <header class="cielo" #cielo>
       <div class="sol" aria-hidden="true"></div>
       <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true">
         <path d="M2 12q6-8 12 0q6-8 12 0" />
@@ -33,12 +33,9 @@
       </div>
     </header>
 
-    <!-- Mapa con la ubicación -->
+    <!-- Mapa en tiempo real: ocupa el resto de la pantalla; la hoja se monta encima -->
     <section class="mapa" aria-label="Tu ubicación">
-      <app-mapa-ciudad marcador="usuario" [centro]="miPunto()" [precision]="precision()" />
-      <button type="button" class="centrar" aria-label="Centrar el mapa en mi ubicación" (click)="reubicar()">
-        <app-icono nombre="navegar" />
-      </button>
+      <app-mapa-ciudad marcador="usuario" [centro]="miPunto()" [precision]="precision()" [margenInferior]="altoVisibleHoja()" />
       <button type="button" class="ubicacion entra" style="--d: 100ms" aria-live="polite" (click)="reubicar()">
         @if (buscandoLugar()) {
           <span class="cargando" aria-hidden="true"></span>
@@ -54,36 +51,68 @@
       </button>
     </section>
 
-    <!-- Hoja con los servicios -->
-    <main class="hoja">
-      <span class="asa" aria-hidden="true"></span>
+    <!-- Hoja de servicios: se arrastra hacia arriba/abajo (o se toca la barrita) -->
+    <div
+      class="envoltura"
+      [class.arrastrando]="arrastrando()"
+      [class.sin-medir]="!medida()"
+      [style.transform]="'translateY(' + desplazamiento() + 'px)'"
+    >
+      <button type="button" class="centrar" aria-label="Centrar el mapa en mi ubicación" (click)="reubicar()">
+        <app-icono nombre="navegar" />
+      </button>
 
-      <h1 class="entra" style="--d: 140ms">¿Qué necesitas hoy, {{ nombre() }}?</h1>
-      <p class="sub entra" style="--d: 170ms">Elige un servicio para empezar.</p>
-
-      <div class="servicios">
-        @for (s of servicios; track s.id; let i = $index) {
-          <button type="button" class="servicio entra" [class]="s.id" [style.--d]="200 + i * 50 + 'ms'" (click)="elegir(s.id)">
-            <span class="baldosa"><app-icono [nombre]="s.icono" /></span>
-            <b>{{ s.nombre }}</b>
-            <small>{{ s.detalle }}</small>
+      <main class="hoja" #hoja [class.abierta]="abierta()" [style.max-height.px]="altoMaximo()">
+        <div class="agarre" #agarre>
+          <button
+            type="button"
+            class="asa"
+            [attr.aria-label]="abierta() ? 'Ocultar servicios' : 'Mostrar servicios'"
+            [attr.aria-expanded]="abierta()"
+            (click)="alternarHoja()"
+          >
+            <span></span>
           </button>
-        }
-      </div>
+          <h1 class="entra" style="--d: 140ms">¿Qué necesitas hoy, {{ nombre() }}?</h1>
+          <p class="sub entra" style="--d: 170ms">Elige un servicio para empezar.</p>
+        </div>
 
-      <h2 class="rotulo entra" style="--d: 400ms">Tus lugares</h2>
-      <div class="lugares entra" style="--d: 430ms">
-        @for (l of lugares(); track l.etiqueta) {
-          <button type="button" class="lugar" [class.nuevo]="l.id === null" [class]="l.icono" (click)="irALugar(l)">
-            <span class="disco"><app-icono [nombre]="l.icono" /></span>
-            {{ l.etiqueta }}
-            @if (l.id === null) {
-              <span class="mas" aria-label="(agregar)">+</span>
+        <!-- Solo con la hoja abajo: al tocarlo la hoja sube y el botón se recoge -->
+        <div class="boton-viaje" #botonViaje [class.oculto]="abierta()" [attr.inert]="abierta() ? '' : null">
+          <div>
+            <button type="button" class="mv-boton mv-boton--naranja hacer-viaje entra" style="--d: 190ms" (click)="hacerViaje()">
+              Hacer viaje
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="resto" [attr.aria-hidden]="!abierta()" [attr.inert]="abierta() ? null : ''">
+          <div class="servicios">
+            @for (s of servicios; track s.id; let i = $index) {
+              <button type="button" class="servicio entra" [class]="s.id" [style.--d]="220 + i * 50 + 'ms'" (click)="elegir(s.id)">
+                <span class="baldosa"><app-icono [nombre]="s.icono" /></span>
+                <b>{{ s.nombre }}</b>
+                <small>{{ s.detalle }}</small>
+              </button>
             }
-          </button>
-        }
-      </div>
-    </main>
+          </div>
+
+          <h2 class="rotulo entra" style="--d: 420ms">Tus lugares</h2>
+          <div class="lugares entra" style="--d: 450ms">
+            @for (l of lugares(); track l.etiqueta) {
+              <button type="button" class="lugar" [class.nuevo]="l.id === null" [class]="l.icono" (click)="irALugar(l)">
+                <span class="disco"><app-icono [nombre]="l.icono" /></span>
+                {{ l.etiqueta }}
+                @if (l.id === null) {
+                  <span class="mas" aria-label="(agregar)">+</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </main>
+    </div>
   </div>
 </ion-content>
 

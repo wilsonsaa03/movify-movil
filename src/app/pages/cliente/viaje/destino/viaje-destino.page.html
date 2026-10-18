@@ -1,0 +1,145 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <!-- Cielo con título y selector de moto/taxi -->
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true">
+        <path d="M2 12q6-8 12 0q6-8 12 0" />
+        <path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" />
+      </svg>
+
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver" (click)="volver()">
+          <app-icono nombre="atras" />
+        </button>
+        <h1>¿A dónde vas?</h1>
+
+        <div class="selector">
+          <button type="button" class="tipo" [attr.aria-expanded]="menuTipo()" aria-haspopup="listbox" (click)="menuTipo.set(!menuTipo())">
+            <span class="disco"><app-icono [nombre]="viaje.tipo()" /></span>
+            {{ viaje.tipo() === 'moto' ? 'Moto' : 'Taxi' }}
+            <app-icono nombre="abajo" class="flecha" />
+          </button>
+          @if (menuTipo()) {
+            <ul class="menu" role="listbox" aria-label="Tipo de vehículo">
+              @for (t of ['moto', 'taxi']; track t) {
+                <li>
+                  <button type="button" role="option" [attr.aria-selected]="viaje.tipo() === t" (click)="elegirTipo($any(t))">
+                    <span class="disco" [class.taxi]="t === 'taxi'"><app-icono [nombre]="$any(t)" /></span>
+                    {{ t === 'moto' ? 'Moto' : 'Taxi' }}
+                    @if (viaje.tipo() === t) {
+                      <app-icono nombre="check" class="ok" />
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      <!-- DESDE / HASTA -->
+      <section class="trayecto entra" aria-label="Trayecto">
+        <span class="linea" aria-hidden="true"><i class="ini"></i><i class="fin"></i></span>
+        <div class="campos">
+          <button type="button" class="campo desde" (click)="reintentarGps()" [attr.aria-label]="'Desde: ' + origenTexto()">
+            <small>Desde</small>
+            <b>{{ origenTexto() }}</b>
+          </button>
+          <label class="campo hasta">
+            <small>Hasta</small>
+            <span class="entrada">
+              <input
+                type="text"
+                [ngModel]="texto()"
+                (ngModelChange)="escribir($event)"
+                placeholder="Busca un lugar o dirección"
+                autocomplete="off"
+                enterkeyhint="search"
+                maxlength="120"
+              />
+              @if (buscando()) {
+                <span class="cargando" aria-hidden="true"></span>
+              } @else if (texto()) {
+                <button type="button" class="borrar" aria-label="Borrar destino" (click)="limpiar()"><app-icono nombre="x" /></button>
+              }
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Resultados / guardados / recientes -->
+      <ul class="opciones" aria-live="polite">
+        @for (o of opciones(); track o.lugar.lat + ',' + o.lugar.lng + o.lugar.nombre; let i = $index) {
+          <li class="entra" [style.--d]="i * 30 + 'ms'">
+            <button type="button" class="opcion" [class.elegida]="esElegido(o)" (click)="elegir(o)">
+              <span class="disco" [class]="esElegido(o) ? 'naranja' : o.tono"><app-icono [nombre]="o.icono" /></span>
+              <span class="textos">
+                <b>{{ o.lugar.nombre }}</b>
+                @if (o.lugar.detalle || o.marca) {
+                  <small>{{ o.lugar.detalle }}{{ o.lugar.detalle && o.marca ? ' · ' : '' }}{{ o.marca }}</small>
+                }
+              </span>
+              @if (esElegido(o)) {
+                <app-icono nombre="check" class="ok" />
+              }
+            </button>
+          </li>
+        }
+      </ul>
+      @if (errorBusqueda()) {
+        <p class="aviso">{{ errorBusqueda() }}</p>
+      }
+
+      <!-- Punto de referencia -->
+      <section class="referencia">
+        <h2>Punto de referencia</h2>
+        <p class="ayuda">Para que el conductor llegue sin perderse.</p>
+        <input
+          class="texto-ref"
+          type="text"
+          [ngModel]="viaje.referencia()"
+          (ngModelChange)="viaje.referencia.set($event)"
+          placeholder="Ej.: frente a la tienda de doña Rosa"
+          maxlength="200"
+          autocomplete="off"
+        />
+
+        @if (viaje.nota(); as n) {
+          <app-nota-voz [fuente]="n.url" [segundos]="n.segundos" [quitable]="true" (quitar)="quitarNota()" />
+        } @else if (grabando()) {
+          <button type="button" class="grabar grabando" (click)="detener()">
+            <span class="punto-rojo" aria-hidden="true"></span>
+            Grabando… {{ tiempoGrabado() }} <small>/ 0:{{ maxNota }}</small>
+            <span class="parar">Detener</span>
+          </button>
+        } @else {
+          <button type="button" class="grabar" (click)="grabar()">
+            <app-icono nombre="microfono" />
+            Grabar nota de voz
+            <small>opcional</small>
+          </button>
+        }
+        @if (errorNota()) {
+          <p class="aviso">{{ errorNota() }}</p>
+        }
+      </section>
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!puedeConfirmar()" (click)="confirmar()">
+      Confirmar destino
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+    </button>
+  </div>
+</ion-footer>

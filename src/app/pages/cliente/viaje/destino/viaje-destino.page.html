@@ -62,6 +62,8 @@
                 (ngModelChange)="escribir($event)"
                 placeholder="Busca un lugar o dirección"
                 autocomplete="off"
+                spellcheck="false"
+                autocorrect="off"
                 enterkeyhint="search"
                 maxlength="120"
               />
@@ -82,7 +84,8 @@
             <button type="button" class="opcion" [class.elegida]="esElegido(o)" (click)="elegir(o)">
               <span class="disco" [class]="esElegido(o) ? 'naranja' : o.tono"><app-icono [nombre]="o.icono" /></span>
               <span class="textos">
-                <b>{{ o.lugar.nombre }}</b>
+                <!-- En una sola línea a propósito: los saltos dejarían espacios entre los pedazos ("Hosp ital") -->
+                <b>@if (o.partes) {@for (p of o.partes; track $index) {@if (p.coincide) {<mark>{{ p.texto }}</mark>} @else {<span>{{ p.texto }}</span>}}} @else {{{ o.lugar.nombre }}}</b>
                 @if (o.lugar.detalle || o.marca) {
                   <small>{{ o.lugar.detalle }}{{ o.lugar.detalle && o.marca ? ' · ' : '' }}{{ o.marca }}</small>
                 }
@@ -94,6 +97,9 @@
           </li>
         }
       </ul>
+      @if (buscando() && texto().trim().length >= 3) {
+        <p class="buscando-mas"><span class="cargando" aria-hidden="true"></span> Buscando calles y direcciones…</p>
+      }
       @if (errorBusqueda()) {
         <p class="aviso">{{ errorBusqueda() }}</p>
       }

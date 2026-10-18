@@ -19,11 +19,11 @@ describe('LoginGooglePage', () => {
   let elegirCuenta: (token: string) => void;
 
   const crear = async (disponible = true) => {
-    TestBed.overrideProvider(GoogleAuthService, {
-      useValue: {
-        disponible: () => disponible,
-        mostrarBoton: async (_el: HTMLElement, cb: (t: string) => void) => (elegirCuenta = cb),
-      },
+    // Servicio real (así se prueba también entrar(): backend + sesión + navegación); solo se simula Google
+    const google = TestBed.inject(GoogleAuthService);
+    vi.spyOn(google, 'disponible').mockReturnValue(disponible);
+    vi.spyOn(google, 'mostrarBoton').mockImplementation(async (_el: HTMLElement, cb: (t: string) => void) => {
+      elegirCuenta = cb;
     });
     http = TestBed.inject(HttpTestingController);
     const f = TestBed.createComponent(LoginGooglePage);

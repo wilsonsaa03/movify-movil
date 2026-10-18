@@ -51,11 +51,14 @@ const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
 /** Buscador de OpenStreetMap pensado para "buscar mientras se escribe" (encuentra palabras a medias). */
 const PHOTON = 'https://photon.komoot.io/api/';
 const OVERPASS = 'https://overpass-api.de/api/interpreter';
+/** Copia del catálogo que viene dentro de la app (scripts/actualizar-lugares.mjs). */
+const CATALOGO_APP = 'assets/datos/lugares-buenaventura.json';
 /** El mismo motor de rutas que usan la web (leaflet-routing-machine) y el backend (TarifaServicio). */
 const OSRM = 'https://router.project-osrm.org/route/v1/driving';
 const RECIENTES = 'movify.destinos.recientes';
 const MAX_RECIENTES = 5;
-const CATALOGO = 'movify.catalogo.buenaventura';
+/** Si cambia cómo se arma el catálogo, se sube la versión para no usar copias viejas. */
+const CATALOGO = 'movify.catalogo.buenaventura.v2';
 const VIGENCIA_CATALOGO_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Qué lugares de OpenStreetMap entran al catálogo y cómo se llaman en la app. */
@@ -106,14 +109,16 @@ export class LugaresService {
   private catalogoListo: Promise<Lugar[]> | null = null;
 
   /**
-   * Barrios y sitios conocidos de Buenaventura (de OpenStreetMap). Se descarga una vez y queda guardado
-   * 7 días en el celular; si no hay internet se usa la copia vieja (o lista vacía).
+   * Barrios y sitios conocidos de Buenaventura (de OpenStreetMap). Viene dentro de la app y se actualiza
+   * en segundo plano cada 7 días; si todo falla se usa la última copia guardada (o lista vacía).
    */
   catalogo(): Promise<Lugar[]> {
-    this.catalogoListo ??= this.cargarCatalogo().catch(() => {
-      this.catalogoListo = null; // se reintenta la próxima vez
-      return this.catalogoGuardado()?.lugares ?? [];
-    });
+    this.catalogoListo ??= this.cargarCatalogo()
+      .catch(() => {
+        this.catalogoListo = null; // se reintenta la próxima vez
+        return this.catalogoGuardado()?.lugares ?? [];
+      })
+      .then(depurar);
     return this.catalogoListo;
   }
 
@@ -122,15 +127,18 @@ export class LugaresService {
    * sin importar tildes ni mayúsculas. `primero` (guardados y recientes) gana a igualdad de puntaje.
    */
   sugerir(texto: string, catalogo: Lugar[], primero: Lugar[] = [], max = 6): Lugar[] {
-    const q = normalizar(texto.trim());
+    // "juan23" → "juan 23": separa letras de números para que cada uno se busque por su lado
+    const q = normalizar(texto.trim()).replace(/([a-z])(\d)/g, '$1 $2').replace(/(\d)([a-z])/g, '$1 $2');
     if (!q) return [];
     const palabras = q.split(/\s+/);
     const puntuados: { l: Lugar; p: number }[] = [];
     const vistos = new Set<string>();
     [...primero.map((l) => ({ l, extra: 0.5 })), ...catalogo.map((l) => ({ l, extra: 0 }))].forEach(({ l, extra }) => {
       const n = normalizar(l.nombre);
+      // Se busca también con los números romanos en cifras: "Juan XXIII" se encuentra con "juan 23"
+      const buscable = n + ' ' + cifrasDeRomanos(n);
       // Todas las palabras escritas tienen que aparecer ("hospital dep" → "Hospital Departamental")
-      if (!palabras.every((p) => n.includes(p))) return;
+      if (!palabras.every((p) => buscable.includes(p))) return;
       const clave = n + '|' + l.lat.toFixed(3) + l.lng.toFixed(3);
       if (vistos.has(clave)) return;
       vistos.add(clave);
@@ -198,10 +206,24 @@ export class LugaresService {
 
   // ---------- Catálogo (Overpass) ----------
 
+  /**
+   * 1) Copia descargada hace menos de 7 días → esa.
+   * 2) Si no, la que viene dentro de la app (assets, generada con scripts/actualizar-lugares.mjs): carga al instante
+   *    y sin internet. En segundo plano se intenta traer la versión al día de Overpass para la próxima vez
+   *    (el servidor público a veces tarda 30 s o está saturado: por eso no se espera).
+   */
   private async cargarCatalogo(): Promise<Lugar[]> {
     const guardado = this.catalogoGuardado();
     if (guardado && Date.now() - guardado.cuando < VIGENCIA_CATALOGO_MS) return guardado.lugares;
 
+    this.actualizarDesdeOverpass().catch(() => undefined);
+    const resp = await fetch(CATALOGO_APP);
+    if (!resp.ok) throw new Error('Sin catálogo en la app');
+    const { elements } = (await resp.json()) as { elements: ElementoOverpass[] };
+    return deOverpass(elements);
+  }
+
+  private async actualizarDesdeOverpass(): Promise<void> {
     const b = BUENAVENTURA;
     const caja = `(${b.sur},${b.oeste},${b.norte},${b.este})`;
     const filtros = CATEGORIAS.map(([k, v]) => `nwr["${k}"="${v}"]["name"]${caja};`).join('');
@@ -209,37 +231,18 @@ export class LugaresService {
     const resp = await fetch(OVERPASS, {
       method: 'POST',
       body: 'data=' + encodeURIComponent(consulta),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      signal: AbortSignal.timeout(30000),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+      signal: AbortSignal.timeout(60000),
     });
     if (!resp.ok) throw new Error('Overpass ' + resp.status);
     const { elements } = (await resp.json()) as { elements: ElementoOverpass[] };
-
-    const lugares: Lugar[] = [];
-    for (const e of elements) {
-      const lat = e.lat ?? e.center?.lat;
-      const lng = e.lon ?? e.center?.lon;
-      const t = e.tags ?? {};
-      if (lat == null || lng == null || !t['name']) continue;
-      const categoria = CATEGORIAS.find(([k, v]) => t[k] === v)?.[2] ?? null;
-      const via = t['addr:street'] ? UbicacionService.abreviarVia(t['addr:street']) : null;
-      const direccion = via ? via + (t['addr:housenumber'] ? ` #${t['addr:housenumber']}` : '') : null;
-      const esBarrio = categoria === 'Barrio' || categoria === 'Vereda' || categoria === 'Corregimiento';
-      lugares.push({
-        nombre: t['name'],
-        detalle: [categoria, direccion].filter(Boolean).join(' · ') || null,
-        barrio: esBarrio ? t['name'] : (t['addr:suburb'] ?? null),
-        lat,
-        lng,
-        categoria,
-      });
-    }
+    const lugares = deOverpass(elements);
+    if (!lugares.length) return;
     try {
       localStorage.setItem(CATALOGO, JSON.stringify({ cuando: Date.now(), lugares }));
     } catch {
-      /* sin espacio: queda solo en memoria */
+      /* sin espacio: se seguirá usando la copia de la app */
     }
-    return lugares;
   }
 
   private catalogoGuardado(): { cuando: number; lugares: Lugar[] } | null {
@@ -264,7 +267,8 @@ export class LugaresService {
         const via = p['street'] ? UbicacionService.abreviarVia(p['street']) : null;
         const direccion = via ? via + (p['housenumber'] ? ` #${p['housenumber']}` : '') : null;
         const barrio = p['district'] ?? p['locality'] ?? null;
-        const nombre = p['name'] ? (p['osm_key'] === 'highway' ? UbicacionService.abreviarVia(p['name']) : p['name']) : (direccion ?? barrio ?? 'Punto en Buenaventura');
+        const propio = p['name'] ? capitalizar(p['name']) : null;
+        const nombre = propio ? (p['osm_key'] === 'highway' ? UbicacionService.abreviarVia(propio) : propio) : (direccion ?? barrio ?? 'Punto en Buenaventura');
         const detalle = [nombre === direccion ? null : direccion, nombre === barrio ? null : barrio].filter(Boolean).join(', ') || null;
         return { nombre, detalle, barrio, lat: geometry.coordinates[1], lng: geometry.coordinates[0], categoria: p['osm_key'] === 'highway' ? 'Calle' : null };
       }),
@@ -293,6 +297,32 @@ export class LugaresService {
   }
 }
 
+/** Convierte los elementos de Overpass (en línea o del archivo de la app) en lugares para sugerir. */
+function deOverpass(elements: ElementoOverpass[]): Lugar[] {
+  const lugares: Lugar[] = [];
+  for (const e of elements) {
+    const lat = e.lat ?? e.center?.lat;
+    const lng = e.lon ?? e.center?.lon;
+    const t = e.tags ?? {};
+    // Solo las categorías que interesan para pedir un viaje (el archivo trae más)
+    const categoria = CATEGORIAS.find(([k, v]) => t[k] === v)?.[2];
+    if (lat == null || lng == null || !t['name'] || !categoria) continue;
+    const via = t['addr:street'] ? UbicacionService.abreviarVia(t['addr:street']) : null;
+    const direccion = via ? via + (t['addr:housenumber'] ? ` #${t['addr:housenumber']}` : '') : null;
+    const esBarrio = categoria === 'Barrio' || categoria === 'Vereda' || categoria === 'Corregimiento';
+    const nombre = capitalizar(t['name']);
+    lugares.push({
+      nombre,
+      detalle: [categoria, direccion].filter(Boolean).join(' · ') || null,
+      barrio: esBarrio ? nombre : (t['addr:suburb'] ?? null),
+      lat,
+      lng,
+      categoria,
+    });
+  }
+  return lugares;
+}
+
 /** Distancia en línea recta (km). */
 export function distanciaKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const r = 6371;
@@ -314,7 +344,8 @@ export function normalizar(texto: string): string {
 export function resaltar(nombre: string, texto: string): Parte[] {
   const n = normalizar(nombre);
   const marcas = new Array<boolean>(nombre.length).fill(false);
-  for (const p of normalizar(texto.trim()).split(/\s+/).filter(Boolean)) {
+  const q = normalizar(texto.trim()).replace(/([a-z])(\d)/g, '$1 $2').replace(/(\d)([a-z])/g, '$1 $2');
+  for (const p of q.split(/\s+/).filter(Boolean)) {
     const i = n.indexOf(p);
     if (i >= 0) marcas.fill(true, i, i + p.length);
   }
@@ -327,13 +358,58 @@ export function resaltar(nombre: string, texto: string): Parte[] {
   return partes;
 }
 
-/** Quita resultados repetidos (mismo nombre y casi el mismo punto). */
+/**
+ * Quita resultados repetidos: mismo nombre y casi el mismo punto, o la misma calle en el mismo sector
+ * (OpenStreetMap parte cada calle en muchos tramos: "Cl. 6 — El Pailón" saldría cinco veces).
+ */
 function unicos(lista: Lugar[]): Lugar[] {
   const vistos = new Set<string>();
   return lista.filter((l) => {
-    const clave = `${normalizar(l.nombre)}|${l.lat.toFixed(3)},${l.lng.toFixed(3)}`;
+    const clave =
+      l.categoria === 'Calle'
+        ? `calle|${normalizar(l.nombre)}|${normalizar(l.detalle ?? '')}`
+        : `${normalizar(l.nombre)}|${l.lat.toFixed(3)},${l.lng.toFixed(3)}`;
     if (vistos.has(clave)) return false;
     vistos.add(clave);
     return true;
   });
+}
+
+/** El catálogo trae sitios duplicados (mismo nombre a pocos metros): se deja uno, el que tenga dirección. */
+function depurar(lista: Lugar[]): Lugar[] {
+  const unicos: Lugar[] = [];
+  for (const l of [...lista].sort((a, b) => Number(!!b.detalle?.includes('#')) - Number(!!a.detalle?.includes('#')))) {
+    const n = normalizar(l.nombre);
+    if (!unicos.some((u) => normalizar(u.nombre) === n && distanciaKm(u, l) < 0.3)) unicos.push(l);
+  }
+  return unicos;
+}
+
+/** "HOSPITAL NAVAL DE BUENAVENTURA" → "Hospital Naval de Buenaventura" (solo si viene todo en mayúsculas). */
+function capitalizar(nombre: string): string {
+  const letras = nombre.replace(/[^\p{L}]/gu, '');
+  if (letras.length < 4 || letras !== letras.toUpperCase()) return nombre;
+  const menores = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e']);
+  return nombre
+    .toLowerCase()
+    .split(' ')
+    .map((p, i) => (/^[ivxlc]+$/.test(p) ? p.toUpperCase() : i > 0 && menores.has(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
+    .join(' ');
+}
+
+/** Las palabras que son números romanos, en cifras: "juan xxiii" → "23". */
+function cifrasDeRomanos(texto: string): string {
+  const valor: Record<string, number> = { i: 1, v: 5, x: 10, l: 50, c: 100 };
+  return texto
+    .split(/\s+/)
+    .filter((p) => /^[ivxlc]+$/.test(p) && p.length > 1) // "i" sola es más probable que sea una palabra
+    .map((p) => {
+      let total = 0;
+      for (let i = 0; i < p.length; i++) {
+        const v = valor[p[i]];
+        total += v < (valor[p[i + 1]] ?? 0) ? -v : v;
+      }
+      return String(total);
+    })
+    .join(' ');
 }

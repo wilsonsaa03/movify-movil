@@ -1,5 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { NavController } from '@ionic/angular';
+import { IonRouterOutlet, NavController } from '@ionic/angular';
 
 /**
  * Encabezado reutilizable: cielo al atardecer, botón volver, título, logo 3D y olas.
@@ -61,6 +61,8 @@ import { NavController } from '@ionic/angular';
 })
 export class HeroCieloComponent {
   private readonly nav = inject(NavController);
+  /** La pila de pantallas de Ionic (sabe si de verdad hay una pantalla anterior dentro de la app). */
+  private readonly salida = inject(IonRouterOutlet, { optional: true });
 
   readonly titulo = input.required<string>();
   readonly subtitulo = input<string>('');
@@ -75,8 +77,13 @@ export class HeroCieloComponent {
 
   readonly ola = 'M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z';
 
+  /**
+   * Atrás dentro de la app. Se pregunta a la pila de Ionic (no a window.history): window.history.length
+   * cuenta páginas de otros sitios y no sabe si se llegó con navigateRoot (al cerrar sesión, sesión vencida,
+   * enlace directo). Sin pantalla anterior en la app → `volverA`.
+   */
   volver(): void {
-    if (window.history.length > 1) {
+    if (this.salida?.canGoBack()) {
       this.nav.back();
     } else {
       this.nav.navigateBack(this.volverA());

@@ -7,7 +7,7 @@ import { ApiService } from '../../../../core/api.service';
 import { IconoComponent, NombreIcono } from '../../../../componentes/icono/icono.component';
 import { NotaVozComponent, formatear } from '../../../../componentes/nota-voz/nota-voz.component';
 import { Grabadora, MAX_SEGUNDOS_NOTA } from '../../../../servicios/grabadora';
-import { Lugar, LugaresService } from '../../../../servicios/lugares.service';
+import { Lugar, LugaresService, Parte, distanciaKm, normalizar, resaltar } from '../../../../servicios/lugares.service';
 import { UbicacionService } from '../../../../servicios/ubicacion.service';
 import { TipoVehiculo, ViajeService } from '../../../../servicios/viaje.service';
 
@@ -27,10 +27,14 @@ interface Opcion {
   tono: 'naranja' | 'gris' | 'amarillo';
   /** "guardado" o "reciente" (se muestra junto al detalle). */
   marca?: string;
+  /** El nombre partido para resaltar lo que coincide con lo escrito. */
+  partes?: Parte[];
 }
 
-/** Espera tras la última tecla antes de buscar (Nominatim pide máximo 1 consulta por segundo). */
-const ESPERA_BUSQUEDA_MS = 450;
+/** Espera tras la última tecla antes de buscar calles en línea (las sugerencias locales son instantáneas). */
+const ESPERA_BUSQUEDA_MS = 300;
+/** Máximo de sugerencias en pantalla (con el teclado abierto no caben más). */
+const MAX_OPCIONES = 8;
 
 /**
  * Viaje 2 · ¿A dónde vas?
@@ -57,6 +61,8 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
   readonly resultados = signal<Lugar[]>([]);
   readonly errorBusqueda = signal('');
   readonly guardados = signal<Opcion[]>([]);
+  /** Barrios y sitios de Buenaventura para sugerir al instante (se descarga una vez y queda guardado). */
+  private readonly catalogo = signal<Lugar[]>([]);
   readonly menuTipo = signal(false);
 
   readonly grabando = signal(false);
@@ -78,13 +84,23 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
     return donde ? `Mi ubicación · ${donde}` : 'Mi ubicación';
   });
 
-  /** Lo que se muestra debajo del buscador. */
+  /**
+   * Lo que se muestra debajo del buscador.
+   * Sin texto: guardados y recientes. Escribiendo: primero las sugerencias locales (guardados, recientes,
+   * barrios y sitios, desde la primera letra) y después las calles/direcciones que encuentre en línea.
+   */
   readonly opciones = computed<Opcion[]>(() => {
-    // Mientras haya resultados de la búsqueda se siguen mostrando (con el elegido resaltado)
-    if (this.texto().trim().length >= 3 && this.resultados().length) {
-      return this.resultados().map((lugar) => ({ lugar, icono: 'pin', tono: 'gris' }));
-    }
-    return this.guardados();
+    const t = this.texto().trim();
+    const propios = this.guardados();
+    if (!t) return propios;
+
+    const locales = this.lugares.sugerir(t, this.catalogo(), propios.map((o) => o.lugar), 5);
+    const enLinea = this.resultados().filter((r) => !locales.some((l) => mismoLugar(l, r)));
+    return [...locales, ...enLinea].slice(0, MAX_OPCIONES).map((lugar) => {
+      const propio = propios.find((o) => o.lugar === lugar);
+      const base: Opcion = propio ?? { lugar, icono: lugar.categoria === 'Calle' ? 'navegar' : 'pin', tono: 'gris' };
+      return { ...base, partes: resaltar(lugar.nombre, t) };
+    });
   });
 
   readonly puedeConfirmar = computed(() => !!this.viaje.destino() && !!this.gps.ubicacion() && !this.grabando());
@@ -97,6 +113,7 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
   ionViewDidEnter(): void {
     this.gps.seguir();
     this.cargarGuardados();
+    this.lugares.catalogo().then((c) => this.catalogo.set(c));
   }
 
   ionViewWillLeave(): void {
@@ -217,11 +234,13 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
   private async buscar(valor: string): Promise<void> {
     this.consulta = new AbortController();
     try {
-      const r = await this.lugares.buscar(valor, this.consulta.signal);
-      this.resultados.set(r);
-      if (!r.length) this.errorBusqueda.set(`No encontramos «${valor.trim()}» en Buenaventura. Prueba con el barrio o una calle.`);
+      this.resultados.set(await this.lugares.buscar(valor, this.consulta.signal));
+      // Solo se avisa si tampoco hubo sugerencias locales
+      if (!this.opciones().length) {
+        this.errorBusqueda.set(`No encontramos «${valor.trim()}» en Buenaventura. Prueba con el barrio, un sitio conocido o una calle (ej.: Calle 6).`);
+      }
     } catch (e) {
-      if ((e as Error).name !== 'AbortError') this.errorBusqueda.set('No pudimos buscar. Revisa tu internet.');
+      if ((e as Error).name !== 'AbortError' && !this.opciones().length) this.errorBusqueda.set('No pudimos buscar. Revisa tu internet.');
     } finally {
       this.buscando.set(false);
     }
@@ -258,4 +277,9 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
     if (e.includes('trabajo') || e.includes('oficina')) return 'trabajo';
     return 'corazon';
   }
+}
+
+/** ¿Es el mismo sitio? (mismo nombre y a menos de 60 m): evita mostrarlo dos veces. */
+function mismoLugar(a: Lugar, b: Lugar): boolean {
+  return normalizar(a.nombre) === normalizar(b.nombre) && distanciaKm(a, b) < 0.06;
 }

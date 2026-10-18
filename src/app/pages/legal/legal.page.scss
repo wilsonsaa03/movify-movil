@@ -1,0 +1,138 @@
+@use '../../../theme/registro' as *;
+
+.cuerpo {
+  gap: 20px;
+  padding-top: 12px;
+}
+
+.resumen {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: $navy;
+}
+
+// ---------- Índice ----------
+.indice {
+  padding: 16px;
+  border: 1.5px solid $borde;
+  border-radius: 18px;
+  background: #f7fafc;
+
+  h2 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $gris;
+  }
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  button {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    color: $teal-d;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 3px solid $teal;
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+  }
+  li + li button {
+    border-top: 1px solid #e6edf3;
+  }
+}
+
+// ---------- Secciones ----------
+.seccion {
+  scroll-margin-top: 12px;
+
+  h2 {
+    margin: 0 0 8px;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.25;
+    color: $navy;
+  }
+  p {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.6;
+    color: #3d4f63;
+  }
+  ul {
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  li {
+    position: relative;
+    padding-left: 20px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.55;
+    color: #3d4f63;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 9px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: $orange;
+    }
+  }
+}
+
+// ---------- Final ----------
+.final {
+  align-items: stretch;
+  padding-top: 8px;
+}
+
+.contacto {
+  padding: 16px;
+  border-radius: 16px;
+  background: #e6f7f8;
+
+  b {
+    font-size: 15px;
+    font-weight: 800;
+    color: $navy;
+  }
+  p {
+    margin: 4px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: $gris;
+  }
+  a {
+    font-weight: 800;
+    color: $teal-d;
+  }
+}
+
+.subir {
+  align-self: center;
+}

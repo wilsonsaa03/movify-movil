@@ -1,5 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { NavController } from '@ionic/angular';
 import { Observable, firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { RespuestaSesion, SesionService } from './sesion.service';
@@ -14,17 +15,22 @@ export class ErrorApi extends Error {
   }
 }
 
+const SESION_VENCIDA = 'Tu sesión venció. Inicia sesión de nuevo.';
+
 /**
  * Llamadas al backend de MoviFY. El token y la plataforma los agrega el interceptor.
  * Todas devuelven promesas y, si algo falla, lanzan ErrorApi con un mensaje para mostrar.
  *
- * Si el token de acceso venció (401), pide uno nuevo con el refresh token una sola vez
- * y repite la llamada; así el usuario no tiene que volver a entrar a cada rato.
+ * Manejo del JWT:
+ *  1. Si el token de acceso ya venció, pide uno nuevo con el refresh token ANTES de llamar.
+ *  2. Si aun así el backend responde 401, renueva una vez y repite la llamada.
+ *  3. Si el refresh token tampoco sirve, cierra la sesión y lleva al login con el aviso "Tu sesión venció".
  */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly sesion = inject(SesionService);
+  private readonly nav = inject(NavController);
   private readonly base = environment.apiUrl;
   private renovando: Promise<boolean> | null = null;
 
@@ -68,9 +74,12 @@ export class ApiService {
     return this.llamar(enviar);
   }
 
-  /** Pide un token nuevo con el refresh token y guarda la sesión. Devuelve false si ya no se puede. */
+  /**
+   * Pide un token nuevo con el refresh token y guarda la sesión. Devuelve false si no se pudo.
+   * Sin internet NO cierra la sesión (el refresh token puede seguir sirviendo cuando vuelva la conexión).
+   */
   renovarSesion(): Promise<boolean> {
-    const refresh = this.sesion.datos()?.refreshToken;
+    const refresh = this.sesion.refreshToken;
     if (!refresh) return Promise.resolve(false);
     // Si varias llamadas fallan al tiempo, todas esperan la misma renovación
     this.renovando ??= firstValueFrom(
@@ -80,20 +89,42 @@ export class ApiService {
         this.sesion.guardar(s);
         return true;
       })
-      .catch(() => {
-        this.sesion.cerrar();
+      .catch((e) => {
+        if (!(e instanceof HttpErrorResponse && e.status === 0)) this.sesionVencida();
         return false;
       })
       .finally(() => (this.renovando = null));
     return this.renovando;
   }
 
+  /**
+   * Cerrar sesión: borra el token del celular y le pide al backend que anule el refresh token
+   * (POST /api/auth/logout). Si no hay internet, igual sale; el refresh token vence solo.
+   */
+  async cerrarSesion(): Promise<void> {
+    const refresh = this.sesion.refreshToken;
+    this.sesion.cerrar();
+    if (refresh) {
+      await firstValueFrom(this.http.post(this.base + '/auth/logout', { refreshToken: refresh })).catch(() => undefined);
+    }
+  }
+
   private async llamar<T>(crear: () => Observable<T>): Promise<T> {
+    // 1. Token vencido: se renueva antes de llamar (así no se gasta una petición en un 401 seguro)
+    if (this.sesion.tokenVencido()) {
+      const ok = await this.renovarSesion();
+      if (!ok && !this.sesion.activa()) throw new ErrorApi(SESION_VENCIDA, 401);
+    }
     try {
       return await firstValueFrom(crear());
     } catch (e) {
+      // 2. El backend dijo 401 (token revocado, secreto cambiado...): una sola renovación y reintento
       const esAuth = e instanceof HttpErrorResponse && e.status === 401 && !e.url?.includes('/auth/');
-      if (esAuth && (await this.renovarSesion())) {
+      if (esAuth && this.sesion.datos()) {
+        if (!(await this.renovarSesion())) {
+          this.sesionVencida(); // el backend ya rechazó el token y no hubo cómo renovarlo
+          throw new ErrorApi(SESION_VENCIDA, 401);
+        }
         try {
           return await firstValueFrom(crear());
         } catch (e2) {
@@ -102,6 +133,13 @@ export class ApiService {
       }
       throw await ApiService.aError(e);
     }
+  }
+
+  /** 3. El refresh token ya no sirve: se borra la sesión y se vuelve al login con el aviso. */
+  private sesionVencida(): void {
+    if (!this.sesion.datos()) return;
+    this.sesion.cerrar();
+    this.nav.navigateRoot('/login', { queryParams: { expirada: 1 } });
   }
 
   static async aError(e: unknown): Promise<ErrorApi> {

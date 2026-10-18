@@ -1,0 +1,331 @@
+@use '../../../../theme/inicio-app' as *;
+
+// ---------- Cielo con saludo ----------
+.cielo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 34px) 22px 78px;
+  background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 50%, #fe7b13 100%);
+  overflow: hidden;
+}
+
+.gaviotas {
+  position: absolute;
+  left: 52%;
+  top: calc(env(safe-area-inset-top) + 16px);
+  width: 64px;
+  height: 24px;
+  fill: none;
+  stroke: $navy;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  .lejos {
+    stroke-opacity: 0.7;
+  }
+}
+
+.saludo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.textos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  small {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  b {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 28px;
+    line-height: 1.05;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.campana {
+  z-index: 1;
+}
+
+// ---------- Mapa ----------
+.ubicacion {
+  position: absolute;
+  z-index: 1;
+  left: 20px;
+  top: 16px;
+  max-width: calc(100% - 40px);
+  margin: 0;
+  padding: 8px 16px 8px 12px;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba($navy, 0.14);
+  font-family: inherit;
+  color: $navy;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 120ms $ease-out;
+
+  &:active {
+    transform: scale(0.97);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+    color: $teal-d;
+  }
+  .cargando {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2.5px solid $teal-d;
+    border-right-color: transparent;
+    animation: girar 700ms linear infinite;
+  }
+}
+// Botón "mi ubicación" (esquina del mapa, por encima de la hoja)
+.centrar {
+  position: absolute;
+  z-index: 1;
+  right: 16px;
+  bottom: 50px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  color: $teal-d;
+  box-shadow: 0 6px 16px rgba($navy, 0.18);
+  cursor: pointer;
+  transition: transform 120ms $ease-out;
+
+  &:active {
+    transform: scale(0.92);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  app-icono {
+    width: 20px;
+    height: 20px;
+    --grosor: 2.4;
+    transform: rotate(45deg);
+  }
+}
+
+.lugar-textos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  b,
+  small {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  b {
+    font-size: 14px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ---------- Hoja ----------
+h1 {
+  margin: 0;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+.sub {
+  margin: 2px 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: $gris;
+}
+
+.servicios {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+// Cada servicio con su color (como las baldosas del Figma): fondo claro, borde y "grosor" inferior
+.servicio {
+  --fondo: #e8f8f9;
+  --borde: #5fd6dc;
+  --tile: #5fd6dc;
+  min-height: 132px;
+  padding: 14px;
+  border: 2.5px solid var(--borde);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: var(--fondo);
+  color: $navy;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 6px 0 var(--borde);
+  transition:
+    transform 140ms $ease-out,
+    box-shadow 140ms $ease-out;
+
+  &:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--borde);
+  }
+  &:focus-visible {
+    outline: 3px solid $navy;
+    outline-offset: 3px;
+  }
+
+  &.taxi {
+    --fondo: #fff6d9;
+    --borde: #ffc94d;
+    --tile: #ffc94d;
+  }
+  &.domicilio {
+    --fondo: #ffeee2;
+    --borde: #ff9a4d;
+    --tile: #ff9a4d;
+  }
+  &.encomienda {
+    --fondo: #eef9ea;
+    --borde: #8ee07a;
+    --tile: #8ee07a;
+  }
+
+  .baldosa {
+    width: 46px;
+    height: 46px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: var(--tile);
+
+    app-icono {
+      width: 26px;
+      height: 26px;
+      --grosor: 2.3;
+    }
+  }
+  b {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 22px;
+    line-height: 1.1;
+    font-weight: 800;
+  }
+  small {
+    margin-top: 2px;
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: rgba($navy, 0.8);
+  }
+}
+
+// ---------- Tus lugares ----------
+.lugares {
+  display: flex;
+  gap: 10px;
+  margin: 10px -20px 0;
+  padding: 0 20px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+.lugar {
+  --disco: #5fd6dc;
+  flex-shrink: 0;
+  height: 44px;
+  padding: 0 16px 0 5px;
+  border: 1.5px solid #d5dee8;
+  border-radius: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f4f7fb;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+  transition: transform 120ms $ease-out;
+
+  &:active {
+    transform: scale(0.96);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  &.corazon {
+    --disco: #ffc94d;
+  }
+  &.trabajo {
+    --disco: #8ee07a;
+  }
+  &.nuevo {
+    border-style: dashed;
+    background: #ffffff;
+  }
+
+  .disco {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--disco);
+
+    app-icono {
+      width: 18px;
+      height: 18px;
+    }
+  }
+  .mas {
+    font-size: 18px;
+    color: $teal-d;
+  }
+}

@@ -1,0 +1,92 @@
+<ion-content [fullscreen]="true" [scrollY]="true">
+  <div class="pantalla">
+    <!-- Cielo con saludo -->
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true">
+        <path d="M2 12q6-8 12 0q6-8 12 0" />
+        <path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" />
+      </svg>
+
+      <div class="saludo entra">
+        <span class="avatar">
+          @if (foto(); as f) {
+            <img [src]="f" alt="" />
+          } @else {
+            {{ inicial() }}
+          }
+        </span>
+        <span class="textos">
+          <small>{{ saludo() }}</small>
+          <b>{{ nombre() }}</b>
+        </span>
+      </div>
+
+      <button type="button" class="campana entra" style="--d: 60ms" aria-label="Notificaciones" (click)="notificaciones()">
+        <app-icono nombre="campana" />
+        <span class="aviso" aria-hidden="true"></span>
+      </button>
+
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <!-- Mapa con la ubicación -->
+    <section class="mapa" aria-label="Tu ubicación">
+      <app-mapa-ciudad marcador="usuario" [centro]="miPunto()" [precision]="precision()" />
+      <button type="button" class="centrar" aria-label="Centrar el mapa en mi ubicación" (click)="reubicar()">
+        <app-icono nombre="navegar" />
+      </button>
+      <button type="button" class="ubicacion entra" style="--d: 100ms" aria-live="polite" (click)="reubicar()">
+        @if (buscandoLugar()) {
+          <span class="cargando" aria-hidden="true"></span>
+        } @else {
+          <app-icono nombre="pin" />
+        }
+        <span class="lugar-textos">
+          <b>{{ lugarTitulo() }}</b>
+          @if (lugarDetalle()) {
+            <small>{{ lugarDetalle() }}</small>
+          }
+        </span>
+      </button>
+    </section>
+
+    <!-- Hoja con los servicios -->
+    <main class="hoja">
+      <span class="asa" aria-hidden="true"></span>
+
+      <h1 class="entra" style="--d: 140ms">¿Qué necesitas hoy, {{ nombre() }}?</h1>
+      <p class="sub entra" style="--d: 170ms">Elige un servicio para empezar.</p>
+
+      <div class="servicios">
+        @for (s of servicios; track s.id; let i = $index) {
+          <button type="button" class="servicio entra" [class]="s.id" [style.--d]="200 + i * 50 + 'ms'" (click)="elegir(s.id)">
+            <span class="baldosa"><app-icono [nombre]="s.icono" /></span>
+            <b>{{ s.nombre }}</b>
+            <small>{{ s.detalle }}</small>
+          </button>
+        }
+      </div>
+
+      <h2 class="rotulo entra" style="--d: 400ms">Tus lugares</h2>
+      <div class="lugares entra" style="--d: 430ms">
+        @for (l of lugares(); track l.etiqueta) {
+          <button type="button" class="lugar" [class.nuevo]="l.id === null" [class]="l.icono" (click)="irALugar(l)">
+            <span class="disco"><app-icono [nombre]="l.icono" /></span>
+            {{ l.etiqueta }}
+            @if (l.id === null) {
+              <span class="mas" aria-label="(agregar)">+</span>
+            }
+          </button>
+        }
+      </div>
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <app-barra-inferior [items]="barra" activa="/cliente" />
+</ion-footer>

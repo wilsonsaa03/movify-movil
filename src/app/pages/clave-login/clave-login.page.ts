@@ -16,6 +16,8 @@ const LARGO = 4;
  *
  * POST /api/auth/login-celular { celular, clave } → sesión (JWT + refresh).
  * El backend cuenta los intentos fallidos y bloquea un rato (429); la app solo muestra su mensaje.
+ * Si la clave está mal (401) no se guarda nada: solo se muestra el error y se limpia la clave.
+ * Al entrar, cada rol va a su inicio (SesionService.rutaInicio).
  */
 @Component({
   selector: 'app-clave-login',
@@ -63,7 +65,7 @@ export class ClaveLoginPage {
       });
       this.sesion.guardar(r);
       Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
-      this.nav.navigateRoot(this.destino(r), { queryParams: this.servicio ? { servicio: this.servicio } : {} });
+      this.nav.navigateRoot(this.sesion.rutaInicio(), { queryParams: this.servicio ? { servicio: this.servicio } : {} });
     } catch (e) {
       const err = e as ErrorApi;
       Haptics.notification({ type: NotificationType.Error }).catch(() => undefined);
@@ -77,11 +79,6 @@ export class ClaveLoginPage {
     } finally {
       this.entrando.set(false);
     }
-  }
-
-  /** Conductor → su panel (o documentos si aún no lo aprueban); cliente → inicio. */
-  private destino(r: RespuestaSesion): string {
-    return r.rol === 'conductor' ? (r.conductor?.estado === 'aprobado' ? '/conductor/inicio' : '/conductor') : '/cliente';
   }
 
   olvide(): void {

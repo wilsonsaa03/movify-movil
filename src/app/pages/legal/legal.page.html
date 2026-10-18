@@ -1,0 +1,48 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo [titulo]="doc.titulo" [etiqueta]="'Versión ' + doc.version + ' · Vigente desde el ' + doc.vigenteDesde" volverA="/inicio" />
+
+    <main class="cuerpo" #cuerpo>
+      <p class="resumen entra" style="--d: 100ms">{{ doc.resumen }}</p>
+
+      <nav class="indice entra" style="--d: 140ms" aria-label="Contenido">
+        <h2>En este documento</h2>
+        <ol>
+          @for (s of doc.secciones; track s.id) {
+            <li>
+              <button type="button" (click)="irA(s.id)">{{ s.titulo }}</button>
+            </li>
+          }
+        </ol>
+      </nav>
+
+      @for (s of doc.secciones; track s.id) {
+        <section class="seccion" [id]="s.id">
+          <h2>{{ s.titulo }}</h2>
+          @for (p of s.parrafos ?? []; track $index) {
+            <p>{{ p }}</p>
+          }
+          @if (s.lista?.length) {
+            <ul>
+              @for (item of s.lista; track $index) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          }
+          @if (s.cierre) {
+            <p>{{ s.cierre }}</p>
+          }
+        </section>
+      }
+
+      <div class="final">
+        <div class="contacto">
+          <b>¿Tienes preguntas?</b>
+          <p>Escríbenos a <a [href]="'mailto:' + correo">{{ correo }}</a></p>
+        </div>
+        <button type="button" class="mv-boton mv-boton--navy" (click)="verOtro()">Leer {{ otro.titulo }}</button>
+        <button type="button" class="enlace subir" (click)="arriba()">Volver arriba</button>
+      </div>
+    </main>
+  </div>
+</ion-content>

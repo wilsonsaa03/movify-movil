@@ -1,0 +1,59 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo titulo="Continúa con Google" subtitulo="Sin claves que recordar" volverA="/login" />
+
+    <main class="cuerpo">
+      <ol class="pasos entra" style="--d: 120ms" aria-label="Qué pasa al continuar">
+        <li>
+          <span class="num" aria-hidden="true">1</span>
+          <span><b>Eliges tu cuenta de Google</b><small>Se abre una ventana de Google, no de MoviFY.</small></span>
+        </li>
+        <li>
+          <span class="num" aria-hidden="true">2</span>
+          <span><b>Usamos tu nombre, correo y foto</b><small>Tu contraseña de Google nunca llega a MoviFY.</small></span>
+        </li>
+        <li>
+          <span class="num" aria-hidden="true">3</span>
+          <span><b>Listo, entras a MoviFY</b><small>Si es tu primera vez, te creamos una cuenta de cliente.</small></span>
+        </li>
+      </ol>
+
+      <section class="zona-google entra" style="--d: 180ms" aria-live="polite">
+        @if (estado() === 'nativo') {
+          <div class="aviso">
+            <b>Muy pronto en la app instalada</b>
+            <p>Por ahora, en el celular entra con tu número y tu clave de 4 dígitos.</p>
+          </div>
+        }
+
+        <!-- Aquí Google dibuja su botón oficial (debe existir siempre para poder dibujarlo) -->
+        <div #botonGoogle class="boton-google" [class.oculto]="estado() !== 'listo'"></div>
+
+        @if (estado() === 'cargando') {
+          <p class="estado"><span class="cargando" aria-hidden="true"></span> Cargando Google…</p>
+        }
+        @if (estado() === 'entrando') {
+          <p class="estado"><span class="cargando" aria-hidden="true"></span> Entrando a MoviFY…</p>
+        }
+        @if (error()) {
+          <p class="ayuda error" role="alert">{{ error() }}</p>
+        }
+        @if (estado() === 'sin-google') {
+          <button type="button" class="enlace" (click)="prepararBoton()">Intentar de nuevo</button>
+        }
+      </section>
+
+      <div class="final">
+        @if (estado() === 'nativo') {
+          <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 220ms" (click)="conCelular()">Entrar con mi celular</button>
+        } @else {
+          <p class="legal entra" style="--d: 220ms">
+            Al continuar aceptas los <button type="button" (click)="ir('/terminos')">Términos</button> y la
+            <button type="button" (click)="ir('/privacidad')">Política de privacidad</button> de MoviFY.
+          </p>
+          <p class="mv-pie entra" style="--d: 260ms">¿Prefieres tu celular? <button type="button" (click)="conCelular()">Entrar con celular</button></p>
+        }
+      </div>
+    </main>
+  </div>
+</ion-content>

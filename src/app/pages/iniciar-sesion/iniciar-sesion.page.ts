@@ -8,7 +8,8 @@ import { CampoCelularComponent } from '../../componentes/campo-celular/campo-cel
  * Iniciar sesión con el número de celular (el método principal de MoviFY).
  * Paso 1 de 2: aquí se escribe el número; el paso 2 (la clave de 4 dígitos) es /login/clave.
  *
- * Por ahora NO llama al backend: solo valida y pasa el número a la siguiente pantalla.
+ * Aquí no se llama al backend: solo se valida y se pasa el número a la siguiente pantalla.
+ * Si llega con ?expirada=1 (el refresh token ya no sirvió) muestra "Tu sesión venció".
  */
 @Component({
   selector: 'app-iniciar-sesion',
@@ -26,6 +27,9 @@ export class IniciarSesionPage {
   /** Solo los dígitos, sin espacios. Ej: "3001234567" */
   readonly digitos = signal((this.ruta.snapshot.queryParamMap.get('celular') ?? '').replace(/\D/g, '').slice(0, 10));
   readonly intentoEnviar = signal(false);
+
+  /** Llegó aquí porque la sesión venció (lo manda ApiService). */
+  readonly sesionVencida = this.ruta.snapshot.queryParamMap.has('expirada');
 
   /** Celular colombiano: 10 dígitos y empieza por 3. */
   readonly valido = computed(() => /^3\d{9}$/.test(this.digitos()));
@@ -49,7 +53,7 @@ export class IniciarSesionPage {
   }
 
   conGoogle(): void {
-    this.router.navigateByUrl('/login/google');
+    this.router.navigate(['/login/google'], { queryParams: this.servicio ? { servicio: this.servicio } : {} });
   }
 
   irARegistro(): void {

@@ -1,33 +1,47 @@
 import { Routes } from '@angular/router';
 import { celularVerificado, conCelular, conDatos, conRol, cuentaCreada } from './servicios/registro.guards';
 import { conSesion, irAlPaso } from './servicios/conductor.guards';
+import { invitadoGuard, rolGuard } from './core/auth.guards';
 
-const pendiente = (titulo: string) => ({
+const pendiente = (titulo: string, roles: string[] = []) => ({
   loadComponent: () => import('./pages/pendiente/pendiente.page').then((m) => m.PendientePage),
-  data: { titulo },
+  data: { titulo, roles },
 });
+
+/** Admin y soporte trabajan en la web; en el celular entran como cliente. */
+const CLIENTE = ['cliente', 'admin', 'soporte'];
 
 export const routes: Routes = [
   {
     path: 'bienvenida',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/bienvenida/bienvenida.page').then((m) => m.BienvenidaPage),
   },
   {
     path: 'inicio',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/inicio/inicio.page').then((m) => m.InicioPage),
   },
 
   {
     path: 'login',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/iniciar-sesion/iniciar-sesion.page').then((m) => m.IniciarSesionPage),
   },
   {
     path: 'registro',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/crear-cuenta/crear-cuenta.page').then((m) => m.CrearCuentaPage),
   },
 
   {
+    path: 'login/google',
+    canActivate: [invitadoGuard],
+    loadComponent: () => import('./pages/login-google/login-google.page').then((m) => m.LoginGooglePage),
+  },
+  {
     path: 'login/clave',
+    canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/clave-login/clave-login.page').then((m) => m.ClaveLoginPage),
   },
 
@@ -95,15 +109,49 @@ export const routes: Routes = [
     canActivate: [conSesion],
     loadComponent: () => import('./pages/conductor/enviada/conductor-enviada.page').then((m) => m.ConductorEnviadaPage),
   },
-  { path: 'conductor/inicio', ...pendiente('Panel del conductor') },
+  // App del conductor (Conductor app 1 · Inicio)
+  {
+    path: 'conductor/inicio',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'] },
+    loadComponent: () => import('./pages/conductor/inicio/conductor-inicio.page').then((m) => m.ConductorInicioPage),
+  },
+  // Siguen en el flujo del conductor (provisionales)
+  { path: 'conductor/viaje/solicitud', canActivate: [rolGuard], ...pendiente('Nueva solicitud', ['conductor']) },
+  { path: 'conductor/viajes', canActivate: [rolGuard], ...pendiente('Mis viajes', ['conductor']) },
+  { path: 'conductor/ganancias', canActivate: [rolGuard], ...pendiente('Ganancias', ['conductor']) },
+  { path: 'conductor/perfil', canActivate: [rolGuard], ...pendiente('Mi perfil', ['conductor']) },
+  { path: 'conductor/notificaciones', canActivate: [rolGuard], ...pendiente('Notificaciones', ['conductor']) },
+
+  // App del cliente (Viaje 1 · Inicio)
+  {
+    path: 'cliente',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/inicio/cliente-inicio.page').then((m) => m.ClienteInicioPage),
+  },
+  // Siguen en el flujo del cliente (provisionales)
+  { path: 'cliente/viaje/destino', canActivate: [rolGuard], ...pendiente('¿A dónde vas?', CLIENTE) },
+  { path: 'cliente/domicilio', canActivate: [rolGuard], ...pendiente('Domicilio', CLIENTE) },
+  { path: 'cliente/encomienda', canActivate: [rolGuard], ...pendiente('Encomienda', CLIENTE) },
+  { path: 'cliente/lugares', canActivate: [rolGuard], ...pendiente('Tus lugares', CLIENTE) },
+  { path: 'cliente/pedidos', canActivate: [rolGuard], ...pendiente('Mis pedidos', CLIENTE) },
+  { path: 'cliente/perfil', canActivate: [rolGuard], ...pendiente('Mi perfil', CLIENTE) },
+  { path: 'cliente/notificaciones', canActivate: [rolGuard], ...pendiente('Notificaciones', CLIENTE) },
 
   // Pantallas que siguen (por ahora son provisionales)
   { path: 'login/recuperar', ...pendiente('Recuperar clave') },
-  { path: 'login/google', ...pendiente('Entrar con Google') },
-  { path: 'cliente', ...pendiente('Inicio del cliente') },
   { path: 'explorar', ...pendiente('Explorar como invitado') },
-  { path: 'terminos', ...pendiente('Términos y condiciones') },
-  { path: 'privacidad', ...pendiente('Política de privacidad') },
+  {
+    path: 'terminos',
+    data: { tipo: 'terminos' },
+    loadComponent: () => import('./pages/legal/legal.page').then((m) => m.LegalPage),
+  },
+  {
+    path: 'privacidad',
+    data: { tipo: 'privacidad' },
+    loadComponent: () => import('./pages/legal/legal.page').then((m) => m.LegalPage),
+  },
 
   {
     // Plantilla original de Ionic (se borrará cuando existan las pantallas reales)

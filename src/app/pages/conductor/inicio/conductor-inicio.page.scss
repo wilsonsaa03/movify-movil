@@ -1,0 +1,288 @@
+@use '../../../../theme/inicio-app' as *;
+
+// ---------- Encabezado azul ----------
+.cielo {
+  position: relative;
+  padding: calc(env(safe-area-inset-top) + 30px) 20px 70px;
+  background: linear-gradient(180deg, #0a3a6b 0%, #03274d 100%);
+  color: #ffffff;
+  overflow: hidden;
+}
+.sol {
+  right: -60px;
+  top: calc(env(safe-area-inset-top) - 70px);
+}
+
+.fila {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.saludo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.avatar {
+  background: $teal-claro;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85);
+}
+.textos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  small {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.75);
+  }
+  b {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 26px;
+    line-height: 1.05;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.campana {
+  background: rgba($navy, 0.55);
+  color: #ffffff;
+}
+
+// Interruptor "Estás en línea"
+.interruptor {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin-top: 18px;
+  padding: 10px 10px 10px 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 250ms ease;
+
+  &:focus-visible {
+    outline: 3px solid $teal-claro;
+    outline-offset: 2px;
+  }
+  &:disabled {
+    cursor: progress;
+  }
+
+  .luz {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #8a9bb0;
+    transition: background-color 250ms ease;
+  }
+  .estado {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 6px;
+
+    b {
+      font-size: 16px;
+      font-weight: 800;
+    }
+    small {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+  .palanca {
+    width: 58px;
+    height: 34px;
+    flex-shrink: 0;
+    padding: 4px;
+    border-radius: 17px;
+    background: rgba(255, 255, 255, 0.25);
+    transition: background-color 250ms ease;
+  }
+  .bola {
+    display: block;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    transition: transform 250ms $ease-out;
+  }
+
+  &.activo {
+    .luz {
+      background: #4ade80;
+      box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
+      animation: pulso 1.8s ease-out infinite;
+    }
+    .palanca {
+      background: #22c55e;
+    }
+    .bola {
+      transform: translateX(24px);
+    }
+  }
+}
+
+// ---------- Mapa ----------
+.mapa {
+  height: 250px;
+
+  app-mapa-ciudad {
+    transition: filter 300ms ease;
+  }
+  .apagado {
+    filter: grayscale(0.85) opacity(0.75);
+  }
+}
+.zonas {
+  position: absolute;
+  z-index: 1;
+  left: 20px;
+  bottom: 52px;
+  margin: 0;
+  padding: 8px 14px 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba($navy, 0.14);
+  font-size: 13px;
+  font-weight: 800;
+
+  .anillo {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 3px solid #e2477a;
+  }
+}
+
+// ---------- Hoja ----------
+.aviso {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #fff1e6;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b4530a;
+}
+
+.ganado {
+  padding: 4px 2px 0;
+}
+.cifras {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.monto {
+  margin: 0;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+.meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-bottom: 8px;
+
+  small {
+    font-size: 13px;
+    font-weight: 800;
+    color: $teal-d;
+  }
+  b {
+    font-size: 14px;
+    font-weight: 800;
+  }
+}
+.barra {
+  height: 10px;
+  margin-top: 8px;
+  border-radius: 5px;
+  background: #eef3f8;
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ff9638, $orange);
+    transform-origin: left;
+    transition: transform 700ms $ease-out;
+  }
+}
+.falta {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: $gris;
+}
+
+.datos {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+
+  li {
+    padding: 12px 14px;
+    border: 1.5px solid $borde;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    background: #f7fafc;
+  }
+  b {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 22px;
+    line-height: 1.1;
+    font-weight: 800;
+  }
+  small {
+    font-size: 12px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+
+@keyframes pulso {
+  70% {
+    box-shadow: 0 0 0 8px rgba(74, 222, 128, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .interruptor.activo .luz {
+    animation: none;
+  }
+}

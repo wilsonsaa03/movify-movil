@@ -1,0 +1,72 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <!-- Cielo con el radar -->
+    <header class="cielo" [class.quieto]="fase() !== 'buscando'">
+      <svg class="gaviotas g1" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <svg class="gaviotas g2" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+
+      <div class="radar" aria-hidden="true">
+        <span class="onda o1"></span>
+        <span class="onda o2"></span>
+        <span class="onda o3"></span>
+        <span class="boton">
+          <span class="disco"><app-icono [nombre]="tipo()" /></span>
+        </span>
+      </div>
+
+      <h1 class="entra" aria-live="polite">{{ titulo() }}</h1>
+      <p class="entra" style="--d: 60ms">{{ mensaje() }}</p>
+
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      @if (servicio(); as s) {
+        <section class="resumen entra" style="--d: 100ms" aria-label="Tu viaje">
+          <span class="trazo" aria-hidden="true"><i class="ini"></i><i class="medio"></i><i class="fin"></i></span>
+          <span class="lugares">
+            <b>{{ s.origen }}{{ s.origen_barrio ? ', ' + s.origen_barrio : '' }}</b>
+            <b>{{ s.destino }}</b>
+          </span>
+          <span class="valor">
+            <span class="precio">{{ pesos(s.tarifa) }}</span>
+            <small>{{ s.tipo_vehiculo === 'moto' ? 'Moto' : 'Taxi' }}</small>
+          </span>
+        </section>
+      } @else {
+        <section class="resumen esqueleto" aria-hidden="true"></section>
+      }
+
+      <p class="verificados entra" style="--d: 140ms">
+        <app-icono nombre="escudo" />
+        Todos los conductores están verificados.
+      </p>
+
+      @if (error()) {
+        <p class="aviso" role="status">{{ error() }}</p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    @if (fase() === 'sin-conductor') {
+      <button type="button" class="mv-boton mv-boton--naranja" (click)="otraVez()">
+        Intentar de nuevo
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" /></svg>
+      </button>
+      <button type="button" class="secundario" (click)="alInicio()">Volver al inicio</button>
+    } @else {
+      <button type="button" class="contorno" [disabled]="cancelando()" (click)="cancelar()">
+        @if (cancelando()) {
+          <span class="cargando" aria-hidden="true"></span>
+        }
+        Cancelar solicitud
+      </button>
+    }
+  </div>
+</ion-footer>

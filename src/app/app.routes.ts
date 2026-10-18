@@ -116,8 +116,15 @@ export const routes: Routes = [
     data: { roles: ['conductor'] },
     loadComponent: () => import('./pages/conductor/inicio/conductor-inicio.page').then((m) => m.ConductorInicioPage),
   },
+  // Conductor app 2 · Nueva solicitud (?id=servicio)
+  {
+    path: 'conductor/viaje/solicitud',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'] },
+    loadComponent: () => import('./pages/conductor/solicitud/conductor-solicitud.page').then((m) => m.ConductorSolicitudPage),
+  },
   // Siguen en el flujo del conductor (provisionales)
-  { path: 'conductor/viaje/solicitud', canActivate: [rolGuard], ...pendiente('Nueva solicitud', ['conductor']) },
+  { path: 'conductor/viaje/recogida', canActivate: [rolGuard], ...pendiente('Rumbo al pasajero', ['conductor']) },
   { path: 'conductor/viajes', canActivate: [rolGuard], ...pendiente('Mis viajes', ['conductor']) },
   { path: 'conductor/ganancias', canActivate: [rolGuard], ...pendiente('Ganancias', ['conductor']) },
   { path: 'conductor/perfil', canActivate: [rolGuard], ...pendiente('Mi perfil', ['conductor']) },
@@ -130,8 +137,27 @@ export const routes: Routes = [
     data: { roles: CLIENTE },
     loadComponent: () => import('./pages/cliente/inicio/cliente-inicio.page').then((m) => m.ClienteInicioPage),
   },
+  // Pedir moto o taxi: Viaje 2 (¿A dónde vas?) → 3 (Elige moto o taxi) → 4 (Buscando, ?id=servicio)
+  {
+    path: 'cliente/viaje/destino',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/viaje/destino/viaje-destino.page').then((m) => m.ViajeDestinoPage),
+  },
+  {
+    path: 'cliente/viaje/confirmar',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/viaje/confirmar/viaje-confirmar.page').then((m) => m.ViajeConfirmarPage),
+  },
+  {
+    path: 'cliente/viaje/buscando',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/viaje/buscando/viaje-buscando.page').then((m) => m.ViajeBuscandoPage),
+  },
   // Siguen en el flujo del cliente (provisionales)
-  { path: 'cliente/viaje/destino', canActivate: [rolGuard], ...pendiente('¿A dónde vas?', CLIENTE) },
+  { path: 'cliente/viaje/en-camino', canActivate: [rolGuard], ...pendiente('Tu conductor va en camino', CLIENTE) },
   { path: 'cliente/domicilio', canActivate: [rolGuard], ...pendiente('Domicilio', CLIENTE) },
   { path: 'cliente/encomienda', canActivate: [rolGuard], ...pendiente('Encomienda', CLIENTE) },
   { path: 'cliente/lugares', canActivate: [rolGuard], ...pendiente('Tus lugares', CLIENTE) },

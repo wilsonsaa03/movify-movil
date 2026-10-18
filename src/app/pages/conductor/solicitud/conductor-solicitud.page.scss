@@ -1,0 +1,285 @@
+@use '../../../../theme/viaje' as *;
+
+// Banner arriba del mapa
+.banner {
+  position: absolute;
+  z-index: 3;
+  left: 18px;
+  right: 18px;
+  top: calc(env(safe-area-inset-top) + 18px);
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: $navy;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba($navy, 0.3);
+  font-size: 16px;
+  font-weight: 800;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+    color: #ffc94d;
+    animation: timbre 1.2s ease-in-out infinite;
+  }
+}
+
+.con-mapa .hoja {
+  max-height: 68%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// ---------- Cuenta regresiva y ganancia ----------
+.cabeza {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.cuenta {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    position: absolute;
+    inset: 0;
+    transform: rotate(-90deg);
+  }
+  circle {
+    fill: none;
+    stroke-width: 6;
+  }
+  .fondo {
+    stroke: #ffe3cc;
+  }
+  .avance {
+    stroke: $orange;
+    stroke-linecap: round;
+    stroke-dasharray: 176;
+    transition: stroke-dashoffset 250ms linear;
+  }
+  b {
+    position: relative;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  small {
+    position: relative;
+    font-size: 11px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+.ganancia {
+  display: flex;
+  flex-direction: column;
+
+  .precio {
+    font-size: 38px;
+    line-height: 1.05;
+  }
+  small {
+    font-size: 13px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+
+// ---------- Trayecto ----------
+.trayecto {
+  display: flex;
+  gap: 14px;
+}
+.puntos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+.punto {
+  display: flex;
+  flex-direction: column;
+
+  b {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  small {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+
+// ---------- Referencia ----------
+.referencia {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  p {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #e8f8f9;
+    font-size: 14.5px;
+    font-weight: 800;
+
+    app-icono {
+      width: 18px;
+      height: 18px;
+      color: $teal-d;
+    }
+  }
+}
+
+// ---------- Pasajero ----------
+.pasajero {
+  padding: 12px 14px;
+  border: 2px solid $borde;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.avatar {
+  width: 46px;
+  height: 46px;
+  font-size: 18px;
+  background: #ffc94d;
+  box-shadow: none;
+}
+.datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  b {
+    font-size: 16px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.estrellas {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 800;
+
+  app-icono {
+    width: 16px;
+    height: 16px;
+    color: #f5a623;
+    --relleno: #ffc94d;
+  }
+}
+.verificada {
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e2f6f7;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: $teal-d;
+
+  app-icono {
+    width: 12px;
+    height: 12px;
+    --grosor: 3;
+  }
+}
+
+.esqueleto {
+  height: 320px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #f2f6fa 0%, #e8eef4 50%, #f2f6fa 100%);
+  background-size: 200% 100%;
+  animation: brillo 1.2s linear infinite;
+}
+
+// ---------- Botones ----------
+.botones {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 12px;
+}
+.contorno {
+  height: 56px;
+  border: 2.5px solid $navy;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffffff;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+
+  &:active {
+    background: #f2f6fa;
+  }
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+.mv-boton .cargando,
+.contorno .cargando {
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes timbre {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0);
+  }
+  10%,
+  30% {
+    transform: rotate(-14deg);
+  }
+  20%,
+  40% {
+    transform: rotate(14deg);
+  }
+}
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}

@@ -1,0 +1,163 @@
+// Piezas compartidas por las pantallas del viaje (cliente: Viaje 2, 3, 4 · conductor: Nueva solicitud).
+// Se importa con:  @use '../../../../../theme/viaje' as *;
+@forward 'inicio-app';
+@use 'inicio-app' as *;
+
+// Pie fijo con el botón principal
+.pie {
+  padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
+  background: #ffffff;
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: $navy;
+}
+
+// Botón redondo blanco sobre el mapa (volver)
+.flotante {
+  position: absolute;
+  z-index: 3;
+  left: 18px;
+  top: calc(env(safe-area-inset-top) + 18px);
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  color: $navy;
+  box-shadow: 0 6px 16px rgba($navy, 0.2);
+  cursor: pointer;
+  transition: transform 120ms $ease-out;
+
+  &:active {
+    transform: scale(0.94);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  app-icono {
+    width: 22px;
+    height: 22px;
+    --grosor: 2.6;
+  }
+}
+
+// Mapa a pantalla completa con una hoja blanca abajo
+.con-mapa {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  // Sin esto heredan el color de Ionic, que en modo oscuro es blanco (texto invisible sobre la hoja blanca)
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: $navy;
+  -webkit-tap-highlight-color: transparent;
+
+  app-mapa-ciudad {
+    position: absolute;
+    inset: 0;
+  }
+  .hoja {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    flex: none;
+    margin: 0;
+    max-height: 72%;
+    overflow-y: auto;
+    padding-bottom: 8px;
+  }
+}
+
+// Disco de color con ícono (moto, taxi, lugares)
+.disco {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #eef3f8;
+  color: $navy;
+
+  app-icono {
+    width: 22px;
+    height: 22px;
+  }
+  &.moto,
+  &.teal {
+    background: $teal-claro;
+  }
+  &.taxi,
+  &.amarillo {
+    background: #ffc94d;
+  }
+  &.naranja {
+    background: #ffe3cc;
+  }
+}
+
+// Línea origen → destino (punto teal arriba, cuadrado azul abajo)
+.trazo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0;
+
+  .ini {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: $teal;
+    box-shadow: 0 0 0 4px #d4f3f5;
+  }
+  .medio {
+    flex: 1;
+    width: 2px;
+    min-height: 22px;
+    margin: 6px 0;
+    background: #c9d5e2;
+  }
+  .fin {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: $navy;
+  }
+}
+
+.aviso {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #fff1e6;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #b4530a;
+}
+
+.cargando {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  animation: girar 700ms linear infinite;
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.precio {
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  color: $navy;
+  font-variant-numeric: tabular-nums;
+}

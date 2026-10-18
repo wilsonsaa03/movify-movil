@@ -1,0 +1,101 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="con-mapa">
+    <app-mapa-ciudad marcador="usuario" [centro]="origen()" [ruta]="ruta()" [destino]="destino()" [encuadrar]="true" [margenInferior]="altoHoja()" />
+
+    <p class="banner entra" role="alert">
+      <app-icono nombre="campana" />
+      ¡Nueva solicitud de {{ s()?.tipo_vehiculo ?? 'viaje' }}!
+    </p>
+
+    <main class="hoja" #hoja>
+      <span class="asa" aria-hidden="true"></span>
+
+      @if (s(); as v) {
+        <!-- Cuenta regresiva + ganancia -->
+        <section class="cabeza entra">
+          <span class="cuenta" role="timer" [attr.aria-label]="restante() + ' segundos para responder'">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <circle class="fondo" cx="32" cy="32" r="28" />
+              <circle class="avance" cx="32" cy="32" r="28" [style.stroke-dashoffset]="176 * (1 - fraccion())" />
+            </svg>
+            <b>{{ restante() }}</b>
+            <small>seg</small>
+          </span>
+          <span class="ganancia">
+            <span class="precio">{{ pesos(v.tarifa) }}</span>
+            <small>{{ resumen() }}</small>
+          </span>
+        </section>
+
+        <!-- Recogida y destino -->
+        <section class="trayecto entra" style="--d: 50ms">
+          <span class="trazo" aria-hidden="true"><i class="ini"></i><i class="medio"></i><i class="fin"></i></span>
+          <span class="puntos">
+            <span class="punto">
+              <b>{{ v.origen }}{{ v.origen_barrio ? ', ' + v.origen_barrio : '' }}</b>
+              @if (cercania(); as c) {
+                <small>{{ c }}</small>
+              }
+            </span>
+            <span class="punto">
+              <b>{{ destinoNombre() }}</b>
+              @if (destinoDetalle()) {
+                <small>{{ destinoDetalle() }}</small>
+              }
+            </span>
+          </span>
+        </section>
+
+        <!-- Punto de referencia y nota de voz -->
+        @if (v.origen_referencia || v.nota_voz_segundos) {
+          <section class="referencia entra" style="--d: 100ms">
+            @if (v.origen_referencia) {
+              <p><app-icono nombre="pin" /> {{ v.origen_referencia }}</p>
+            }
+            @if (v.nota_voz_segundos) {
+              <app-nota-voz [fuente]="notaUrl()" [segundos]="v.nota_voz_segundos" />
+            }
+          </section>
+        }
+
+        <!-- Pasajero -->
+        <section class="pasajero entra" style="--d: 150ms">
+          <span class="avatar">{{ inicial() }}</span>
+          <span class="datos">
+            <b>{{ pasajero() }}</b>
+            <span class="fila">
+              @if (calificacion(); as c) {
+                <span class="estrellas"><app-icono nombre="estrella" /> {{ c }}</span>
+              }
+              @if (v.usuario_verificado) {
+                <span class="verificada"><app-icono nombre="check" /> Verificada</span>
+              }
+            </span>
+          </span>
+        </section>
+      } @else {
+        <div class="esqueleto" aria-label="Cargando solicitud"></div>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie botones">
+    <button type="button" class="contorno" [disabled]="!!ocupado() || !s()" (click)="rechazar()">
+      @if (ocupado() === 'rechazar') {
+        <span class="cargando" aria-hidden="true"></span>
+      }
+      Rechazar
+    </button>
+    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!!ocupado() || !s()" (click)="aceptar()">
+      @if (ocupado() === 'aceptar') {
+        <span class="cargando" aria-hidden="true"></span>
+        Aceptando…
+      } @else {
+        Aceptar viaje
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+      }
+    </button>
+  </div>
+</ion-footer>

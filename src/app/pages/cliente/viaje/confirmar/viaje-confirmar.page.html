@@ -1,0 +1,91 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="con-mapa">
+    <app-mapa-ciudad
+      marcador="usuario"
+      [centro]="origen()"
+      [ruta]="ruta()"
+      [destino]="destino()"
+      [etiquetaRuta]="etiqueta()"
+      [encuadrar]="true"
+      [margenInferior]="altoHoja()"
+    />
+
+    <button type="button" class="flotante" aria-label="Volver" (click)="volver()">
+      <app-icono nombre="atras" />
+    </button>
+
+    <main class="hoja" #hoja>
+      <span class="asa" aria-hidden="true"></span>
+      <h1 class="entra">Confirma tu viaje</h1>
+      <p class="sub entra" style="--d: 40ms">
+        Elegiste {{ viaje.tipo() }}. Si prefieres, cambia a {{ otro() }}.
+      </p>
+
+      @if (cargando() && !opciones().length) {
+        <div class="opciones">
+          <div class="opcion esqueleto"></div>
+          <div class="opcion esqueleto"></div>
+        </div>
+      } @else {
+        <div class="opciones" role="radiogroup" aria-label="Tipo de vehículo">
+          @for (o of opciones(); track o.tipo; let i = $index) {
+            <button
+              type="button"
+              role="radio"
+              class="opcion entra"
+              [style.--d]="80 + i * 50 + 'ms'"
+              [class.elegida]="o.tipo === viaje.tipo()"
+              [attr.aria-checked]="o.tipo === viaje.tipo()"
+              (click)="elegir(o.tipo)"
+            >
+              <span class="disco" [class]="o.tipo"><app-icono [nombre]="o.tipo" /></span>
+              <span class="textos">
+                <b>{{ o.nombre }}</b>
+                <small>
+                  {{ o.cupo }} ·
+                  @if (o.llegada !== null) {
+                    llega en {{ o.llegada }} min
+                  } @else {
+                    buscaremos el más cercano
+                  }
+                </small>
+              </span>
+              <span class="valor">
+                <span class="precio">{{ pesos(o.precio) }}</span>
+                <small>Precio fijo</small>
+              </span>
+            </button>
+          }
+        </div>
+      }
+
+      <p class="garantia entra" style="--d: 200ms">
+        <app-icono nombre="candado" />
+        El precio no cambia en el camino, llueva o no.
+      </p>
+
+      @if (error()) {
+        <p class="aviso" role="alert">
+          {{ error() }}
+          @if (!opciones().length) {
+            <button type="button" class="reintentar" (click)="reintentar()">Reintentar</button>
+          }
+        </p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!elegida() || pidiendo()" (click)="pedir()">
+      @if (pidiendo()) {
+        <span class="cargando" aria-hidden="true"></span>
+        Pidiendo…
+      } @else {
+        Pedir {{ viaje.tipo() }}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      }
+    </button>
+  </div>
+</ion-footer>

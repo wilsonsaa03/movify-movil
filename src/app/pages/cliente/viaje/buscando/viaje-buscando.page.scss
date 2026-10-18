@@ -1,0 +1,243 @@
+@use '../../../../../theme/viaje' as *;
+
+// ---------- Cielo con el radar ----------
+.cielo {
+  position: relative;
+  padding: calc(env(safe-area-inset-top) + 40px) 24px 120px;
+  text-align: center;
+  background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 45%, #fe7b13 100%);
+  overflow: hidden;
+
+  h1 {
+    position: relative;
+    margin: 18px 0 6px;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 32px;
+    line-height: 1.1;
+    font-weight: 800;
+  }
+  p {
+    position: relative;
+    margin: 0 auto;
+    max-width: 300px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+}
+.gaviotas {
+  position: absolute;
+  width: 64px;
+  height: 24px;
+  fill: none;
+  stroke: $navy;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  .lejos {
+    stroke-opacity: 0.7;
+  }
+  &.g1 {
+    left: 8%;
+    top: calc(env(safe-area-inset-top) + 60px);
+  }
+  &.g2 {
+    right: 8%;
+    top: calc(env(safe-area-inset-top) + 110px);
+  }
+}
+.olas {
+  height: 90px;
+}
+
+.radar {
+  position: relative;
+  width: 320px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+}
+.onda {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 241, 194, 0.18);
+  animation: expandir 3s ease-out infinite;
+
+  &.o2 {
+    animation-delay: 1s;
+  }
+  &.o3 {
+    animation-delay: 2s;
+  }
+}
+.boton {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  box-shadow:
+    0 8px 0 rgba($navy, 0.15),
+    0 16px 30px rgba(140, 60, 0, 0.3);
+}
+.radar .disco {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: $teal-claro;
+
+  app-icono {
+    width: 40px;
+    height: 40px;
+    --grosor: 2.2;
+  }
+}
+.quieto .onda {
+  animation: none;
+  opacity: 0;
+}
+
+// ---------- Resumen ----------
+.cuerpo {
+  position: relative;
+  z-index: 1;
+  padding: 8px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.resumen {
+  min-height: 112px;
+  padding: 18px 18px 18px 16px;
+  border: 2px solid #e4ebf2;
+  border-radius: 24px;
+  display: flex;
+  gap: 14px;
+  background: #ffffff;
+
+  &.esqueleto {
+    background: linear-gradient(90deg, #f2f6fa 0%, #e8eef4 50%, #f2f6fa 100%);
+    background-size: 200% 100%;
+    animation: brillo 1.2s linear infinite;
+  }
+}
+.lugares {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+
+  b {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+}
+.valor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  .precio {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+  small {
+    font-size: 13px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+.verificados {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: $navy;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+    color: $teal-d;
+  }
+}
+
+// ---------- Botones ----------
+.pie {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.contorno {
+  width: 100%;
+  height: 56px;
+  border: 2.5px solid $navy;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #ffffff;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+
+  &:active {
+    background: #f2f6fa;
+  }
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+.secundario {
+  height: 44px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  color: $teal-d;
+  cursor: pointer;
+}
+
+@keyframes expandir {
+  0% {
+    transform: scale(0.35);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onda {
+    animation: none;
+    opacity: 0.5;
+  }
+  .o1 {
+    transform: scale(0.55);
+  }
+  .o2 {
+    transform: scale(0.75);
+  }
+}

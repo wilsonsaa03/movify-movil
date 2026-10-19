@@ -11,8 +11,21 @@
   &.verde {
     background: linear-gradient(180deg, #8ee6ea 0%, #3cc4cc 55%, #02aab4 100%);
   }
-  &.alerta {
-    background: linear-gradient(180deg, #ffd36e 0%, #ff9a52 55%, #f0643a 100%);
+  // Rechazada: atardecer rojo coral
+  &.rojo {
+    background: linear-gradient(180deg, #ffc48a 0%, #ff8a5c 50%, #e5484d 100%);
+  }
+  // Suspendida: noche (azul MoviFY)
+  &.noche {
+    background: linear-gradient(180deg, #0a3a6b 0%, #03274d 100%);
+
+    h1,
+    p {
+      color: #ffffff;
+    }
+    .gaviotas {
+      stroke: rgba(255, 255, 255, 0.6);
+    }
   }
 
   h1 {
@@ -98,6 +111,17 @@
 }
 .verde .disco::before {
   background: $teal-d;
+}
+.rojo .disco::before {
+  background: #e5484d;
+}
+.rojo .disco svg,
+.noche .disco svg {
+  stroke: #ffffff;
+  stroke-width: 3;
+}
+.noche .disco::before {
+  background: #5b6b80;
 }
 .verde .disco svg {
   stroke: #ffffff;
@@ -273,4 +297,153 @@
   .actual .punto {
     animation: none;
   }
+}
+
+// ---------- Motivo del rechazo / suspensión ----------
+.motivo {
+  padding: 16px 18px;
+  border: 2px solid #ffc9cb;
+  border-radius: 18px;
+  background: #fff4f4;
+
+  .etiqueta {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #c4323a;
+  }
+  p {
+    margin: 6px 0 0;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.4;
+    color: $navy;
+    overflow-wrap: anywhere;
+  }
+  small {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: $gris;
+  }
+
+  &.oscuro {
+    border-color: #d5dee8;
+    background: #f4f7fb;
+
+    .etiqueta {
+      color: $navy;
+    }
+  }
+}
+
+// ---------- Documentos rechazados ----------
+.rechazados {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: $navy;
+  }
+}
+.doc {
+  padding: 10px 12px;
+  border: 1.5px solid $borde;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+}
+.icono-doc {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #fff1f2;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: #e5484d;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+.textos-doc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  b {
+    font-size: 14px;
+    font-weight: 800;
+    color: $navy;
+  }
+  small {
+    font-size: 12px;
+    font-weight: 700;
+    color: #c4323a;
+  }
+}
+.subir {
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #ffe3cc;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #b4530a;
+  cursor: pointer;
+}
+
+// ---------- Línea de tiempo: paso que falló ----------
+.linea li.fallo .punto {
+  border-color: #e5484d;
+  background: #e5484d;
+}
+.linea li.fallo .textos b {
+  color: #c4323a;
+}
+.linea li.fallo:not(:last-child)::before {
+  background: #ffc9cb;
+}
+
+.pista {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  color: $gris;
+}
+
+.enlace-sec {
+  align-self: center;
+  border: 0;
+  background: none;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $teal-d;
+  cursor: pointer;
+}
+.mv-boton .cargando {
+  width: 18px;
+  height: 18px;
 }

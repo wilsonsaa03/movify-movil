@@ -2,7 +2,16 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { ApiService } from '../core/api.service';
 
 export type TipoVehiculo = 'moto' | 'taxi';
-export type PasoConductor = 'identidad' | 'licencia' | 'vehiculo' | 'documentos' | 'enviar' | 'revision' | 'corregir' | 'aprobado';
+export type PasoConductor =
+  | 'identidad'
+  | 'licencia'
+  | 'vehiculo'
+  | 'documentos'
+  | 'enviar'
+  | 'revision'
+  | 'corregir'
+  | 'suspendido'
+  | 'aprobado';
 export type PasoDocumento = 'identidad' | 'licencia' | 'vehiculo' | 'documentos';
 export type EstadoDocumento = 'pendiente' | 'aprobado' | 'rechazado';
 
@@ -61,6 +70,10 @@ export interface ProgresoConductor {
   conductor: DatosConductor | null;
   estado: 'pendiente' | 'aprobado' | 'rechazado' | 'suspendido' | null;
   motivo_estado: string | null;
+  /** Cuándo lo rechazó (o suspendió) el admin por última vez. */
+  rechazado_en: string | null;
+  /** Si lo rechazaron: ya cambió algo desde entonces y puede volver a enviar la solicitud. */
+  corregido: boolean;
   tipo_vehiculo: TipoVehiculo | null;
   vehiculo: Vehiculo | null;
   documentos: DocumentoSubido[];
@@ -107,7 +120,10 @@ export const RUTA_PASO: Record<PasoConductor, string> = {
   documentos: '/conductor/documentos',
   enviar: '/conductor/revisar',
   revision: '/conductor/enviada',
-  corregir: '/conductor/documentos',
+  // Rechazado o suspendido: primero la pantalla que explica el motivo (antes "corregir" abría el formulario
+  // directo y el conductor reenviaba sin ver por qué lo rechazaron)
+  corregir: '/conductor/enviada',
+  suspendido: '/conductor/enviada',
   aprobado: '/conductor/enviada',
 };
 

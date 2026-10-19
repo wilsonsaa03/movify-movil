@@ -1,6 +1,6 @@
 <ion-content [fullscreen]="true">
   <div class="pantalla">
-    <header class="cielo" [class.verde]="aprobado()" [class.alerta]="corregir()">
+    <header class="cielo" [class.verde]="aprobado()" [class.rojo]="rechazado()" [class.noche]="suspendido()">
       <svg class="gaviotas" viewBox="0 0 120 30" aria-hidden="true">
         <path d="M4 14q6-8 12 0q6-8 12 0" />
         <path d="M84 10q5-6 10 0q5-6 10 0" />
@@ -10,28 +10,25 @@
       <div class="sello entra" aria-hidden="true">
         <span class="aro"></span>
         <span class="disco">
-          @if (aprobado()) {
-            <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-          } @else if (corregir()) {
-            <svg viewBox="0 0 24 24"><path d="M12 7v6M12 16.5v.5" /></svg>
-          } @else {
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 8v4.5l3 2" /></svg>
+          @switch (situacion()) {
+            @case ('aprobado') {
+              <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+            }
+            @case ('rechazado') {
+              <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" /></svg>
+            }
+            @case ('suspendido') {
+              <svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5z" /></svg>
+            }
+            @default {
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 8v4.5l3 2" /></svg>
+            }
           }
         </span>
       </div>
 
-      <h1 class="entra" style="--d: 120ms">
-        {{ aprobado() ? '¡Ya puedes trabajar!' : corregir() ? 'Falta un detalle' : '¡Solicitud enviada!' }}
-      </h1>
-      <p class="entra" style="--d: 160ms">
-        {{
-          aprobado()
-            ? 'Tu cuenta de conductor está activa.'
-            : corregir()
-              ? 'Corrige lo que te indicamos y vuelve a enviarla.'
-              : 'Revisaremos tus documentos para activar tu cuenta.'
-        }}
-      </p>
+      <h1 class="entra" style="--d: 120ms">{{ encabezado().titulo }}</h1>
+      <p class="entra" style="--d: 160ms">{{ encabezado().texto }}</p>
 
       <div class="olas" aria-hidden="true">
         <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
@@ -40,12 +37,46 @@
     </header>
 
     <main class="cuerpo">
-      <ol class="linea entra" style="--d: 220ms" aria-label="Estado de tu solicitud">
+      <!-- Motivo que escribió el admin (rechazo o suspensión) -->
+      @if ((rechazado() || suspendido()) && motivo()) {
+        <section class="motivo entra" style="--d: 200ms" [class.oscuro]="suspendido()" aria-labelledby="titulo-motivo">
+          <span class="etiqueta" id="titulo-motivo">{{ suspendido() ? 'Motivo de la suspensión' : 'Motivo del rechazo' }}</span>
+          <p>«{{ motivo() }}»</p>
+          @if (cuando()) {
+            <small>Revisado el {{ cuando() }}</small>
+          }
+        </section>
+      }
+
+      <!-- Documentos marcados por el admin -->
+      @if (rechazado() && documentosRechazados().length) {
+        <section class="rechazados entra" style="--d: 230ms" aria-label="Documentos por corregir">
+          <h2>Documentos por corregir</h2>
+          @for (f of documentosRechazados(); track f.tipo.codigo) {
+            <div class="doc">
+              <span class="icono-doc" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M10 12l4 4M14 12l-4 4" /></svg>
+              </span>
+              <span class="textos-doc">
+                <b>{{ f.tipo.nombre }}</b>
+                @if (f.subido?.observacion; as observacion) {
+                  <small>{{ observacion }}</small>
+                }
+              </span>
+              <button type="button" class="subir" (click)="subirDeNuevo(f)">Subir de nuevo</button>
+            </div>
+          }
+        </section>
+      }
+
+      <ol class="linea entra" style="--d: 260ms" aria-label="Estado de tu solicitud">
         @for (h of hitos(); track h.titulo) {
           <li [class]="h.estado">
             <span class="punto" aria-hidden="true">
               @if (h.estado === 'hecho') {
                 <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+              } @else if (h.estado === 'fallo') {
+                <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" /></svg>
               }
             </span>
             <span class="textos">
@@ -58,8 +89,12 @@
         }
       </ol>
 
+      @if (rechazado() && !corregido()) {
+        <p class="pista entra" style="--d: 280ms">Cuando corrijas lo que te indicamos, podrás reenviar tu solicitud desde aquí.</p>
+      }
+
       @if (!aprobado()) {
-        <button type="button" class="actualizar entra" style="--d: 260ms" [disabled]="actualizando()" (click)="actualizar()">
+        <button type="button" class="actualizar entra" style="--d: 300ms" [disabled]="actualizando()" (click)="actualizar()">
           @if (actualizando()) {
             <span class="cargando" aria-hidden="true"></span>
           } @else {
@@ -74,10 +109,46 @@
       }
 
       <div class="final">
-        <button type="button" class="mv-boton entra" style="--d: 300ms" [class.mv-boton--navy]="!corregir()" [class.mv-boton--naranja]="corregir()" (click)="principal()">
-          {{ aprobado() ? 'Empezar a trabajar' : corregir() ? 'Corregir documentos' : 'Entendido' }}
+        <button
+          type="button"
+          class="mv-boton entra"
+          style="--d: 340ms"
+          [class.mv-boton--navy]="!rechazado()"
+          [class.mv-boton--naranja]="rechazado()"
+          [disabled]="reenviando()"
+          (click)="principal()"
+        >
+          @switch (situacion()) {
+            @case ('aprobado') {
+              Empezar a trabajar
+            }
+            @case ('rechazado') {
+              @if (reenviando()) {
+                <span class="cargando" aria-hidden="true"></span> Reenviando…
+              } @else if (corregido()) {
+                Reenviar a revisión
+              } @else {
+                Corregir mi solicitud
+              }
+            }
+            @case ('suspendido') {
+              Escribir a soporte
+            }
+            @default {
+              Entendido
+            }
+          }
         </button>
-        <p class="mv-pie entra" style="--d: 340ms">¿Dudas? <a href="mailto:soporte@movify.co">Escríbenos</a></p>
+
+        @if (rechazado() && corregido()) {
+          <button type="button" class="enlace-sec entra" style="--d: 360ms" (click)="corregir()">Revisar mis documentos otra vez</button>
+        }
+        @if (suspendido() || rechazado()) {
+          <button type="button" class="enlace-sec entra" style="--d: 370ms" (click)="salirAlInicio()">Cerrar sesión</button>
+        }
+        @if (!suspendido()) {
+          <p class="mv-pie entra" style="--d: 380ms">¿Dudas? <a href="mailto:soporte@movify.co">Escríbenos</a></p>
+        }
       </div>
     </main>
   </div>

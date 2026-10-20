@@ -1,0 +1,46 @@
+@use '../../../../theme/registro' as *;
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff3e8;
+
+  svg {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: #c2560a;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #8a3d06;
+  }
+}
+
+.enlace-error {
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}

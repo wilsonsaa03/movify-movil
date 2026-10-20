@@ -1,0 +1,342 @@
+@use '../../../../theme/registro' as *;
+
+.cielo {
+  position: relative;
+  padding: calc(env(safe-area-inset-top) + 36px) 24px 96px;
+  text-align: center;
+  background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 45%, #fe7b13 100%);
+  color: $navy;
+  overflow: hidden;
+
+  h1 {
+    position: relative;
+    margin: 16px 0 6px;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 800;
+  }
+  p {
+    position: relative;
+    margin: 0 auto;
+    max-width: 300px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+}
+
+.sol {
+  position: absolute;
+  top: -60px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+}
+
+.gaviotas {
+  position: absolute;
+  top: 28px;
+  left: 22px;
+  width: 56px;
+  fill: none;
+  stroke: rgba($navy, 0.55);
+  stroke-width: 2;
+  stroke-linecap: round;
+
+  .lejos {
+    opacity: 0.5;
+  }
+}
+
+.escudo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 10px rgba(255, 255, 255, 0.22),
+    0 14px 28px rgba(140, 60, 0, 0.3);
+
+  svg {
+    width: 48px;
+    height: 48px;
+    fill: none;
+    stroke: $teal;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .trazo {
+    stroke-dasharray: 14;
+    stroke-dashoffset: 14;
+    animation: dibujar 420ms $ease-out 450ms forwards;
+  }
+}
+
+.olas {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 70px;
+
+  .ola {
+    position: absolute;
+    inset: auto 0 0;
+    width: 200%;
+    height: 100%;
+    fill: #ffffff;
+  }
+  .o1 {
+    fill: rgba(2, 170, 180, 0.9);
+    transform: translateY(-14px);
+  }
+}
+
+.cuerpo {
+  margin-top: -1px;
+  padding-top: 18px;
+  background: #ffffff;
+  color: $navy;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+// ---------- Tarjeta del reporte ----------
+.resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 2px solid $borde;
+  background: #f6f9fc;
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.num {
+  font-size: 13px;
+  font-weight: 700;
+  color: $gris;
+}
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff3e8;
+  color: #c2560a;
+  font-size: 12px;
+  font-weight: 800;
+
+  i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: $orange;
+  }
+}
+
+.persona {
+  justify-content: flex-start;
+}
+
+.avatar {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #d9f3f5;
+  color: $teal-d;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.datos {
+  flex: 1;
+  min-width: 0;
+
+  b {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  small {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: $gris;
+  }
+}
+
+.motivo {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fdecee;
+  color: #8f1d27;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+// ---------- ¿Qué sigue? ----------
+.pasos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  li {
+    position: relative;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+
+    &:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 24px;
+      bottom: -14px;
+      width: 2px;
+      background: $borde;
+    }
+    &.hecho .punto {
+      border-color: $teal;
+      background: $teal;
+
+      svg {
+        opacity: 1;
+      }
+    }
+    &.actual .punto {
+      border-color: $orange;
+      box-shadow: inset 0 0 0 4px #ffffff, inset 0 0 0 12px $orange;
+    }
+  }
+  b {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  small {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: $gris;
+  }
+}
+
+.punto {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid $borde;
+  background: #ffffff;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+  }
+}
+
+// ---------- Emergencias ----------
+.peligro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fdecee;
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #8f1d27;
+  }
+  b {
+    font-weight: 800;
+  }
+  a {
+    color: inherit;
+    font-weight: 800;
+  }
+}
+
+.telefono {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: $rojo;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.mv-boton svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes dibujar {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .escudo .trazo {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

@@ -1,0 +1,96 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+
+      <span class="escudo" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" /><path class="trazo" d="M8.5 12l2.5 2.5 4.5-5" /></svg>
+      </span>
+
+      <h1 class="entra">Recibimos tu reporte</h1>
+      <p class="entra" style="--d: 60ms">Gracias por ayudarnos a mantener viajes seguros.</p>
+
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      @if (reporte(); as r) {
+        <section class="resumen entra" style="--d: 100ms" aria-label="Tu reporte">
+          <div class="fila">
+            <span class="num">Reporte #{{ numero() }}</span>
+            <span class="estado">
+              <i aria-hidden="true"></i>
+              {{ r.estado_nombre }}
+            </span>
+          </div>
+
+          @if (nombre()) {
+            <div class="fila persona">
+              <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+              <span class="datos">
+                <b>{{ nombre() }}</b>
+                <small>{{ detalleViaje() }}</small>
+              </span>
+              <span class="motivo">{{ r.asunto }}</span>
+            </div>
+          } @else {
+            <div class="fila">
+              <span class="motivo">{{ r.asunto }}</span>
+            </div>
+          }
+        </section>
+      }
+
+      <section class="entra" style="--d: 160ms" aria-labelledby="que-sigue">
+        <h2 id="que-sigue">¿Qué sigue?</h2>
+        <ol class="pasos">
+          <li class="hecho">
+            <span class="punto" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 12.5l4 4L18 8" /></svg>
+            </span>
+            <span>
+              <b>Reporte recibido</b>
+              <small>Quedó registrado con tu viaje.</small>
+            </span>
+          </li>
+          <li [class.hecho]="avance() === 2" [class.actual]="avance() === 1">
+            <span class="punto" aria-hidden="true"></span>
+            <span>
+              <b>Lo estamos revisando</b>
+              <small>Nuestro equipo analiza el viaje y lo que nos contaste.</small>
+            </span>
+          </li>
+          <li [class.actual]="avance() === 2">
+            <span class="punto" aria-hidden="true"></span>
+            <span>
+              <b>Te damos una respuesta</b>
+              <small>Te avisaremos en la app con la decisión.</small>
+            </span>
+          </li>
+        </ol>
+      </section>
+
+      <aside class="peligro entra" style="--d: 220ms" role="note">
+        <span class="telefono" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>
+        </span>
+        <p>
+          <b>¿Estás en peligro ahora?</b>
+          Llama a la Línea de emergencias <a href="tel:123">123</a>.
+        </p>
+      </aside>
+
+      <div class="final">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 280ms" (click)="volverAlInicio()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7M6 10v10h12V10" /></svg>
+          Volver al inicio
+        </button>
+        <button type="button" class="enlace entra" style="--d: 320ms" (click)="verViajes()">Ver mis viajes</button>
+      </div>
+    </main>
+  </div>
+</ion-content>

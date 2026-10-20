@@ -1,0 +1,94 @@
+@use '../../../../theme/registro' as *;
+
+.casillas {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+
+  &.sacudir {
+    animation: sacudir 380ms ease;
+  }
+}
+
+.casilla {
+  aspect-ratio: 0.82;
+  max-height: 64px;
+  border-radius: 16px;
+  border: 2px solid $borde;
+  background: #f6f9fc;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  font-weight: 800;
+  color: $navy;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+
+  &.llena {
+    border-color: $navy;
+    background: #ffffff;
+    animation: pop 180ms $ease-out;
+  }
+  &.actual {
+    border-color: $teal;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba($teal, 0.15);
+  }
+}
+
+.con-error .casilla.llena {
+  border-color: $rojo;
+  color: $rojo;
+}
+
+.estado {
+  min-height: 20px;
+  margin: -4px 0 0;
+}
+
+.verificando {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: $teal-d;
+
+  .cargando {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+}
+
+.acciones-codigo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  b {
+    color: $navy;
+  }
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .casillas.sacudir,
+  .casilla.llena {
+    animation: none;
+  }
+}
+
+.pista-dev {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 196, 0, 0.18);
+}

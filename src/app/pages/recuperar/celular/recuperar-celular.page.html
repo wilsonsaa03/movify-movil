@@ -1,0 +1,52 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <app-hero-cielo
+      titulo="Recupera tu clave"
+      subtitulo="Te enviaremos un código por SMS."
+      etiqueta="Recuperar clave"
+      [paso]="1"
+      volverA="/login"
+    />
+
+    <main class="cuerpo">
+      <form class="formulario entra" style="--d: 120ms" novalidate (submit)="$event.preventDefault(); enviarCodigo()">
+        <label for="celular" class="rotulo">Celular de tu cuenta</label>
+
+        <app-campo-celular
+          [digitos]="digitos()"
+          (digitosChange)="cambio($event)"
+          [error]="!!error()"
+          [listo]="valido()"
+        />
+
+        @if (error()) {
+          <p class="ayuda error" role="alert">{{ error() }}</p>
+        } @else {
+          <p class="ayuda">Si el número está registrado, te llegará un código de 6 dígitos.</p>
+        }
+
+        <button type="submit" hidden></button>
+      </form>
+
+      <aside class="aviso entra" style="--d: 180ms">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg>
+        <p>Nunca te pediremos tu código por llamada ni por WhatsApp.</p>
+      </aside>
+
+      <div class="final">
+        <button type="button" class="mv-boton mv-boton--naranja entra" style="--d: 240ms" [disabled]="enviando()" (click)="enviarCodigo()">
+          @if (enviando()) {
+            <span class="cargando" aria-hidden="true"></span> Enviando…
+          } @else {
+            Enviar código
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          }
+        </button>
+
+        <p class="mv-pie entra" style="--d: 280ms">
+          ¿Ya la recordaste? <button type="button" (click)="irAClave()">Ingresa tu clave</button>
+        </p>
+      </div>
+    </main>
+  </div>
+</ion-content>

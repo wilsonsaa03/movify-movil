@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { celularVerificado, conCelular, conDatos, conRol, cuentaCreada } from './servicios/registro.guards';
 import { conSesion, irAlPaso } from './servicios/conductor.guards';
 import { invitadoGuard, rolGuard } from './core/auth.guards';
+import { recuperarClaveCambiada, recuperarCodigoVerificado, recuperarConCelular } from './servicios/recuperar.guards';
 
 const pendiente = (titulo: string, roles: string[] = []) => ({
   loadComponent: () => import('./pages/pendiente/pendiente.page').then((m) => m.PendientePage),
@@ -160,13 +161,48 @@ export const routes: Routes = [
   { path: 'cliente/viaje/en-camino', canActivate: [rolGuard], ...pendiente('Tu conductor va en camino', CLIENTE) },
   { path: 'cliente/domicilio', canActivate: [rolGuard], ...pendiente('Domicilio', CLIENTE) },
   { path: 'cliente/encomienda', canActivate: [rolGuard], ...pendiente('Encomienda', CLIENTE) },
+  // Viaje 8 · Reporte enviado (v2): "Recibimos tu reporte" (?id=ticket). La usan cliente y conductor.
+  // El formulario de "Reportar usuario" que la precede sigue pendiente.
+  {
+    path: 'cliente/reporte/enviado',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE, inicio: '/cliente', viajes: '/cliente/pedidos' },
+    loadComponent: () => import('./pages/reporte/enviado/reporte-enviado.page').then((m) => m.ReporteEnviadoPage),
+  },
+  {
+    path: 'conductor/reporte/enviado',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'], inicio: '/conductor/inicio', viajes: '/conductor/viajes' },
+    loadComponent: () => import('./pages/reporte/enviado/reporte-enviado.page').then((m) => m.ReporteEnviadoPage),
+  },
+  { path: 'cliente/reportes', canActivate: [rolGuard], ...pendiente('Mis reportes', CLIENTE) },
   { path: 'cliente/lugares', canActivate: [rolGuard], ...pendiente('Tus lugares', CLIENTE) },
   { path: 'cliente/pedidos', canActivate: [rolGuard], ...pendiente('Mis pedidos', CLIENTE) },
   { path: 'cliente/perfil', canActivate: [rolGuard], ...pendiente('Mi perfil', CLIENTE) },
   { path: 'cliente/notificaciones', canActivate: [rolGuard], ...pendiente('Notificaciones', CLIENTE) },
 
   // Pantallas que siguen (por ahora son provisionales)
-  { path: 'login/recuperar', ...pendiente('Recuperar clave') },
+  // Recuperar clave (4 pasos + listo): celular → código SMS → clave nueva → confirmar → listo
+  {
+    path: 'login/recuperar',
+    canActivate: [invitadoGuard],
+    loadComponent: () => import('./pages/recuperar/celular/recuperar-celular.page').then((m) => m.RecuperarCelularPage),
+  },
+  {
+    path: 'login/recuperar/codigo',
+    canActivate: [invitadoGuard, recuperarConCelular],
+    loadComponent: () => import('./pages/recuperar/codigo/recuperar-codigo.page').then((m) => m.RecuperarCodigoPage),
+  },
+  {
+    path: 'login/recuperar/clave',
+    canActivate: [invitadoGuard, recuperarCodigoVerificado],
+    loadComponent: () => import('./pages/recuperar/clave/recuperar-clave.page').then((m) => m.RecuperarClavePage),
+  },
+  {
+    path: 'login/recuperar/listo',
+    canActivate: [invitadoGuard, recuperarClaveCambiada],
+    loadComponent: () => import('./pages/recuperar/listo/recuperar-listo.page').then((m) => m.RecuperarListoPage),
+  },
   { path: 'explorar', ...pendiente('Explorar como invitado') },
   {
     path: 'terminos',

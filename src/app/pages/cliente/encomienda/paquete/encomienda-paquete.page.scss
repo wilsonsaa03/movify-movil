@@ -1,0 +1,112 @@
+@use '../../../../../theme/encomienda' as *;
+
+.cuerpo {
+  margin-top: -40px;
+}
+
+.tamanos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tamano {
+  width: 100%;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 2.5px solid #e4ebf2;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #ffffff;
+  text-align: left;
+  font-family: inherit;
+  color: $navy;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #e4ebf2;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    transform 120ms $ease-out;
+
+  &:active {
+    transform: translateY(2px);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  // Elegido: fondo verde claro y borde azul, como "Pequeño" en el Figma
+  &.elegido {
+    border-color: $navy;
+    background: #e9f8ea;
+    box-shadow: 0 5px 0 $navy;
+
+    .disco {
+      background: #8fdc95;
+    }
+    .insignia {
+      background: #ffffff;
+    }
+  }
+  .disco {
+    width: 48px;
+    height: 48px;
+  }
+}
+.textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  b {
+    font-size: 17px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 13px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+.subtitulo {
+  margin-bottom: 8px;
+}
+
+.prohibido {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff1e6;
+  color: #8a3b07;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  p {
+    margin: 0;
+    display: flex;
+    gap: 10px;
+  }
+  app-icono {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #d9620a;
+  }
+  ul {
+    margin: 8px 0 0 28px;
+    padding: 0;
+  }
+}
+.enlace {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 800;
+  color: $teal-d;
+  text-decoration: underline;
+  cursor: pointer;
+}

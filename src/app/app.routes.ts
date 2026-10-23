@@ -160,7 +160,38 @@ export const routes: Routes = [
   // Siguen en el flujo del cliente (provisionales)
   { path: 'cliente/viaje/en-camino', canActivate: [rolGuard], ...pendiente('Tu conductor va en camino', CLIENTE) },
   { path: 'cliente/domicilio', canActivate: [rolGuard], ...pendiente('Domicilio', CLIENTE) },
-  { path: 'cliente/encomienda', canActivate: [rolGuard], ...pendiente('Encomienda', CLIENTE) },
+  // Enviar un paquete: Encomienda 1 (Destino) → 2 (Paquete) → 3 (Confirmar) → Buscando (la de Viaje 4)
+  // → 4 (Seguimiento, ?id=servicio) → 5 (Entregada, ?id=servicio)
+  {
+    path: 'cliente/encomienda',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/encomienda/destino/encomienda-destino.page').then((m) => m.EncomiendaDestinoPage),
+  },
+  {
+    path: 'cliente/encomienda/paquete',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/encomienda/paquete/encomienda-paquete.page').then((m) => m.EncomiendaPaquetePage),
+  },
+  {
+    path: 'cliente/encomienda/confirmar',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/encomienda/confirmar/encomienda-confirmar.page').then((m) => m.EncomiendaConfirmarPage),
+  },
+  {
+    path: 'cliente/encomienda/seguimiento',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/encomienda/seguimiento/encomienda-seguimiento.page').then((m) => m.EncomiendaSeguimientoPage),
+  },
+  {
+    path: 'cliente/encomienda/entregada',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/encomienda/entregada/encomienda-entregada.page').then((m) => m.EncomiendaEntregadaPage),
+  },
   // Viaje 8 · Reporte enviado (v2): "Recibimos tu reporte" (?id=ticket). La usan cliente y conductor.
   // El formulario de "Reportar usuario" que la precede sigue pendiente.
   {

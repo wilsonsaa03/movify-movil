@@ -1,0 +1,125 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver" (click)="volver()"><app-icono nombre="atras" /></button>
+        <h1>Envía un paquete</h1>
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      <!-- RECOGER EN / ENTREGAR EN -->
+      <section class="trayecto entra" aria-label="Recogida y entrega">
+        <span class="trazo" aria-hidden="true"><i class="ini"></i><i class="medio"></i><i class="fin"></i></span>
+        <div class="puntos">
+          <button type="button" class="punto" [class.invalido]="intento() && faltaOrigen()" (click)="buscando.set('origen')">
+            <small>Recoger en</small>
+            @if (recoger(); as r) {
+              <b>{{ r.titulo }}</b>
+              @if (r.detalle) { <span>{{ r.detalle }}</span> }
+            } @else {
+              <b class="vacio">Buscando tu ubicación…</b>
+            }
+          </button>
+          <button type="button" class="punto" [class.invalido]="intento() && faltaDestino()" (click)="buscando.set('destino')">
+            <small>Entregar en</small>
+            @if (envio.destino(); as d) {
+              <b>{{ d.nombre }}</b>
+              @if (d.detalle || d.barrio) { <span>{{ d.detalle ?? d.barrio }}</span> }
+            } @else {
+              <b class="vacio">¿A dónde lo llevamos?</b>
+            }
+          </button>
+        </div>
+      </section>
+      @if (intento() && faltaDestino()) {
+        <p class="error" role="alert">Elige la dirección de entrega: búscala o márcala en el mapa.</p>
+      }
+
+      <!-- ¿Quién lo recibe? -->
+      <h2 class="subtitulo entra" style="--d: 60ms"><app-icono nombre="persona" /> ¿Quién lo recibe?</h2>
+
+      @if (!envio.recibeYo()) {
+        <div class="entra" style="--d: 90ms">
+          <label class="etiqueta" for="enc-nombre">Nombre</label>
+          <input
+            id="enc-nombre"
+            class="entrada"
+            type="text"
+            autocomplete="off"
+            autocapitalize="words"
+            maxlength="120"
+            placeholder="Nombre de quien recibe"
+            [class.invalida]="intento() && faltaNombre()"
+            [attr.aria-invalid]="intento() && faltaNombre()"
+            [value]="envio.nombreRecibe()"
+            (input)="envio.nombreRecibe.set($any($event.target).value)"
+          />
+          @if (intento() && faltaNombre()) {
+            <p class="error" role="alert">¿A quién le llega el paquete?</p>
+          }
+        </div>
+
+        <div class="entra" style="--d: 120ms">
+          <label class="etiqueta" for="enc-celular">Celular</label>
+          <div class="celular" [class.invalida]="intento() && faltaCelular()">
+            <span class="prefijo" aria-hidden="true">+57</span>
+            <input
+              #cel
+              id="enc-celular"
+              class="entrada"
+              type="tel"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="310 555 0142"
+              [attr.aria-invalid]="intento() && faltaCelular()"
+              [value]="envio.celularRecibe()"
+              (input)="cel.value = escribirCelular(cel.value)"
+            />
+          </div>
+          @if (intento() && faltaCelular()) {
+            <p class="error" role="alert">Escribe un celular de 10 dígitos que empiece por 3.</p>
+          }
+        </div>
+
+        <p class="info entra" style="--d: 150ms">
+          <app-icono nombre="mensaje" />
+          Le enviaremos a {{ envio.primerNombre() }} un SMS con el código para recibir el paquete.
+        </p>
+      }
+
+      <label class="casilla entra" style="--d: 180ms" [class.marcada]="envio.recibeYo()">
+        <input type="checkbox" [checked]="envio.recibeYo()" (change)="alternarRecibeYo()" />
+        <span class="caja" aria-hidden="true"><app-icono nombre="check" /></span>
+        Lo recibo yo mismo
+      </label>
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    @if (intento() && !listo()) {
+      <p class="aviso faltan" role="status">Completa lo que está en rojo para continuar.</p>
+    }
+    <button type="button" class="mv-boton mv-boton--naranja" (click)="continuar()">
+      Continuar
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+    </button>
+  </div>
+</ion-footer>
+
+@if (buscando(); as tipo) {
+  <app-buscador-lugar
+    [tipo]="tipo"
+    [titulo]="tipo === 'origen' ? '¿Dónde lo recogemos?' : '¿A dónde lo llevamos?'"
+    (elegido)="elegido($event)"
+    (cerrar)="buscando.set(null)"
+  />
+}

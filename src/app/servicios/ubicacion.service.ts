@@ -125,7 +125,8 @@ export class UbicacionService {
     this.estado.set(e?.code === 1 ? 'sin-permiso' : 'error');
   }
 
-  private async buscarDireccion(lat: number, lng: number): Promise<Pick<MiUbicacion, 'barrio' | 'direccion' | 'ciudad'>> {
+  /** Barrio y dirección de un punto cualquiera (también lo usa el selector de punto en el mapa). */
+  async buscarDireccion(lat: number, lng: number): Promise<Pick<MiUbicacion, 'barrio' | 'direccion' | 'ciudad'>> {
     const url = `${NOMINATIM}?format=jsonv2&addressdetails=1&zoom=18&accept-language=es&lat=${lat}&lon=${lng}`;
     const resp = await fetch(url, { signal: AbortSignal.timeout(8000), headers: { Accept: 'application/json' } });
     if (!resp.ok) throw new Error('Nominatim ' + resp.status);

@@ -1,0 +1,98 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="con-mapa">
+    <app-mapa-ciudad
+      [marcador]="conductor() ? (servicio()?.tipo_vehiculo ?? 'moto') : null"
+      [centro]="conductor()"
+      [ruta]="camino()"
+      [destino]="meta()"
+      [encuadrar]="true"
+      [margenInferior]="altoHoja()"
+    />
+
+    <button type="button" class="flotante" aria-label="Ir al inicio" (click)="alInicio()">
+      <app-icono nombre="casa" />
+    </button>
+    <p class="llega" role="status" aria-live="polite"><app-icono nombre="encomienda" /> {{ aviso() }}</p>
+
+    <main class="hoja" #hoja>
+      <span class="asa" aria-hidden="true"></span>
+
+      @if (servicio(); as s) {
+        <!-- Conductor y placa -->
+        <section class="conductor entra">
+          <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+          <span class="quien">
+            <b>{{ s.conductor_nombre }}</b>
+            <small>
+              @if (s.conductor_calificacion) {
+                <app-icono nombre="estrella" class="estrella" /> {{ s.conductor_calificacion }} ·
+              }
+              mensajería
+            </small>
+          </span>
+          @if (s.conductor_placa) {
+            <span class="placa">
+              <b>{{ s.conductor_placa }}</b>
+              <small>{{ s.conductor_modelo }}{{ s.conductor_color ? ' · ' + s.conductor_color : '' }}</small>
+            </span>
+          }
+        </section>
+
+        <!-- Línea de tiempo -->
+        <ol class="pasos entra" style="--d: 60ms">
+          @for (p of pasos(); track p.titulo) {
+            <li [class]="p.estado">
+              <span class="marca" aria-hidden="true">@if (p.estado === 'hecho') {<app-icono nombre="check" />}</span>
+              <span class="texto">
+                <b>{{ p.titulo }}</b>
+                @if (p.detalle) { <small>{{ p.detalle }}</small> }
+              </span>
+            </li>
+          }
+        </ol>
+
+        <!-- Código de entrega -->
+        @if (s.codigo_entrega; as c) {
+          <section class="codigo entra" style="--d: 100ms" aria-label="Código de entrega">
+            <p><b>Código de entrega</b><small>{{ quienRecibe() }} se lo dice al conductor</small></p>
+            <div class="digitos" role="img" [attr.aria-label]="'Código ' + c.split('').join(' ')">
+              @for (d of c.split(''); track $index) {
+                <span aria-hidden="true">{{ d }}</span>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- Acciones -->
+        <nav class="acciones entra" style="--d: 140ms" aria-label="Acciones">
+          <a class="accion" [href]="telefonoConductor() ? 'tel:' + telefonoConductor() : null" [attr.aria-disabled]="!telefonoConductor()">
+            <span class="disco"><app-icono nombre="telefono" /></span>Llamar
+          </a>
+          <button type="button" class="accion" (click)="enviarCodigo()">
+            <span class="disco"><app-icono nombre="compartir" /></span>Enviar código
+          </button>
+          <a class="accion" [href]="telefonoConductor() ? 'sms:' + telefonoConductor() : null" [attr.aria-disabled]="!telefonoConductor()">
+            <span class="disco"><app-icono nombre="mensaje" /></span>Mensaje
+          </a>
+        </nav>
+
+        @if (puedeCancelar()) {
+          <button type="button" class="cancelar" [disabled]="cancelando()" (click)="cancelar()">
+            {{ cancelando() ? 'Cancelando…' : 'Cancelar envío' }}
+          </button>
+        }
+      } @else {
+        <div class="esqueleto" aria-hidden="true"></div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">
+          {{ error() }}
+          @if (servicio()?.estado_codigo === 'cancelado') {
+            <button type="button" class="reintentar" (click)="alInicio()">Ir al inicio</button>
+          }
+        </p>
+      }
+    </main>
+  </div>
+</ion-content>

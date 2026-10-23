@@ -1,0 +1,167 @@
+@use '../../../../../theme/encomienda' as *;
+
+.hoja {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+h1 {
+  margin: 0;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+.sub {
+  margin: -10px 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: $gris;
+}
+
+// Tarjeta del paquete (verde como en el Figma)
+.paquete {
+  min-height: 84px;
+  padding: 14px;
+  border: 2.5px solid $navy;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #e9f8ea;
+  box-shadow: 0 5px 0 $navy;
+
+  .disco {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: #8fdc95;
+
+    app-icono {
+      width: 26px;
+      height: 26px;
+    }
+  }
+  &.esqueleto {
+    border-color: transparent;
+    box-shadow: none;
+    background: linear-gradient(90deg, #f2f6fa 0%, #e8eef4 50%, #f2f6fa 100%);
+    background-size: 200% 100%;
+    animation: brillo 1.2s linear infinite;
+  }
+}
+.textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  b {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 20px;
+    line-height: 1.15;
+    font-weight: 800;
+  }
+  small {
+    font-size: 13px;
+    font-weight: 700;
+    color: $gris;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+.valor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  .precio {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+  small {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: $teal-d;
+  }
+}
+
+.pregunta {
+  margin: 4px 0 -4px;
+  font-size: 15px;
+  font-weight: 800;
+}
+// Selector de dos opciones (Yo / destinatario)
+.pagador {
+  padding: 4px;
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background: #eef3f8;
+
+  button {
+    min-height: 54px;
+    border: 2px solid transparent;
+    border-radius: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    font-family: inherit;
+    color: $navy;
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease;
+
+    b {
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: capitalize;
+    }
+    small {
+      font-size: 12px;
+      font-weight: 700;
+      color: $gris;
+    }
+    &.elegido {
+      border-color: $navy;
+      background: #ffffff;
+      box-shadow: 0 3px 8px rgba($navy, 0.12);
+    }
+    &:focus-visible {
+      outline: 3px solid $teal;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reintentar {
+  margin-left: auto;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: inherit;
+  font-weight: 800;
+  color: #b4530a;
+  cursor: pointer;
+}
+.mv-boton .cargando {
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}

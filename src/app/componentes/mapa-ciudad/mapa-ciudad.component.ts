@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewEncapsulation, effect, inject, input, untracked } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewEncapsulation, effect, inject, input, output, untracked } from '@angular/core';
 import * as L from 'leaflet';
 
 export interface PuntoMapa {
@@ -104,6 +104,10 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
   readonly etiquetaRuta = input<string | null>(null);
   /** true = encuadra el punto, la ruta y el destino (en vez de seguir el punto). */
   readonly encuadrar = input(false);
+  /** true = se mueve con un dedo (pantallas donde el mapa es lo principal, como elegir un punto). */
+  readonly arrastrable = input(false);
+  /** Punto que tocó el usuario en el mapa. */
+  readonly toque = output<PuntoMapa>();
 
   private mapa?: L.Map;
   private punto?: L.Marker;
@@ -142,10 +146,11 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
       zoomControl: false,
       scrollWheelZoom: false,
       // En el celular un dedo desplaza la página; el mapa se mueve con dos dedos (o arrastrando en el PC)
-      dragging: !L.Browser.mobile,
+      dragging: this.arrastrable() || !L.Browser.mobile,
       tap: false,
     } as L.MapOptions);
     L.tileLayer(MOSAICOS, { attribution: ATRIBUCION, maxZoom: 19 }).addTo(this.mapa);
+    this.mapa.on('click', (e: L.LeafletMouseEvent) => this.toque.emit({ lat: e.latlng.lat, lng: e.latlng.lng }));
     this.capaZonas = L.layerGroup().addTo(this.mapa);
     this.capaRuta = L.layerGroup().addTo(this.mapa);
 

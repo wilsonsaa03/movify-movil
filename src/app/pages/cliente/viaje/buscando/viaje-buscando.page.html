@@ -10,7 +10,7 @@
         <span class="onda o2"></span>
         <span class="onda o3"></span>
         <span class="boton">
-          <span class="disco"><app-icono [nombre]="tipo()" /></span>
+          <span class="disco"><app-icono [nombre]="esEncomienda() ? 'encomienda' : tipo()" /></span>
         </span>
       </div>
 
@@ -33,11 +33,23 @@
           </span>
           <span class="valor">
             <span class="precio">{{ pesos(s.tarifa) }}</span>
-            <small>{{ s.tipo_vehiculo === 'moto' ? 'Moto' : 'Taxi' }}</small>
+            <small>{{ esEncomienda() ? 'Envío en ' : '' }}{{ s.tipo_vehiculo === 'moto' ? 'Moto' : 'Taxi' }}</small>
           </span>
         </section>
       } @else {
         <section class="resumen esqueleto" aria-hidden="true"></section>
+      }
+
+      <!-- Encomienda: el código ya existe y quien recibe lo necesita (también le llegó por SMS) -->
+      @if (esEncomienda() && codigo(); as c) {
+        <section class="codigo entra" style="--d: 120ms" aria-label="Código de entrega">
+          <p><b>Código de entrega</b><small>Quien recibe se lo dice al conductor</small></p>
+          <div class="digitos" role="img" [attr.aria-label]="'Código ' + c.split('').join(' ')">
+            @for (d of c.split(''); track $index) {
+              <span aria-hidden="true">{{ d }}</span>
+            }
+          </div>
+        </section>
       }
 
       <p class="verificados entra" style="--d: 140ms">

@@ -6,6 +6,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ApiService } from '../../../../core/api.service';
 import { IconoComponent, NombreIcono } from '../../../../componentes/icono/icono.component';
 import { NotaVozComponent, formatear } from '../../../../componentes/nota-voz/nota-voz.component';
+import { SelectorPuntoComponent } from '../../../../componentes/selector-punto/selector-punto.component';
 import { Grabadora, MAX_SEGUNDOS_NOTA } from '../../../../servicios/grabadora';
 import { Lugar, LugaresService, Parte, distanciaKm, normalizar, resaltar } from '../../../../servicios/lugares.service';
 import { UbicacionService } from '../../../../servicios/ubicacion.service';
@@ -38,15 +39,15 @@ const MAX_OPCIONES = 8;
 
 /**
  * Viaje 2 · ¿A dónde vas?
- * DESDE = ubicación real del GPS (barrio y dirección). HASTA = buscador de direcciones en Buenaventura,
- * con sus lugares guardados y los destinos recientes cuando todavía no escribe nada.
+ * DESDE = ubicación real del GPS (barrio y dirección), o un punto tocado en el mapa. HASTA = buscador de
+ * direcciones en Buenaventura, con sus lugares guardados y los destinos recientes, o "Elegir en el mapa".
  * Punto de referencia en texto y/o nota de voz (hasta 30 s). "Confirmar destino" → Viaje 3.
  */
 @Component({
   selector: 'app-viaje-destino',
   templateUrl: 'viaje-destino.page.html',
   styleUrls: ['viaje-destino.page.scss'],
-  imports: [IonContent, IonFooter, FormsModule, IconoComponent, NotaVozComponent],
+  imports: [IonContent, IonFooter, FormsModule, IconoComponent, NotaVozComponent, SelectorPuntoComponent],
 })
 export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy {
   private readonly nav = inject(NavController);
@@ -76,8 +77,15 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
   private grabadora?: Grabadora;
   private reloj?: ReturnType<typeof setInterval>;
 
-  /** DESDE: la posición del GPS con su dirección. */
+  /** Recogida marcada a mano en el mapa (null = la del GPS). */
+  readonly origenElegido = signal<Lugar | null>(null);
+  /** Qué punto se está eligiendo en el mapa (pantalla completa encima). */
+  readonly eligiendo = signal<'origen' | 'destino' | null>(null);
+
+  /** DESDE: el punto elegido en el mapa o, si no, la posición del GPS con su dirección. */
   readonly origenTexto = computed(() => {
+    const o = this.origenElegido();
+    if (o) return o.nombre;
     const u = this.gps.ubicacion();
     if (!u) return this.gps.estado() === 'sin-permiso' ? 'Activa tu ubicación' : 'Buscando tu ubicación…';
     const donde = u.direccion ?? u.barrio ?? u.ciudad;
@@ -103,7 +111,9 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
     });
   });
 
-  readonly puedeConfirmar = computed(() => !!this.viaje.destino() && !!this.gps.ubicacion() && !this.grabando());
+  readonly puedeConfirmar = computed(
+    () => !!this.viaje.destino() && (!!this.origenElegido() || !!this.gps.ubicacion()) && !this.grabando(),
+  );
 
   constructor() {
     const tipo = this.ruta.snapshot.queryParamMap.get('tipo');
@@ -136,7 +146,27 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
     this.menuTipo.set(false);
   }
 
-  reintentarGps(): void {
+  // ---------- Elegir en el mapa ----------
+
+  /** El punto tocado en el mapa: la recogida o el destino. */
+  elegidoEnMapa(l: Lugar): void {
+    if (this.eligiendo() === 'origen') {
+      this.origenElegido.set(l);
+    } else {
+      clearTimeout(this.temporizador);
+      this.consulta?.abort();
+      this.buscando.set(false);
+      this.errorBusqueda.set('');
+      this.viaje.destino.set(l);
+      this.texto.set(l.nombre);
+    }
+    this.eligiendo.set(null);
+  }
+
+  /** La recogida vuelve a ser la ubicación del GPS. */
+  usarGps(): void {
+    this.origenElegido.set(null);
+    this.eligiendo.set(null);
     this.gps.actualizar();
   }
 
@@ -206,14 +236,17 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
   confirmar(): void {
     const u = this.gps.ubicacion();
     const d = this.viaje.destino();
-    if (!u || !d) return;
-    this.viaje.origen.set({
-      nombre: 'Mi ubicación',
-      detalle: u.direccion,
-      barrio: u.barrio,
-      lat: u.lat,
-      lng: u.lng,
-    });
+    const o = this.origenElegido();
+    if ((!u && !o) || !d) return;
+    this.viaje.origen.set(
+      o ?? {
+        nombre: 'Mi ubicación',
+        detalle: u!.direccion,
+        barrio: u!.barrio,
+        lat: u!.lat,
+        lng: u!.lng,
+      },
+    );
     this.lugares.recordar(d);
     this.nav.navigateForward('/cliente/viaje/confirmar');
   }

@@ -1,0 +1,80 @@
+@use '../../../../../theme/encomienda' as *;
+
+// Tarjeta RECOGER EN / ENTREGAR EN montada sobre las olas
+.trayecto {
+  margin-top: -70px;
+  padding: 14px 14px 14px 16px;
+  border-radius: 24px;
+  display: flex;
+  gap: 12px;
+  background: #ffffff;
+  box-shadow:
+    0 6px 0 #e4ebf2,
+    0 14px 30px rgba($navy, 0.14);
+
+  .trazo {
+    padding: 22px 0;
+  }
+}
+.puntos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.punto {
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: #f2f6fa;
+  text-align: left;
+  font-family: inherit;
+  color: $navy;
+  cursor: pointer;
+
+  small {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $gris;
+  }
+  b,
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  b {
+    font-size: 16px;
+    font-weight: 800;
+  }
+  span {
+    font-size: 13px;
+    font-weight: 700;
+    color: $gris;
+  }
+  .vacio {
+    color: #8a9bb0;
+  }
+  &:active {
+    background: #e9eff6;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  &.invalido {
+    border-color: #e5484d;
+    background: #fff5f5;
+  }
+}
+
+.faltan {
+  margin-bottom: 10px;
+}

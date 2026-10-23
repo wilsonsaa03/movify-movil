@@ -49,8 +49,8 @@
       <section class="trayecto entra" aria-label="Trayecto">
         <span class="linea" aria-hidden="true"><i class="ini"></i><i class="fin"></i></span>
         <div class="campos">
-          <button type="button" class="campo desde" (click)="reintentarGps()" [attr.aria-label]="'Desde: ' + origenTexto()">
-            <small>Desde</small>
+          <button type="button" class="campo desde" (click)="eligiendo.set('origen')" [attr.aria-label]="'Desde: ' + origenTexto() + '. Toca para cambiar el punto de recogida'">
+            <small>Desde · toca para cambiar</small>
             <b>{{ origenTexto() }}</b>
           </button>
           <label class="campo hasta">
@@ -76,6 +76,11 @@
           </label>
         </div>
       </section>
+
+      <button type="button" class="opcion en-mapa entra" (click)="eligiendo.set('destino')">
+        <span class="disco gris"><app-icono nombre="pin" /></span>
+        <span class="textos"><b>Elegir en el mapa</b><small>Toca el sitio exacto si no aparece en la lista</small></span>
+      </button>
 
       <!-- Resultados / guardados / recientes -->
       <ul class="opciones" aria-live="polite">
@@ -149,3 +154,7 @@
     </button>
   </div>
 </ion-footer>
+
+@if (eligiendo(); as tipo) {
+  <app-selector-punto [tipo]="tipo" (elegido)="elegidoEnMapa($event)" (cerrar)="eligiendo.set(null)" (usarGps)="usarGps()" />
+}

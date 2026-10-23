@@ -28,7 +28,10 @@ export interface SolicitudCreada {
 /** GET /api/servicios/{id} (campos que usan las pantallas del viaje). */
 export interface DetalleServicio {
   id: number;
+  tipo_servicio: 'transporte' | 'domicilio' | 'encomienda';
   tipo_vehiculo: TipoVehiculo;
+  /** Solo en encomiendas y solo para quien la pidió: el PIN que da quien recibe. */
+  codigo_entrega?: string | null;
   estado_codigo: 'buscando' | 'asignado' | 'en_origen' | 'en_curso' | 'finalizado' | 'cancelado' | 'expirado';
   origen: string;
   origen_barrio: string | null;

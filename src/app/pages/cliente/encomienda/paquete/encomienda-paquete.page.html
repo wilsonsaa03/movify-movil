@@ -1,0 +1,98 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver" (click)="volver()"><app-icono nombre="atras" /></button>
+        <h1>¿Qué vas a enviar?</h1>
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      <h2 class="subtitulo entra">Tamaño del paquete</h2>
+      <div class="tamanos" role="radiogroup" aria-label="Tamaño del paquete">
+        @for (t of tamanos; track t.id; let i = $index) {
+          <button
+            type="button"
+            role="radio"
+            class="tamano entra"
+            [style.--d]="40 + i * 40 + 'ms'"
+            [class.elegido]="envio.tamano() === t.id"
+            [attr.aria-checked]="envio.tamano() === t.id"
+            (click)="elegir(t.id)"
+          >
+            <span class="disco"><app-icono [nombre]="icono(t.id)" /></span>
+            <span class="textos">
+              <b>{{ t.nombre }}</b>
+              <small>{{ t.detalle }}</small>
+            </span>
+            <span class="insignia"><app-icono [nombre]="t.vehiculo" /> {{ t.vehiculo === 'moto' ? 'Moto' : 'Taxi' }}</span>
+          </button>
+        }
+      </div>
+
+      <div class="entra" style="--d: 180ms">
+        <label class="subtitulo" for="enc-contenido">¿Qué hay adentro?</label>
+        <input
+          id="enc-contenido"
+          class="entrada"
+          type="text"
+          maxlength="120"
+          autocomplete="off"
+          placeholder="Ej.: una caja de zapatos con ropa"
+          [class.invalida]="(intento() && faltaContenido()) || !!prohibido()"
+          [attr.aria-invalid]="(intento() && faltaContenido()) || !!prohibido()"
+          [attr.aria-describedby]="prohibido() ? 'enc-prohibido' : null"
+          [value]="envio.contenido()"
+          (input)="envio.contenido.set($any($event.target).value)"
+        />
+        @if (prohibido(); as cat) {
+          <p class="error" id="enc-prohibido" role="alert">
+            No podemos llevar esto: menciona {{ cat }}. En MoviFY no se envían drogas, armas, dinero ni objetos robados.
+          </p>
+        } @else if (intento() && faltaContenido()) {
+          <p class="error" role="alert">Cuéntale al conductor qué lleva.</p>
+        }
+      </div>
+
+      <label class="casilla entra" style="--d: 210ms" [class.marcada]="envio.fragil()">
+        <input type="checkbox" [checked]="envio.fragil()" (change)="alternarFragil()" />
+        <span class="caja" aria-hidden="true"><app-icono nombre="check" /></span>
+        Es frágil, manéjalo con cuidado
+      </label>
+
+      <div class="prohibido entra" style="--d: 240ms">
+        <p>
+          <app-icono nombre="alerta" />
+          <span>
+            No enviamos dinero, armas, animales ni sustancias prohibidas.
+            <button type="button" class="enlace" [attr.aria-expanded]="verLista()" (click)="verLista.set(!verLista())">
+              {{ verLista() ? 'Ocultar' : 'Ver la lista' }}
+            </button>
+          </span>
+        </p>
+        @if (verLista()) {
+          <ul>
+            @for (p of prohibidos; track p) {
+              <li>{{ p }}</li>
+            }
+          </ul>
+        }
+      </div>
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    <button type="button" class="mv-boton mv-boton--naranja" (click)="verTarifa()">
+      Ver tarifa
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+    </button>
+  </div>
+</ion-footer>

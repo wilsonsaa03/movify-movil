@@ -1,0 +1,66 @@
+<div class="capa" role="dialog" aria-modal="true" [attr.aria-label]="titulo()">
+  <header class="arriba">
+    <button type="button" class="cerrar" aria-label="Cerrar" (click)="cerrar.emit()"><app-icono nombre="atras" /></button>
+    <h2>{{ titulo() }}</h2>
+  </header>
+
+  <label class="campo">
+    <app-icono nombre="pin" class="lupa" />
+    <input
+      #entrada
+      type="text"
+      [value]="texto()"
+      (input)="escribir($any($event.target).value)"
+      [placeholder]="tipo() === 'origen' ? 'Dirección de recogida' : 'Busca la dirección de entrega'"
+      [attr.aria-label]="tipo() === 'origen' ? 'Dirección de recogida' : 'Dirección de entrega'"
+      autocomplete="off"
+      spellcheck="false"
+      enterkeyhint="search"
+      maxlength="120"
+    />
+    @if (cargando()) {
+      <span class="cargando" aria-hidden="true"></span>
+    } @else if (texto()) {
+      <button type="button" class="borrar" aria-label="Borrar" (click)="escribir('')"><app-icono nombre="x" /></button>
+    }
+  </label>
+
+  <div class="lista">
+    @if (tipo() === 'origen') {
+      <button type="button" class="opcion" (click)="usarGps()">
+        <span class="disco teal"><app-icono nombre="navegar" /></span>
+        <span class="textos"><b>Usar mi ubicación actual</b><small>Donde estás ahora</small></span>
+      </button>
+    }
+    <button type="button" class="opcion" (click)="enMapa.set(true)">
+      <span class="disco"><app-icono nombre="pin" /></span>
+      <span class="textos"><b>Elegir en el mapa</b><small>Toca el sitio exacto si no aparece en la lista</small></span>
+    </button>
+
+    @if (!texto() && opciones().length) {
+      <p class="rotulo">Recientes</p>
+    }
+    <ul aria-live="polite">
+      @for (o of opciones(); track o.lugar.lat + ',' + o.lugar.lng + o.lugar.nombre; let i = $index) {
+        <li class="entra" [style.--d]="i * 30 + 'ms'">
+          <button type="button" class="opcion" (click)="elegir(o.lugar)">
+            <span class="disco"><app-icono [nombre]="o.reciente ? 'reloj' : o.lugar.categoria === 'Calle' ? 'navegar' : 'pin'" /></span>
+            <span class="textos">
+              <b>@if (o.partes) {@for (p of o.partes; track $index) {@if (p.coincide) {<mark>{{ p.texto }}</mark>} @else {<span>{{ p.texto }}</span>}}} @else {{{ o.lugar.nombre }}}</b>
+              @if (o.lugar.detalle || o.lugar.barrio) {
+                <small>{{ o.lugar.detalle ?? o.lugar.barrio }}</small>
+              }
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+    @if (error()) {
+      <p class="aviso" role="status">{{ error() }}</p>
+    }
+  </div>
+</div>
+
+@if (enMapa()) {
+  <app-selector-punto [tipo]="tipo()" (elegido)="elegir($event)" (cerrar)="enMapa.set(false)" (usarGps)="usarGps()" />
+}

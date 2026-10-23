@@ -1,0 +1,83 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="con-mapa">
+    <app-mapa-ciudad
+      marcador="usuario"
+      [centro]="origen()"
+      [ruta]="ruta()"
+      [destino]="destino()"
+      [etiquetaRuta]="etiqueta()"
+      [encuadrar]="true"
+      [margenInferior]="altoHoja()"
+    />
+
+    <button type="button" class="flotante" aria-label="Volver" (click)="volver()">
+      <app-icono nombre="atras" />
+    </button>
+
+    <main class="hoja" #hoja>
+      <span class="asa" aria-hidden="true"></span>
+      <h1 class="entra">Confirma tu envío</h1>
+      <p class="sub entra" style="--d: 40ms">Lo lleva un conductor en {{ envio.vehiculo() }}.</p>
+
+      @if (cargando() && !envio.precio()) {
+        <div class="paquete esqueleto" aria-hidden="true"></div>
+      } @else {
+        <div class="paquete entra" style="--d: 80ms">
+          <span class="disco"><app-icono nombre="encomienda" /></span>
+          <span class="textos">
+            <b>{{ titulo() }}</b>
+            <small>{{ paraQuien() }}</small>
+          </span>
+          @if (envio.precio(); as p) {
+            <span class="valor">
+              <span class="precio">{{ pesos(p) }}</span>
+              <small>Precio fijo</small>
+            </span>
+          }
+        </div>
+      }
+
+      @if (!envio.recibeYo()) {
+        <h2 class="pregunta entra" style="--d: 120ms">¿Quién paga el envío?</h2>
+        <div class="pagador entra" style="--d: 150ms" role="radiogroup" aria-label="¿Quién paga el envío?">
+          <button type="button" role="radio" [class.elegido]="!envio.pagaDestinatario()" [attr.aria-checked]="!envio.pagaDestinatario()" (click)="elegirPagador(false)">
+            <b>Yo</b>
+            <small>al recoger</small>
+          </button>
+          <button type="button" role="radio" [class.elegido]="envio.pagaDestinatario()" [attr.aria-checked]="envio.pagaDestinatario()" (click)="elegirPagador(true)">
+            <b>{{ envio.primerNombre() }}</b>
+            <small>al recibir</small>
+          </button>
+        </div>
+      }
+
+      <p class="info entra" style="--d: 180ms">
+        <app-icono nombre="dinero" />
+        Se paga en efectivo al conductor. El precio no cambia en el camino.
+      </p>
+
+      @if (error()) {
+        <p class="aviso" role="alert">
+          {{ error() }}
+          @if (!envio.precio()) {
+            <button type="button" class="reintentar" (click)="reintentar()">Reintentar</button>
+          }
+        </p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!envio.precio() || enviando()" (click)="enviar()">
+      @if (enviando()) {
+        <span class="cargando" aria-hidden="true"></span>
+        Enviando…
+      } @else {
+        Enviar paquete
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      }
+    </button>
+  </div>
+</ion-footer>

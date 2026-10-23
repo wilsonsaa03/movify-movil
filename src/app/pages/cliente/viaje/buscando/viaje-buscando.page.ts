@@ -6,6 +6,7 @@ import { ErrorApi } from '../../../../core/api.service';
 import { pesos } from '../../../../core/formato';
 import { IconoComponent } from '../../../../componentes/icono/icono.component';
 import { DetalleServicio, ViajeService } from '../../../../servicios/viaje.service';
+import { EncomiendaService } from '../../../../servicios/encomienda.service';
 
 /** Cada cuánto se pregunta si algún conductor aceptó. */
 const CADA_MS = 4000;
@@ -29,6 +30,7 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
   private readonly ruta = inject(ActivatedRoute);
   private readonly alertas = inject(AlertController);
   private readonly viaje = inject(ViajeService);
+  private readonly encomienda = inject(EncomiendaService);
 
   readonly servicio = signal<DetalleServicio | null>(null);
   readonly fase = signal<Fase>('buscando');
@@ -44,10 +46,18 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
   private sondeo?: ReturnType<typeof setInterval>;
 
   readonly tipo = computed(() => this.servicio()?.tipo_vehiculo ?? this.viaje.pedido()?.tipo ?? 'moto');
-  readonly titulo = computed(() => (this.fase() === 'sin-conductor' ? 'Nadie tomó tu viaje' : `Buscando tu ${this.tipo()}…`));
+  /** La misma pantalla sirve para la encomienda (Figma: tras "Enviar paquete"). */
+  readonly esEncomienda = computed(
+    () => this.servicio()?.tipo_servicio === 'encomienda' || (!this.servicio() && this.encomienda.pedido()?.id === this.id),
+  );
+  readonly codigo = computed(() => this.servicio()?.codigo_entrega ?? (this.encomienda.pedido()?.id === this.id ? this.encomienda.pedido()!.codigo_entrega : null));
+  readonly titulo = computed(() => {
+    if (this.esEncomienda()) return this.fase() === 'sin-conductor' ? 'Nadie tomó tu envío' : 'Buscando quién lleve tu paquete…';
+    return this.fase() === 'sin-conductor' ? 'Nadie tomó tu viaje' : `Buscando tu ${this.tipo()}…`;
+  });
   readonly mensaje = computed(() => {
     if (this.fase() === 'sin-conductor') return 'Los conductores cercanos están ocupados. Puedes intentarlo otra vez.';
-    const p = this.viaje.pedido();
+    const p = this.viaje.pedido()?.id === this.id ? this.viaje.pedido() : this.encomienda.pedido();
     if (p && p.id === this.id) {
       const n = Number(p.conductores_notificados) || 0;
       if (n === 0) return 'Aún no hay conductores libres cerca; seguimos buscando.';
@@ -73,8 +83,8 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
 
   async cancelar(): Promise<void> {
     const alerta = await this.alertas.create({
-      header: '¿Cancelar la solicitud?',
-      message: 'Dejaremos de buscarte conductor.',
+      header: this.esEncomienda() ? '¿Cancelar el envío?' : '¿Cancelar la solicitud?',
+      message: this.esEncomienda() ? 'Dejaremos de buscar quién lleve tu paquete.' : 'Dejaremos de buscarte conductor.',
       buttons: [
         { text: 'Seguir buscando', role: 'cancel' },
         { text: 'Sí, cancelar', role: 'destructive' },
@@ -105,6 +115,13 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
       this.nav.navigateRoot('/cliente');
       return;
     }
+    if (this.esEncomienda()) {
+      // La recogida queda; quién recibe y el paquete se vuelven a confirmar
+      this.encomienda.origen.set({ nombre: s.origen, detalle: null, barrio: s.origen_barrio, lat: Number(s.origen_lat), lng: Number(s.origen_lng) });
+      this.encomienda.destino.set({ nombre: s.destino, detalle: null, barrio: s.destino_barrio, lat: Number(s.destino_lat), lng: Number(s.destino_lng) });
+      this.nav.navigateRoot('/cliente/encomienda');
+      return;
+    }
     this.viaje.tipo.set(s.tipo_vehiculo);
     this.viaje.origen.set({ nombre: 'Mi ubicación', detalle: s.origen, barrio: s.origen_barrio, lat: Number(s.origen_lat), lng: Number(s.origen_lng) });
     this.viaje.destino.set({ nombre: s.destino, detalle: null, barrio: s.destino_barrio, lat: Number(s.destino_lat), lng: Number(s.destino_lng) });
@@ -131,7 +148,9 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
         case 'en_curso':
           clearInterval(this.sondeo);
           Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
-          this.nav.navigateRoot('/cliente/viaje/en-camino', { queryParams: { id: this.id } });
+          this.nav.navigateRoot(s.tipo_servicio === 'encomienda' ? '/cliente/encomienda/seguimiento' : '/cliente/viaje/en-camino', {
+            queryParams: { id: this.id },
+          });
           break;
         case 'expirado':
           this.sinConductor();

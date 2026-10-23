@@ -1,0 +1,275 @@
+// Piezas compartidas por las pantallas de Encomienda (Figma: Encomienda 1 a 5).
+// Se importa con:  @use '../../../../../theme/encomienda' as *;
+@forward 'viaje';
+@use 'viaje' as *;
+
+// ---------- Cielo con título (Encomienda 1 y 2) ----------
+.cielo {
+  position: relative;
+  padding: calc(env(safe-area-inset-top) + 22px) 18px 86px;
+  background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 50%, #fe7b13 100%);
+  overflow: hidden;
+
+  .barra {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h1 {
+    margin: 0;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: clamp(24px, 7vw, 30px);
+    line-height: 1.1;
+    font-weight: 800;
+  }
+  .olas {
+    height: 64px;
+    overflow: hidden;
+  }
+}
+.gaviotas {
+  position: absolute;
+  right: 22%;
+  top: calc(env(safe-area-inset-top) + 10px);
+  width: 56px;
+  height: 22px;
+  fill: none;
+  stroke: $navy;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+
+  .lejos {
+    stroke-opacity: 0.7;
+  }
+}
+.volver {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba($navy, 0.14);
+  color: $navy;
+  cursor: pointer;
+  transition: transform 120ms $ease-out;
+
+  app-icono {
+    width: 22px;
+    height: 22px;
+    --grosor: 2.6;
+  }
+  &:active {
+    transform: scale(0.94);
+  }
+  &:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+  }
+}
+
+// ---------- Cuerpo ----------
+.cuerpo {
+  position: relative;
+  z-index: 1;
+  padding: 0 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.subtitulo {
+  margin: 6px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Etiqueta en mayúsculas sobre un campo ("NOMBRE", "CELULAR")
+.etiqueta {
+  display: block;
+  margin: 0 0 6px 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: $gris;
+}
+
+.entrada {
+  width: 100%;
+  height: 54px;
+  padding: 0 16px;
+  border: 2px solid #d5dee8;
+  border-radius: 16px;
+  outline: none;
+  background: #f6f9fc;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  color: $navy;
+
+  &::placeholder {
+    color: #8a9bb0;
+    font-weight: 700;
+  }
+  &:focus {
+    border-color: $teal;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba($teal, 0.15);
+  }
+  &:disabled {
+    opacity: 0.65;
+  }
+  &.invalida {
+    border-color: #e5484d;
+    background: #fff5f5;
+  }
+}
+
+// Celular con +57 fijo a la izquierda
+.celular {
+  display: flex;
+  align-items: stretch;
+  border: 2px solid #d5dee8;
+  border-radius: 16px;
+  background: #f6f9fc;
+  overflow: hidden;
+
+  .prefijo {
+    padding: 0 14px;
+    display: grid;
+    place-items: center;
+    border-right: 2px solid #d5dee8;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .entrada {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+  &:focus-within {
+    border-color: $teal;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba($teal, 0.15);
+  }
+  &.invalida {
+    border-color: #e5484d;
+    background: #fff5f5;
+  }
+}
+
+.error {
+  margin: 6px 0 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b42333;
+}
+
+// Aviso informativo azul claro (SMS, precio fijo…)
+.info {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #eef8f9;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  app-icono {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: $teal-d;
+  }
+}
+
+// Casilla grande ("Lo recibo yo mismo", "Es frágil")
+.casilla {
+  min-height: 56px;
+  padding: 12px 14px;
+  border: 2px solid #d5dee8;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .caja {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border: 2.5px solid #b8c5d4;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    transition: background-color 150ms ease, border-color 150ms ease;
+
+    app-icono {
+      width: 16px;
+      height: 16px;
+      --grosor: 3;
+      opacity: 0;
+    }
+  }
+  &.marcada {
+    border-color: $navy;
+    background: #f7f9fc;
+
+    .caja {
+      border-color: $navy;
+      background: $navy;
+      app-icono {
+        opacity: 1;
+      }
+    }
+  }
+  &:has(input:focus-visible) {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+
+// Insignia "Moto" / "Taxi"
+.insignia {
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eef3f8;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+
+  app-icono {
+    width: 14px;
+    height: 14px;
+  }
+}

@@ -1,0 +1,26 @@
+<div class="capa" role="dialog" aria-modal="true" [attr.aria-label]="tipo() === 'origen' ? 'Elegir punto de recogida' : 'Elegir destino'">
+  <app-mapa-ciudad class="mapa" marcador="usuario" [centro]="miPunto()" [destino]="pin()" [arrastrable]="true" (toque)="tocar($event)" />
+
+  <div class="arriba">
+    <button type="button" class="cerrar" aria-label="Cerrar" (click)="cerrar.emit()"><app-icono nombre="x" /></button>
+    <p class="titulo">Toca el mapa para marcar {{ tipo() === 'origen' ? 'dónde te recogen' : 'tu destino' }}</p>
+  </div>
+
+  <div class="hoja">
+    @if (punto(); as p) {
+      <div class="elegido">
+        <span class="disco"><app-icono nombre="pin" /></span>
+        <span class="textos">
+          <b>{{ p.nombre }}</b>
+          <small>{{ nombrando() ? 'Buscando la dirección…' : (p.detalle ?? 'Puedes tocar otro punto si no es aquí') }}</small>
+        </span>
+      </div>
+    } @else {
+      <p class="ayuda">Mueve el mapa con un dedo y toca el sitio exacto.</p>
+    }
+    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!punto()" (click)="confirmar()">Usar este punto</button>
+    @if (tipo() === 'origen') {
+      <button type="button" class="gps" (click)="usarGps.emit()"><app-icono nombre="navegar" /> Usar mi ubicación actual</button>
+    }
+  </div>
+</div>

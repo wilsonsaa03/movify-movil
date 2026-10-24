@@ -35,6 +35,10 @@ export class BuscadorLugarComponent implements AfterViewInit, OnDestroy {
 
   readonly tipo = input<'origen' | 'destino'>('destino');
   readonly titulo = input('¿A dónde lo llevamos?');
+  /** Mostrar "Usar mi ubicación actual" (por defecto solo en la recogida; en el domicilio, en la entrega). */
+  readonly conGps = input<boolean | null>(null);
+  readonly placeholder = input<string | null>(null);
+  readonly muestraGps = computed(() => this.conGps() ?? this.tipo() === 'origen');
   readonly elegido = output<Lugar>();
   readonly cerrar = output<void>();
 

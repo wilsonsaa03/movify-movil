@@ -1,0 +1,76 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver a mis pedidos" (click)="volver()"><app-icono nombre="atras" /></button>
+        <h1>{{ titulo() }}</h1>
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      @if (p(); as s) {
+        <!-- Resumen -->
+        <section class="tarjeta entra">
+          <div class="cabeza">
+            <span class="disco" [class]="s.tipo_servicio"><app-icono [nombre]="icono()" /></span>
+            <span class="textos">
+              <span class="estado" [class]="clase()">{{ s.estado_nombre }}</span>
+              <small>{{ fechaHora(s.fecha_solicitud) }}</small>
+            </span>
+            <span class="precio">{{ pesos(clase() === 'mal' ? 0 : s.tarifa) }}</span>
+          </div>
+          <div class="trayecto">
+            <span class="trazo" aria-hidden="true"><i class="ini"></i><i class="medio"></i><i class="fin"></i></span>
+            <span class="puntos">
+              <b>{{ s.origen }}</b>
+              <b>{{ s.destino }}</b>
+            </span>
+          </div>
+          @if (s.descripcion) {
+            <p class="nota"><app-icono nombre="lista" /> {{ s.descripcion }}</p>
+          }
+          @if (s.conductor_nombre) {
+            <p class="conductor">
+              <app-icono nombre="persona" /> {{ s.conductor_nombre }}
+              @if (s.conductor_placa) { <span class="placa">{{ s.conductor_placa }}</span> }
+            </p>
+          }
+        </section>
+
+        <!-- Línea de tiempo: cada cambio de estado con fecha y hora (historial_estados) -->
+        <section class="tarjeta entra" style="--d: 60ms" aria-label="Línea de tiempo">
+          <h2>Línea de tiempo</h2>
+          @if (cambios().length) {
+            <ol class="linea">
+              @for (c of cambios(); track $index; let i = $index) {
+                <li [class.final]="i === ultimo()" [class.mal]="i === ultimo() && clase() === 'mal'">
+                  <span class="marca" aria-hidden="true"></span>
+                  <span class="texto">
+                    <b>{{ c.estado_nombre }}</b>
+                    <small>{{ fechaHora(c.creado_en) }} · {{ quien(c) }}</small>
+                    @if (c.motivo) { <small class="motivo">{{ c.motivo }}</small> }
+                  </span>
+                </li>
+              }
+            </ol>
+          } @else {
+            <p class="vacio">Este pedido todavía no tiene cambios registrados.</p>
+          }
+        </section>
+
+        <button type="button" class="reportar" (click)="reportar()">¿Tuviste un problema? Repórtalo</button>
+      } @else if (!error()) {
+        <div class="esqueleto" aria-label="Cargando el pedido"></div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">{{ error() }}</p>
+      }
+    </main>
+  </div>
+</ion-content>

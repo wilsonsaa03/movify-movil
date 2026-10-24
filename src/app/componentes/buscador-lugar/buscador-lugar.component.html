@@ -4,15 +4,15 @@
     <h2>{{ titulo() }}</h2>
   </header>
 
-  <label class="campo">
-    <app-icono nombre="pin" class="lupa" />
+  <div class="campo">
+    <app-icono nombre="pin" class="lupa" aria-hidden="true" />
     <input
       #entrada
       type="text"
       [value]="texto()"
       (input)="escribir($any($event.target).value)"
-      [placeholder]="tipo() === 'origen' ? 'Dirección de recogida' : 'Busca la dirección de entrega'"
-      [attr.aria-label]="tipo() === 'origen' ? 'Dirección de recogida' : 'Dirección de entrega'"
+      [placeholder]="placeholder() ?? (tipo() === 'origen' ? 'Dirección de recogida' : 'Busca la dirección de entrega')"
+      [attr.aria-label]="titulo()"
       autocomplete="off"
       spellcheck="false"
       enterkeyhint="search"
@@ -23,10 +23,10 @@
     } @else if (texto()) {
       <button type="button" class="borrar" aria-label="Borrar" (click)="escribir('')"><app-icono nombre="x" /></button>
     }
-  </label>
+  </div>
 
   <div class="lista">
-    @if (tipo() === 'origen') {
+    @if (muestraGps()) {
       <button type="button" class="opcion" (click)="usarGps()">
         <span class="disco teal"><app-icono nombre="navegar" /></span>
         <span class="textos"><b>Usar mi ubicación actual</b><small>Donde estás ahora</small></span>

@@ -1,0 +1,149 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver" (click)="volver()"><app-icono nombre="atras" /></button>
+        <h1>Pide un domicilio</h1>
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      <!-- RECOGER EN (la tienda) / ENTREGAR EN (la casa) -->
+      <section class="trayecto entra" aria-label="Recogida y entrega">
+        <span class="trazo" aria-hidden="true"><i class="ini"></i><i class="medio"></i><i class="fin"></i></span>
+        <div class="puntos">
+          <button type="button" class="punto" [class.invalido]="intento() && faltaTienda()" (click)="buscando.set('tienda')">
+            <small>Recoger en</small>
+            @if (pedido.tienda(); as t) {
+              <b>{{ t.nombre }}</b>
+              @if (t.detalle || t.barrio) { <span>{{ t.detalle ?? t.barrio }}</span> }
+            } @else {
+              <b class="vacio">¿Dónde lo compramos o recogemos?</b>
+            }
+          </button>
+          <button type="button" class="punto" [class.invalido]="intento() && faltaEntrega()" (click)="buscando.set('entrega')">
+            <small>Entregar en</small>
+            @if (entregar(); as e) {
+              <b>{{ e.titulo }}</b>
+              @if (e.detalle) { <span>{{ e.detalle }}</span> }
+            } @else {
+              <b class="vacio">Buscando tu ubicación…</b>
+            }
+          </button>
+        </div>
+      </section>
+      @if (intento() && faltaTienda()) {
+        <p class="error" role="alert">Elige la tienda o el sitio donde recogemos el pedido.</p>
+      }
+
+      <!-- ¿Qué es? -->
+      <div class="entra" style="--d: 60ms">
+        <h2 class="subtitulo">¿Qué es?</h2>
+        <div class="categorias" role="radiogroup" aria-label="¿Qué es el pedido?">
+          @for (c of categorias; track c.id) {
+            <button
+              type="button"
+              role="radio"
+              class="categoria"
+              [class.elegida]="pedido.categoria() === c.id"
+              [attr.aria-checked]="pedido.categoria() === c.id"
+              (click)="elegirCategoria(c.id)"
+            >
+              <app-icono [nombre]="c.icono" /> {{ c.nombre }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- ¿Qué hay que llevar? -->
+      <div class="entra" style="--d: 90ms">
+        <label class="subtitulo" for="dom-desc">¿Qué hay que llevar?</label>
+        <p class="ayuda">Escríbelo como se lo dirías al domiciliario.</p>
+        <textarea
+          id="dom-desc"
+          class="entrada area"
+          rows="3"
+          maxlength="300"
+          placeholder="Ej.: una caja de acetaminofén de 500 mg y un suero oral de naranja."
+          [class.invalida]="(intento() && faltaDescripcion()) || !!prohibido()"
+          [attr.aria-invalid]="(intento() && faltaDescripcion()) || !!prohibido()"
+          [value]="pedido.descripcion()"
+          (input)="pedido.descripcion.set($any($event.target).value)"
+        ></textarea>
+        @if (prohibido(); as cat) {
+          <p class="error" role="alert">No podemos llevar esto: menciona {{ cat }}. En MoviFY no se llevan drogas, armas, dinero ni objetos robados.</p>
+        } @else if (intento() && faltaDescripcion()) {
+          <p class="error" role="alert">Cuéntale al domiciliario qué debe llevar.</p>
+        }
+      </div>
+
+      <!-- ¿Quién paga el pedido en la tienda? -->
+      <div class="entra" style="--d: 120ms">
+        <h2 class="subtitulo">¿Quién paga el pedido en la tienda?</h2>
+        <div class="pagador" role="radiogroup" aria-label="¿Quién paga el pedido en la tienda?">
+          <button type="button" role="radio" [class.elegido]="!pedido.pagaDomiciliario()" [attr.aria-checked]="!pedido.pagaDomiciliario()" (click)="elegirPagador(false)">
+            <b>Ya está pago</b>
+          </button>
+          <button type="button" role="radio" [class.elegido]="pedido.pagaDomiciliario()" [attr.aria-checked]="pedido.pagaDomiciliario()" (click)="elegirPagador(true)">
+            <b>El domiciliario</b>
+            <small>y yo le devuelvo</small>
+          </button>
+        </div>
+      </div>
+
+      @if (pedido.pagaDomiciliario()) {
+        <div class="valor entra" [class.invalido]="intento() && !!errorValor()">
+          <app-icono nombre="dinero" />
+          <label for="dom-valor">Valor aproximado del pedido</label>
+          <span class="moneda">
+            $
+            <input
+              #val
+              id="dom-valor"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="28.000"
+              [attr.aria-invalid]="intento() && !!errorValor()"
+              [value]="valorVisible()"
+              (input)="val.value = escribirValor(val.value)"
+            />
+          </span>
+          <small>Lo pagas en efectivo al recibir.</small>
+        </div>
+        @if (intento() && errorValor()) {
+          <p class="error" role="alert">{{ errorValor() }}</p>
+        }
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    @if (intento() && !listo()) {
+      <p class="aviso faltan" role="status">Completa lo que está en rojo para continuar.</p>
+    }
+    <button type="button" class="mv-boton mv-boton--naranja" (click)="verTarifa()">
+      Ver tarifa
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+    </button>
+  </div>
+</ion-footer>
+
+@if (buscando(); as b) {
+  <app-buscador-lugar
+    [tipo]="b === 'tienda' ? 'origen' : 'destino'"
+    [conGps]="b === 'entrega'"
+    [titulo]="b === 'tienda' ? '¿Dónde lo compramos?' : '¿A dónde lo llevamos?'"
+    [placeholder]="b === 'tienda' ? 'Tienda, droguería, restaurante o dirección' : null"
+    (elegido)="elegido($event)"
+    (cerrar)="buscando.set(null)"
+  />
+}

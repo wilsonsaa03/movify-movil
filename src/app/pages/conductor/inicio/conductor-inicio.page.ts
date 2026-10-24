@@ -3,8 +3,10 @@ import { IonContent, IonFooter, NavController, ViewDidEnter, ViewDidLeave } from
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ApiService, ErrorApi } from '../../../core/api.service';
 import { SesionService } from '../../../core/sesion.service';
+import { urlFoto } from '../../../core/formato';
 import { ConductorRegistroService } from '../../../servicios/conductor-registro.service';
 import { UbicacionService } from '../../../servicios/ubicacion.service';
+import { ViajeActivoService, pantallaConductor } from '../../../servicios/viaje-activo.service';
 import { IconoComponent } from '../../../componentes/icono/icono.component';
 import { MapaCiudadComponent, PuntoMapa, ZonaDemanda } from '../../../componentes/mapa-ciudad/mapa-ciudad.component';
 import { BarraInferiorComponent, ItemBarra } from '../../../componentes/barra-inferior/barra-inferior.component';
@@ -62,6 +64,7 @@ export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
   private readonly sesion = inject(SesionService);
   private readonly registro = inject(ConductorRegistroService);
   private readonly gps = inject(UbicacionService);
+  private readonly viajeActivo = inject(ViajeActivoService);
   private readonly reloj = new TiempoEnLinea();
   private sondeo: ReturnType<typeof setInterval> | null = null;
 
@@ -77,7 +80,7 @@ export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
     const a = (d?.apellidos || n.split(/\s+/)[1] || '').trim();
     return ((n.charAt(0) || 'C') + a.charAt(0)).toUpperCase();
   });
-  readonly foto = computed(() => this.sesion.datos()?.foto ?? null);
+  readonly foto = computed(() => urlFoto(this.sesion.datos()?.foto));
   readonly vehiculo = computed(() => this.registro.tipo() ?? 'moto');
   readonly miPunto = computed<PuntoMapa | null>(() => {
     const u = this.gps.ubicacion();
@@ -115,6 +118,7 @@ export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
 
   ionViewDidEnter(): void {
     this.gps.seguir(); // su vehículo se mueve en el mapa en tiempo real
+    this.retomarViaje();
     this.cargar();
     if (!this.registro.tipo()) this.registro.cargar().catch(() => undefined);
   }
@@ -145,6 +149,20 @@ export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
 
   notificaciones(): void {
     this.nav.navigateForward('/conductor/notificaciones');
+  }
+
+  /** Tocar la foto o "Hola, Luis" abre su perfil (la misma pantalla de la pestaña Perfil). */
+  abrirPerfil(): void {
+    Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
+    this.nav.navigateRoot('/conductor/perfil', { animated: false });
+  }
+
+  /** Si cerró la app a mitad de un viaje, vuelve a la pantalla en la que iba. */
+  private async retomarViaje(): Promise<void> {
+    const v = await this.viajeActivo.activo().catch(() => null);
+    if (!v || Number(v.conductor_id) !== this.sesion.datos()?.id) return;
+    const ruta = pantallaConductor(v);
+    if (ruta) this.nav.navigateRoot(ruta, { queryParams: { id: v.id } });
   }
 
   private async cargar(): Promise<void> {

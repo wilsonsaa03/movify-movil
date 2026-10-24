@@ -1,0 +1,62 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="noche">
+      <div class="sol" aria-hidden="true"></div>
+      <h1>Mis viajes</h1>
+      <div class="periodos" role="tablist" aria-label="Periodo">
+        @for (p of periodos; track p.id) {
+          <button type="button" role="tab" [class.elegido]="periodo() === p.id" [attr.aria-selected]="periodo() === p.id" (click)="elegir(p.id)">
+            {{ p.nombre }}
+          </button>
+        }
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      <section class="resumen entra" aria-live="polite">
+        <span>
+          <small>{{ rotulo() }}</small>
+          <b class="precio">{{ pesos(ganado().valor) }}</b>
+        </span>
+        <span class="viajes">
+          <small>Viajes</small>
+          <b>{{ ganado().viajes }}</b>
+        </span>
+      </section>
+
+      @if (cargando() && !lista().length) {
+        <div class="esqueleto" aria-label="Cargando viajes"></div>
+      } @else if (lista().length) {
+        <ul class="lista">
+          @for (v of lista(); track v.servicio_id; let i = $index) {
+            <li class="entra" [style.--d]="i * 30 + 'ms'">
+              <button type="button" class="viaje" [class.apagado]="estado(v).clase === 'mal'" (click)="abrir(v)">
+                <span class="disco" [class.teal]="estado(v).clase !== 'mal'"><app-icono [nombre]="icono(v)" /></span>
+                <span class="textos">
+                  <small>{{ periodo() === 'hoy' ? hora(v.fecha_solicitud) : fechaHora(v.fecha_solicitud) }}</small>
+                  <b>{{ corto(v.origen_direccion) }} → {{ corto(v.destino_direccion) }}</b>
+                  <span class="estado" [class]="estado(v).clase">{{ estado(v).texto }}</span>
+                </span>
+                <span class="precio">{{ pesos(estado(v).clase === 'mal' ? 0 : v.tarifa) }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="vacio">
+          <app-icono nombre="lista" />
+          Todavía no tienes viajes {{ periodo() === 'hoy' ? 'hoy' : periodo() === 'semana' ? 'esta semana' : 'este mes' }}.
+          Conéctate en el inicio para recibir solicitudes.
+        </p>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">{{ error() }}</p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <app-barra-inferior [items]="barra" activa="/conductor/viajes" />
+</ion-footer>

@@ -8,6 +8,7 @@ import { UbicacionService } from '../../../servicios/ubicacion.service';
 import { IconoComponent, NombreIcono } from '../../../componentes/icono/icono.component';
 import { MapaCiudadComponent, PuntoMapa } from '../../../componentes/mapa-ciudad/mapa-ciudad.component';
 import { BarraInferiorComponent, ItemBarra } from '../../../componentes/barra-inferior/barra-inferior.component';
+import { urlFoto } from '../../../core/formato';
 
 type TipoServicio = 'moto' | 'taxi' | 'domicilio' | 'encomienda';
 
@@ -118,7 +119,7 @@ export class ClienteInicioPage implements AfterViewInit, OnDestroy, ViewDidEnter
     return (d?.nombres || d?.nombre || '').trim().split(/\s+/)[0] || 'vecino';
   });
   readonly inicial = computed(() => this.nombre().charAt(0).toUpperCase());
-  readonly foto = computed(() => this.sesion.datos()?.foto ?? null);
+  readonly foto = computed(() => urlFoto(this.sesion.datos()?.foto));
   readonly saludo = signal(this.saludoSegunHora());
 
   readonly servicios: TarjetaServicio[] = [
@@ -252,6 +253,12 @@ export class ClienteInicioPage implements AfterViewInit, OnDestroy, ViewDidEnter
 
   notificaciones(): void {
     this.nav.navigateForward('/cliente/notificaciones');
+  }
+
+  /** Tocar la foto o "Hola, Wilson" abre el perfil (la misma pantalla de la pestaña Perfil). */
+  abrirPerfil(): void {
+    Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
+    this.nav.navigateRoot('/cliente/perfil', { animated: false });
   }
 
   private abrir(id: TipoServicio): void {

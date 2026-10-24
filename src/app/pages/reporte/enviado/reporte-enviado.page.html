@@ -54,7 +54,7 @@
             </span>
             <span>
               <b>Reporte recibido</b>
-              <small>Quedó registrado con tu viaje.</small>
+              <small>{{ sinViaje() ? 'Quedó registrado con tu número de solicitud.' : 'Quedó registrado con tu viaje.' }}</small>
             </span>
           </li>
           <li [class.hecho]="avance() === 2" [class.actual]="avance() === 1">

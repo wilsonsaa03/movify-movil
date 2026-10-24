@@ -4,7 +4,7 @@
 
     <p class="banner entra" role="alert">
       <app-icono nombre="campana" />
-      ¡Nueva solicitud de {{ s()?.tipo_vehiculo ?? 'viaje' }}!
+      {{ banner() }}
     </p>
 
     <main class="hoja" #hoja>
@@ -45,6 +45,23 @@
             </span>
           </span>
         </section>
+
+        <!-- Domicilio / encomienda: qué lleva y si hay que adelantar plata -->
+        @if (clase() !== 'transporte') {
+          <section class="pedido entra" style="--d: 75ms" [attr.aria-label]="clase() === 'domicilio' ? 'Pedido' : 'Paquete'">
+            <span class="disco naranja"><app-icono [nombre]="clase() === 'domicilio' ? 'domicilio' : 'encomienda'" /></span>
+            <span class="textos">
+              <b>{{ pedidoTitulo() }}</b>
+              @if (v.descripcion) { <small>{{ v.descripcion }}</small> }
+            </span>
+          </section>
+          @if (adelanta()) {
+            <p class="adelanta entra" style="--d: 90ms">
+              <app-icono nombre="dinero" />
+              Pagas el pedido en la tienda (unos {{ pesos(adelanta()) }}) y el cliente te lo devuelve al recibir.
+            </p>
+          }
+        }
 
         <!-- Punto de referencia y nota de voz -->
         @if (v.origen_referencia || v.nota_voz_segundos) {
@@ -93,7 +110,7 @@
         <span class="cargando" aria-hidden="true"></span>
         Aceptando…
       } @else {
-        Aceptar viaje
+        {{ clase() === 'domicilio' ? 'Aceptar domicilio' : clase() === 'encomienda' ? 'Aceptar envío' : 'Aceptar viaje' }}
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
       }
     </button>

@@ -1,0 +1,210 @@
+@use '../../../../../theme/encomienda' as *;
+
+.cuerpo {
+  margin-top: -50px;
+}
+.tarjeta {
+  padding: 16px;
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #ffffff;
+  box-shadow:
+    0 6px 0 #e4ebf2,
+    0 14px 30px rgba($navy, 0.12);
+
+  h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+  }
+}
+.cabeza {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .disco {
+    width: 48px;
+    height: 48px;
+    background: $teal-claro;
+
+    &.domicilio {
+      background: #ffb36b;
+    }
+    &.encomienda {
+      background: #8fdc95;
+    }
+  }
+  .textos {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+
+    small {
+      font-size: 13px;
+      font-weight: 700;
+      color: $gris;
+    }
+  }
+  .precio {
+    font-size: 22px;
+  }
+}
+.estado {
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+
+  &.ok {
+    background: #e2f6f7;
+    color: $teal-d;
+  }
+  &.mal {
+    background: #fdecee;
+    color: #b42333;
+  }
+  &.curso {
+    background: #fff1e6;
+    color: #b4530a;
+  }
+}
+.trayecto {
+  display: flex;
+  gap: 12px;
+
+  .puntos {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+
+    b {
+      font-size: 14.5px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+  }
+}
+.nota,
+.conductor {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+
+  app-icono {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: $teal-d;
+  }
+}
+.placa {
+  padding: 1px 8px;
+  border: 2px solid $navy;
+  border-radius: 6px;
+  background: #ffc94d;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+// Línea de tiempo
+.linea {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+    &:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 18px;
+      bottom: 0;
+      width: 2px;
+      background: #d5dee8;
+    }
+  }
+  .marca {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border: 3px solid #b8c5d4;
+    border-radius: 50%;
+    background: #ffffff;
+  }
+  .final .marca {
+    border-color: $teal;
+    background: $teal;
+  }
+  .final.mal .marca {
+    border-color: #e5484d;
+    background: #e5484d;
+  }
+  .texto {
+    display: flex;
+    flex-direction: column;
+
+    b {
+      font-size: 15px;
+      font-weight: 800;
+    }
+    small {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: $gris;
+    }
+    .motivo {
+      font-style: italic;
+    }
+  }
+}
+.vacio {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: $gris;
+}
+.reportar {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: #b42333;
+  cursor: pointer;
+}
+.esqueleto {
+  height: 300px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #f2f6fa 0%, #e8eef4 50%, #f2f6fa 100%);
+  background-size: 200% 100%;
+  animation: brillo 1.2s linear infinite;
+}
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}

@@ -1,0 +1,110 @@
+@use '../../../../theme/encomienda' as *;
+
+// Cielo con el título (Figma "Conductor app 4 · PIN")
+.cielo {
+  padding: calc(env(safe-area-inset-top) + 18px) 20px 84px;
+
+  .volver {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 14px;
+  }
+  h1 {
+    position: relative;
+    z-index: 1;
+  }
+  p {
+    position: relative;
+    z-index: 1;
+    margin: 6px 0 0;
+    max-width: 320px;
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+}
+
+.cuerpo {
+  margin-top: -36px;
+  gap: 12px;
+}
+
+.casillas {
+  display: grid;
+  grid-template-columns: repeat(4, 64px);
+  justify-content: center;
+  gap: 12px;
+
+  &.mal .casilla {
+    border-color: #e5484d;
+    animation: temblar 320ms ease;
+  }
+}
+.casilla {
+  height: 72px;
+  border: 2.5px solid #d5dee8;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-size: 34px;
+  font-weight: 800;
+  color: $navy;
+  box-shadow: 0 4px 0 #e4ebf2;
+  transition: border-color 150ms ease;
+
+  &.llena {
+    border-color: $navy;
+  }
+  &.actual {
+    border-color: $orange;
+  }
+}
+
+.estado {
+  margin: 0 0 6px;
+  min-height: 22px;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: $gris;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  app-icono {
+    width: 16px;
+    height: 16px;
+    --grosor: 3;
+  }
+  .ok {
+    color: $teal-d;
+  }
+  .mal {
+    color: #b42333;
+  }
+}
+
+.mv-boton .cargando {
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes temblar {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .casillas.mal .casilla {
+    animation: none;
+  }
+}

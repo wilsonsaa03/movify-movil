@@ -1,0 +1,89 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="con-mapa">
+    <app-mapa-ciudad
+      [marcador]="moto() ? 'moto' : null"
+      [centro]="moto()"
+      [ruta]="camino()"
+      [destino]="meta()"
+      [encuadrar]="true"
+      [margenInferior]="altoHoja()"
+    />
+
+    <!-- Tarjeta de arriba: fase, hora de llegada y los 4 pasos -->
+    <section class="estado entra" role="status" aria-live="polite">
+      <div class="fila">
+        <span>
+          <small>{{ fase() }}</small>
+          <b>{{ llegaA() ? 'Llega a las ' + llegaA() : 'Calculando la llegada…' }}</b>
+        </span>
+        @if (minutos() !== null) {
+          <span class="minutos">{{ minutos() }} min</span>
+        }
+      </div>
+      <ol class="pasos">
+        @for (p of pasos(); track p.nombre; let i = $index) {
+          <li [class]="p.estado">
+            <span class="numero" aria-hidden="true">@if (p.estado === 'hecho') {<app-icono nombre="check" />} @else {{{ i + 1 }}}</span>
+            <small>{{ p.nombre }}</small>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <main class="hoja" #hoja>
+      <span class="asa" aria-hidden="true"></span>
+
+      @if (servicio(); as s) {
+        <section class="conductor entra">
+          <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+          <span class="quien">
+            <b>{{ s.conductor_nombre }}</b>
+            <small>
+              @if (s.conductor_calificacion) {
+                <app-icono nombre="estrella" class="estrella" /> {{ s.conductor_calificacion }} ·
+              }
+              domiciliario
+            </small>
+          </span>
+          @if (s.conductor_placa) {
+            <span class="placa">
+              <b>{{ s.conductor_placa }}</b>
+              <small>{{ s.conductor_modelo }}{{ s.conductor_color ? ' · ' + s.conductor_color : '' }}</small>
+            </span>
+          }
+        </section>
+
+        <p class="nota entra" style="--d: 60ms"><app-icono nombre="domicilio" /> {{ nota() }}</p>
+
+        <nav class="acciones entra" style="--d: 100ms" aria-label="Acciones">
+          <a class="accion" [href]="telefono() ? 'tel:' + telefono() : null" [attr.aria-disabled]="!telefono()">
+            <span class="disco"><app-icono nombre="telefono" /></span>Llamar
+          </a>
+          <a class="accion" [href]="telefono() ? 'sms:' + telefono() : null" [attr.aria-disabled]="!telefono()">
+            <span class="disco"><app-icono nombre="mensaje" /></span>Mensaje
+          </a>
+          <button type="button" class="accion" (click)="compartir()">
+            <span class="disco"><app-icono nombre="compartir" /></span>Compartir
+          </button>
+        </nav>
+
+        @if (puedeCancelar()) {
+          <button type="button" class="cancelar" [disabled]="cancelando()" (click)="cancelar()">
+            {{ cancelando() ? 'Cancelando…' : 'Cancelar domicilio' }}
+          </button>
+        }
+      } @else {
+        <div class="esqueleto" aria-hidden="true"></div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">
+          {{ error() }}
+          @if (servicio()?.estado_codigo === 'cancelado') {
+            <button type="button" class="reintentar" (click)="alInicio()">Ir al inicio</button>
+          }
+        </p>
+      }
+    </main>
+  </div>
+</ion-content>

@@ -8,7 +8,8 @@
         <path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" />
       </svg>
 
-      <div class="saludo entra">
+      <!-- La foto y el saludo abren el perfil (datos, foto, lugares, clave…) -->
+      <button type="button" class="saludo entra" aria-label="Abrir mi perfil y configuración" (click)="abrirPerfil()">
         <span class="avatar">
           @if (foto(); as f) {
             <img [src]="f" alt="" />
@@ -20,7 +21,7 @@
           <small>{{ saludo() }}</small>
           <b>{{ nombre() }}</b>
         </span>
-      </div>
+      </button>
 
       <button type="button" class="campana entra" style="--d: 60ms" aria-label="Notificaciones" (click)="notificaciones()">
         <app-icono nombre="campana" />

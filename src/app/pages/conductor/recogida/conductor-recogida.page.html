@@ -1,0 +1,81 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="con-mapa">
+    <app-mapa-ciudad
+      [marcador]="v()?.tipo_vehiculo ?? 'moto'"
+      [centro]="yo()"
+      [ruta]="camino()"
+      [destino]="recogida()"
+      [encuadrar]="true"
+      [margenInferior]="altoHoja()"
+    />
+
+    <!-- RECOGE A ANA · 3 min · 600 m -->
+    <p class="pildora entra" role="status" aria-live="polite">
+      <span class="disco amarillo"><app-icono nombre="pin" /></span>
+      <span>
+        <small>{{ titulo() }}</small>
+        <b>{{ llegada() }}</b>
+      </span>
+    </p>
+    <app-boton-sos class="sos" [servicioId]="id" />
+
+    <main class="hoja" #hoja>
+      <span class="asa" aria-hidden="true"></span>
+
+      @if (v(); as s) {
+        <section class="persona pasajero entra">
+          <span class="avatar" aria-hidden="true">{{ inicial() }}</span>
+          <span class="datos">
+            <b>{{ pasajero() }}</b>
+            <span class="fila">
+              @if (calificacion(); as c) {
+                <span class="estrellas"><app-icono nombre="estrella" /> {{ c }}</span>
+              }
+              @if (s.usuario_verificado) {
+                <span class="verificada"><app-icono nombre="check" /> Verificada</span>
+              }
+            </span>
+          </span>
+          <a class="redondo" [href]="telefono() ? 'tel:' + telefono() : null" [attr.aria-disabled]="!telefono()" aria-label="Llamar al pasajero">
+            <app-icono nombre="telefono" />
+          </a>
+          <a class="redondo" [href]="telefono() ? 'sms:' + telefono() : null" [attr.aria-disabled]="!telefono()" aria-label="Enviar mensaje al pasajero">
+            <app-icono nombre="mensaje" />
+          </a>
+        </section>
+
+        <p class="direccion entra" style="--d: 40ms">{{ s.origen }}{{ s.origen_barrio ? ', ' + s.origen_barrio : '' }}</p>
+
+        @if (s.origen_referencia || s.nota_voz_segundos) {
+          <section class="referencia entra" style="--d: 80ms" aria-label="Punto de referencia">
+            @if (s.origen_referencia) {
+              <p><app-icono nombre="pin" /> {{ s.origen_referencia }}</p>
+            }
+            @if (s.nota_voz_segundos) {
+              <app-nota-voz [fuente]="notaUrl()" [segundos]="s.nota_voz_segundos" />
+            }
+          </section>
+        }
+      } @else {
+        <div class="esqueleto" aria-label="Cargando el viaje"></div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">{{ error() }}</p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!v() || llegando()" (click)="llegue()">
+      @if (llegando()) {
+        <span class="cargando" aria-hidden="true"></span> Avisando…
+      } @else {
+        Llegué
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4M6 4h11l-2 4 2 4H6" /></svg>
+      }
+    </button>
+  </div>
+</ion-footer>

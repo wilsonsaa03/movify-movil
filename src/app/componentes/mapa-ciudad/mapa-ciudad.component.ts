@@ -59,8 +59,10 @@ const SVG_TAXI =
     .mv-mapa-vehiculo svg {
       width: 24px; height: 24px; fill: none; stroke: #03274d; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
     }
-    /* Destino: pin azul oscuro con el nombre al lado (como en el Figma) */
-    .mv-mapa-destino { position: relative; width: 36px; height: 44px; }
+    /* Destino: pin azul oscuro con el nombre al lado (como en el Figma).
+       display: block es obligatorio: un <span> es inline e ignora width/height, la caja quedaba en 0×0
+       y el pin se dibujaba 44 px por encima del punto tocado (parecía que marcaba "un aproximado"). */
+    .mv-mapa-destino { position: relative; display: block; width: 36px; height: 44px; }
     .mv-mapa-destino .pin {
       position: absolute; left: 0; bottom: 0; width: 36px; height: 40px; border-radius: 18px 18px 6px 6px;
       background: #03274d; display: grid; place-items: center; box-shadow: 0 6px 12px rgba(3, 39, 77, 0.3);

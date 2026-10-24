@@ -1,0 +1,101 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="con-mapa">
+    <app-mapa-ciudad
+      [marcador]="v()?.tipo_vehiculo ?? 'moto'"
+      [centro]="yo()"
+      [ruta]="camino()"
+      [destino]="meta()"
+      [encuadrar]="true"
+      [margenInferior]="altoHoja()"
+    />
+
+    <!-- LLEVANDO A ANA · Muelle turístico · 8 min · 2,9 km -->
+    <section class="arriba entra" role="status" aria-live="polite">
+      <div class="fila">
+        <span>
+          <small>{{ etiqueta() }}</small>
+          <b>{{ lugar() }}</b>
+        </span>
+        @if (minutos() !== null) {
+          <span class="min">
+            <b>{{ minutos() }} min</b>
+            <span>{{ distancia(falta() ?? 0) }}</span>
+          </span>
+        }
+      </div>
+      <div class="barra" aria-hidden="true"><i [style.width.%]="avance() * 100"></i></div>
+    </section>
+    <app-boton-sos class="sos" [servicioId]="id" />
+
+    <main class="hoja" #hoja>
+      <span class="asa" aria-hidden="true"></span>
+
+      @if (v(); as s) {
+        <section class="persona entra">
+          <span class="avatar" aria-hidden="true">{{ inicial() }}</span>
+          <span class="datos">
+            <b>{{ pasajero() }}</b>
+            <span class="fila">
+              @if (calificacion(); as c) {
+                <span class="estrellas"><app-icono nombre="estrella" /> {{ c }}</span>
+              }
+              @if (s.usuario_verificado) {
+                <span class="verificada"><app-icono nombre="check" /> Verificada</span>
+              }
+            </span>
+          </span>
+          <a class="redondo" [href]="telefono() ? 'sms:' + telefono() : null" [attr.aria-disabled]="!telefono()" aria-label="Enviar mensaje">
+            <app-icono nombre="mensaje" />
+          </a>
+        </section>
+
+        @if (tipo() !== 'transporte' && s.descripcion) {
+          <p class="pedido entra" style="--d: 30ms"><app-icono [nombre]="tipo() === 'encomienda' ? 'encomienda' : 'domicilio'" /> {{ s.descripcion }}</p>
+        }
+
+        <!-- Domicilio con compra: lo que dice la factura -->
+        @if (compra() && !porRecoger()) {
+          <label class="factura entra" style="--d: 50ms" [class.invalida]="!!error() && factura() === null">
+            <span>¿Cuánto pagaste en la tienda?</span>
+            <span class="moneda">
+              $
+              <input
+                #fac
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                [placeholder]="s.valor_productos_aprox ? miles(s.valor_productos_aprox) : '0'"
+                (input)="fac.value = escribirFactura(fac.value)"
+              />
+            </span>
+            <small>El cliente te lo devuelve junto con el domicilio.</small>
+          </label>
+        }
+
+        <div class="valor entra" style="--d: 70ms">
+          <span>{{ compra() && !porRecoger() ? 'Cobra en efectivo' : 'Valor del viaje' }}</span>
+          <span class="precio">{{ pesos(compra() && !porRecoger() ? cobrar() : s.tarifa) }}</span>
+        </div>
+      } @else {
+        <div class="esqueleto" aria-label="Cargando el viaje"></div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">{{ error() }}</p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!v() || ocupado()" (click)="siguiente()">
+      @if (ocupado()) {
+        <span class="cargando" aria-hidden="true"></span> Un momento…
+      } @else {
+        {{ textoBoton() }}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4M6 4h11l-2 4 2 4H6" /></svg>
+      }
+    </button>
+  </div>
+</ion-footer>

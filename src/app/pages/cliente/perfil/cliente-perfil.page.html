@@ -1,0 +1,234 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <!-- Cielo con la foto y el nombre -->
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+
+      <label class="foto entra" [class.cargando-foto]="subiendoFoto()">
+        <span class="avatar grande">
+          @if (foto(); as f) {
+            <img [src]="f" alt="Tu foto de perfil" />
+          } @else {
+            {{ inicial() }}
+          }
+        </span>
+        <span class="camara" aria-hidden="true">
+          @if (subiendoFoto()) { <span class="cargando"></span> } @else { <app-icono nombre="persona" /> }
+        </span>
+        <input type="file" accept="image/*" class="sr-only" aria-label="Cambiar foto de perfil" (change)="cambiarFoto($event)" />
+      </label>
+      <h1 class="entra" style="--d: 40ms">{{ nombre() }}</h1>
+      @if (perfil(); as p) {
+        <p class="entra" style="--d: 80ms">
+          +57 {{ celular() }}
+          @if (p.telefono_verificado) { <span class="verificado"><app-icono nombre="check" /> Verificado</span> }
+        </p>
+      }
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      @if (perfil(); as p) {
+        <!-- Números -->
+        <section class="numeros entra" aria-label="Tu actividad">
+          <span><b>{{ p.viajes_finalizados }}</b><small>Servicios</small></span>
+          <span><b class="precio">{{ pesos(p.total_gastado) }}</b><small>Pagado</small></span>
+          <span><b>{{ calificacion() }}</b><small><app-icono nombre="estrella" /> Calificación</small></span>
+        </section>
+
+        <!-- Accesos rápidos (como los cuadros de arriba en el perfil de Uber) -->
+        <nav class="rapidos entra" style="--d: 20ms" aria-label="Accesos rápidos">
+          <button type="button" (click)="irA('/cliente/ayuda')"><app-icono nombre="mensaje" /><span>Ayuda</span></button>
+          <button type="button" (click)="irA('/cliente/pedidos')"><app-icono nombre="lista" /><span>Mis pedidos</span></button>
+          <button type="button" (click)="verSeguridad()"><app-icono nombre="escudo" /><span>Seguridad</span></button>
+        </nav>
+
+        <!-- Tus datos -->
+        <section class="tarjeta entra" style="--d: 40ms" aria-labelledby="t-datos">
+          <div class="cabeza">
+            <h2 id="t-datos"><app-icono nombre="persona" /> Tus datos</h2>
+            @if (!editando()) { <button type="button" class="enlace" (click)="editar()">Editar</button> }
+          </div>
+          @if (editando()) {
+            <label class="etiqueta" for="p-nombres">Nombres</label>
+            <input id="p-nombres" class="entrada" type="text" maxlength="80" autocomplete="given-name" [value]="nombres()" (input)="nombres.set($any($event.target).value)" />
+            <label class="etiqueta" for="p-apellidos">Apellidos</label>
+            <input id="p-apellidos" class="entrada" type="text" maxlength="80" autocomplete="family-name" [value]="apellidos()" (input)="apellidos.set($any($event.target).value)" />
+            <label class="etiqueta" for="p-correo">Correo <small>(opcional)</small></label>
+            <input id="p-correo" class="entrada" type="email" inputmode="email" maxlength="120" autocomplete="email" placeholder="tucorreo@ejemplo.com" [value]="correo()" (input)="correo.set($any($event.target).value)" />
+            @if (errorDatos()) { <p class="error" role="alert">{{ errorDatos() }}</p> }
+            <div class="botones">
+              <button type="button" class="contorno" (click)="editando.set(false)">Cancelar</button>
+              <button type="button" class="mv-boton mv-boton--naranja" [disabled]="guardando()" (click)="guardarDatos()">{{ guardando() ? 'Guardando…' : 'Guardar' }}</button>
+            </div>
+          } @else {
+            <dl class="datos">
+              <div><dt>Nombre</dt><dd>{{ p.nombre }}</dd></div>
+              <div><dt>Celular</dt><dd>+57 {{ celular() }}</dd></div>
+              <div><dt>Correo</dt><dd>{{ p.correo || 'Sin correo' }}</dd></div>
+              @if (miembroDesde()) { <div><dt>En MoviFY desde</dt><dd class="cap">{{ miembroDesde() }}</dd></div> }
+            </dl>
+          }
+        </section>
+
+        <!-- Tus lugares -->
+        <section class="tarjeta entra" style="--d: 80ms" aria-labelledby="t-lugares">
+          <div class="cabeza">
+            <h2 id="t-lugares"><app-icono nombre="pin" /> Tus lugares</h2>
+            @if (!lugarNuevo()) { <button type="button" class="enlace" (click)="buscandoLugar.set(true)">Agregar</button> }
+          </div>
+          @if (lugarNuevo(); as l) {
+            <div class="nuevo">
+              <p class="elegido"><app-icono nombre="pin" /> <span><b>{{ l.nombre }}</b>@if (l.detalle || l.barrio) {<small>{{ l.detalle ?? l.barrio }}</small>}</span></p>
+              <span class="etiqueta">¿Cómo lo llamas?</span>
+              <div class="chips">
+                @for (e of etiquetas; track e) {
+                  <button type="button" class="chip" [class.elegido]="etiquetaNueva() === e" (click)="etiquetaNueva.set(e)">{{ e }}</button>
+                }
+              </div>
+              <input class="entrada" type="text" maxlength="30" placeholder="U otro nombre: Gimnasio, Colegio…" aria-label="Nombre del lugar" [value]="etiquetaNueva()" (input)="etiquetaNueva.set($any($event.target).value)" />
+              @if (errorLugar()) { <p class="error" role="alert">{{ errorLugar() }}</p> }
+              <div class="botones">
+                <button type="button" class="contorno" (click)="cancelarLugar()">Cancelar</button>
+                <button type="button" class="mv-boton mv-boton--naranja" (click)="guardarLugar()">Guardar lugar</button>
+              </div>
+            </div>
+          }
+          @if (lugares().length) {
+            <ul class="lista">
+              @for (l of lugares(); track l.id) {
+                <li>
+                  <span class="disco amarillo"><app-icono [nombre]="iconoLugar(l.etiqueta)" /></span>
+                  <span class="textos"><b>{{ l.etiqueta }}</b><small>{{ l.direccion }}</small></span>
+                  <button type="button" class="quitar" [attr.aria-label]="'Borrar ' + l.etiqueta" (click)="borrarLugar(l)"><app-icono nombre="x" /></button>
+                </li>
+              }
+            </ul>
+          } @else if (!lugarNuevo()) {
+            <p class="vacio">Guarda tu casa o tu trabajo para pedir más rápido.</p>
+          }
+        </section>
+
+        <!-- Forma de pago: por ahora solo efectivo -->
+        <section class="tarjeta entra" style="--d: 100ms" aria-labelledby="t-pago">
+          <div class="cabeza">
+            <h2 id="t-pago"><app-icono nombre="dinero" /> Forma de pago</h2>
+          </div>
+          <div class="pago">
+            <span class="disco verde"><app-icono nombre="dinero" /></span>
+            <span class="textos"><b>Efectivo</b><small>Le pagas al conductor al terminar el servicio</small></span>
+            <app-icono nombre="check" class="marcado" />
+          </div>
+          <p class="ayuda-pie">Ten el valor exacto o billetes pequeños: así es más fácil recibir el cambio.</p>
+        </section>
+
+        <!-- Contactos de emergencia -->
+        <section #seguridad class="tarjeta entra" style="--d: 120ms" aria-labelledby="t-contactos">
+          <div class="cabeza">
+            <h2 id="t-contactos"><app-icono nombre="escudo" /> Contactos de emergencia</h2>
+            @if (!agregandoContacto()) { <button type="button" class="enlace" (click)="agregandoContacto.set(true)">Agregar</button> }
+          </div>
+          <p class="ayuda">Las personas a quienes avisar si tienes una emergencia en un viaje.</p>
+          @if (agregandoContacto()) {
+            <div class="nuevo">
+              <label class="etiqueta" for="c-nombre">Nombre</label>
+              <input id="c-nombre" class="entrada" type="text" maxlength="80" [value]="contactoNombre()" (input)="contactoNombre.set($any($event.target).value)" />
+              <label class="etiqueta" for="c-celular">Celular</label>
+              <div class="celular">
+                <span class="prefijo" aria-hidden="true">+57</span>
+                <input #cel id="c-celular" class="entrada" type="tel" inputmode="numeric" placeholder="310 555 0142" [value]="contactoCelular()" (input)="cel.value = escribirCelular(cel.value)" />
+              </div>
+              <label class="etiqueta" for="c-parentesco">Parentesco <small>(opcional)</small></label>
+              <input id="c-parentesco" class="entrada" type="text" maxlength="30" placeholder="Mamá, hermano, pareja…" [value]="contactoParentesco()" (input)="contactoParentesco.set($any($event.target).value)" />
+              @if (errorContacto()) { <p class="error" role="alert">{{ errorContacto() }}</p> }
+              <div class="botones">
+                <button type="button" class="contorno" (click)="agregandoContacto.set(false)">Cancelar</button>
+                <button type="button" class="mv-boton mv-boton--naranja" (click)="guardarContacto()">Agregar</button>
+              </div>
+            </div>
+          }
+          @if (contactos().length) {
+            <ul class="lista">
+              @for (c of contactos(); track c.id) {
+                <li>
+                  <span class="disco teal"><app-icono nombre="telefono" /></span>
+                  <span class="textos"><b>{{ c.nombre }}</b><small>{{ telefonoBonito(c.telefono) }}{{ c.parentesco ? ' · ' + c.parentesco : '' }}</small></span>
+                  <button type="button" class="quitar" [attr.aria-label]="'Quitar a ' + c.nombre" (click)="borrarContacto(c)"><app-icono nombre="x" /></button>
+                </li>
+              }
+            </ul>
+          } @else if (!agregandoContacto()) {
+            <p class="vacio">Todavía no tienes contactos de emergencia.</p>
+          }
+        </section>
+
+        <!-- Cómo te cuidamos en cada viaje (lo que la app ya hace) -->
+        <section class="tarjeta entra" style="--d: 140ms" aria-labelledby="t-cuidamos">
+          <div class="cabeza">
+            <h2 id="t-cuidamos"><app-icono nombre="escudo" /> Viaja seguro</h2>
+          </div>
+          <ul class="consejos">
+            <li><app-icono nombre="candado" /><span><b>Código de abordaje</b><small>Dale tus 4 números al conductor solo cuando ya estés en el vehículo.</small></span></li>
+            <li><app-icono nombre="taxi" /><span><b>Revisa la placa</b><small>Antes de subir, confirma que la placa y el conductor sean los de la app.</small></span></li>
+            <li><app-icono nombre="compartir" /><span><b>Comparte tu viaje</b><small>Desde el seguimiento puedes enviarle a alguien por dónde vas.</small></span></li>
+            <li><app-icono nombre="alerta" /><span><b>Botón SOS</b><small>Durante el viaje, avisa a MoviFY si algo anda mal.</small></span></li>
+          </ul>
+          <a class="emergencia" href="tel:123"><app-icono nombre="telefono" /> Emergencias: llama al 123</a>
+        </section>
+
+        <!-- Clave -->
+        <section class="tarjeta entra" style="--d: 160ms" aria-labelledby="t-clave">
+          <div class="cabeza">
+            <h2 id="t-clave"><app-icono nombre="candado" /> Tu clave</h2>
+            @if (!cambiandoClave()) { <button type="button" class="enlace" (click)="cambiandoClave.set(true)">Cambiar</button> }
+          </div>
+          @if (cambiandoClave()) {
+            <label class="etiqueta" for="k-actual">Clave actual</label>
+            <input #ka id="k-actual" class="entrada clave" type="password" inputmode="numeric" autocomplete="current-password" maxlength="4" [value]="claveActual()" (input)="ka.value = soloNumeros(ka.value); claveActual.set(ka.value)" />
+            <label class="etiqueta" for="k-nueva">Clave nueva (4 números)</label>
+            <input #kn id="k-nueva" class="entrada clave" type="password" inputmode="numeric" autocomplete="new-password" maxlength="4" [value]="claveNueva()" (input)="kn.value = soloNumeros(kn.value); claveNueva.set(kn.value)" />
+            <label class="etiqueta" for="k-repite">Repite la clave nueva</label>
+            <input #kr id="k-repite" class="entrada clave" type="password" inputmode="numeric" autocomplete="new-password" maxlength="4" [value]="claveRepetida()" (input)="kr.value = soloNumeros(kr.value); claveRepetida.set(kr.value)" />
+            @if (errorClave()) { <p class="error" role="alert">{{ errorClave() }}</p> }
+            <div class="botones">
+              <button type="button" class="contorno" (click)="cambiandoClave.set(false); errorClave.set('')">Cancelar</button>
+              <button type="button" class="mv-boton mv-boton--naranja" (click)="guardarClave()">Cambiar clave</button>
+            </div>
+          } @else {
+            <p class="vacio">Con ella entras a MoviFY desde tu celular.</p>
+          }
+        </section>
+
+        <!-- Legal y cuenta -->
+        <section class="tarjeta entra" style="--d: 200ms" aria-label="Más opciones">
+          <button type="button" class="fila" (click)="irA('/cliente/ayuda')"><app-icono nombre="mensaje" /> Ayuda y soporte <app-icono nombre="adelante" class="flecha" /></button>
+          <button type="button" class="fila" (click)="invitar()"><app-icono nombre="compartir" /> Invitar a un amigo <app-icono nombre="adelante" class="flecha" /></button>
+          <button type="button" class="fila" (click)="irA('/terminos')"><app-icono nombre="lista" /> Términos y condiciones <app-icono nombre="adelante" class="flecha" /></button>
+          <button type="button" class="fila" (click)="irA('/privacidad')"><app-icono nombre="candado" /> Política de privacidad <app-icono nombre="adelante" class="flecha" /></button>
+          <button type="button" class="fila" (click)="cerrarSesion()"><app-icono nombre="poder" /> Cerrar sesión</button>
+        </section>
+
+        <button type="button" class="eliminar" (click)="eliminarCuenta()">Eliminar mi cuenta</button>
+        <p class="version">MoviFY{{ version() ? ' · versión ' + version() : '' }} · Hecho en Buenaventura</p>
+      } @else if (!error()) {
+        <div class="esqueleto" aria-label="Cargando tu perfil"></div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">{{ error() }}</p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <app-barra-inferior [items]="barra" activa="/cliente/perfil" />
+</ion-footer>
+
+@if (buscandoLugar()) {
+  <app-buscador-lugar tipo="destino" titulo="¿Qué lugar guardas?" [conGps]="true" (elegido)="lugarElegido($event)" (cerrar)="buscandoLugar.set(false)" />
+}

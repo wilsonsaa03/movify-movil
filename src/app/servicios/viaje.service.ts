@@ -50,6 +50,13 @@ export interface DetalleServicio {
   usuario_calificacion: number | null;
   usuario_verificado: boolean | null;
   nota_voz_segundos: number | null;
+  /** Domicilio y encomienda (v_servicios_api): qué se lleva, dónde se compra y si hay que adelantar plata. */
+  descripcion?: string | null;
+  establecimiento?: string | null;
+  requiere_compra?: boolean | null;
+  valor_productos_aprox?: number | null;
+  tamano?: 'pequeno' | 'mediano' | 'grande' | null;
+  fragil?: boolean | null;
 }
 
 /** GET /api/transporte/conductores-activos */

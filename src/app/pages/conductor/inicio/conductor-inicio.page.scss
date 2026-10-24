@@ -26,6 +26,24 @@
   align-items: center;
   gap: 14px;
   min-width: 0;
+  min-height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 120ms $ease-out;
+
+  &:active {
+    transform: scale(0.97);
+  }
+  &:focus-visible {
+    outline: 3px solid #ffc94d;
+    outline-offset: 4px;
+  }
 }
 .avatar {
   background: $teal-claro;

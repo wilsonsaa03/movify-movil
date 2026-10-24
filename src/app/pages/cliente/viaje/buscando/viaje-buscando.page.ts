@@ -4,14 +4,21 @@ import { AlertController, IonContent, IonFooter, NavController, ViewDidEnter, Vi
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { ErrorApi } from '../../../../core/api.service';
 import { pesos } from '../../../../core/formato';
-import { IconoComponent } from '../../../../componentes/icono/icono.component';
+import { IconoComponent, NombreIcono } from '../../../../componentes/icono/icono.component';
 import { DetalleServicio, ViajeService } from '../../../../servicios/viaje.service';
 import { EncomiendaService } from '../../../../servicios/encomienda.service';
+import { DomicilioService } from '../../../../servicios/domicilio.service';
 
 /** Cada cuánto se pregunta si algún conductor aceptó. */
 const CADA_MS = 4000;
 
 type Fase = 'buscando' | 'sin-conductor' | 'error';
+
+/** Pantalla a la que se pasa cuando un conductor acepta, según el servicio. */
+const SEGUIMIENTO: Record<string, string> = {
+  encomienda: '/cliente/encomienda/seguimiento',
+  domicilio: '/cliente/domicilio/seguimiento',
+};
 
 /**
  * Viaje 4 · Buscando tu moto…
@@ -31,6 +38,7 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
   private readonly alertas = inject(AlertController);
   private readonly viaje = inject(ViajeService);
   private readonly encomienda = inject(EncomiendaService);
+  private readonly domicilio = inject(DomicilioService);
 
   readonly servicio = signal<DetalleServicio | null>(null);
   readonly fase = signal<Fase>('buscando');
@@ -46,24 +54,35 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
   private sondeo?: ReturnType<typeof setInterval>;
 
   readonly tipo = computed(() => this.servicio()?.tipo_vehiculo ?? this.viaje.pedido()?.tipo ?? 'moto');
-  /** La misma pantalla sirve para la encomienda (Figma: tras "Enviar paquete"). */
-  readonly esEncomienda = computed(
-    () => this.servicio()?.tipo_servicio === 'encomienda' || (!this.servicio() && this.encomienda.pedido()?.id === this.id),
-  );
+  /** La misma pantalla sirve para el viaje, la encomienda y el domicilio (Figma: "Buscando…" de cada flujo). */
+  readonly clase = computed<'transporte' | 'encomienda' | 'domicilio'>(() => {
+    const s = this.servicio();
+    if (s) return s.tipo_servicio;
+    if (this.encomienda.pedido()?.id === this.id) return 'encomienda';
+    if (this.domicilio.pedido()?.id === this.id) return 'domicilio';
+    return 'transporte';
+  });
+  readonly esEncomienda = computed(() => this.clase() === 'encomienda');
+  readonly esDomicilio = computed(() => this.clase() === 'domicilio');
+  readonly icono = computed<NombreIcono>(() => (this.esEncomienda() ? 'encomienda' : this.esDomicilio() ? 'domicilio' : this.tipo()));
   readonly codigo = computed(() => this.servicio()?.codigo_entrega ?? (this.encomienda.pedido()?.id === this.id ? this.encomienda.pedido()!.codigo_entrega : null));
   readonly titulo = computed(() => {
-    if (this.esEncomienda()) return this.fase() === 'sin-conductor' ? 'Nadie tomó tu envío' : 'Buscando quién lleve tu paquete…';
-    return this.fase() === 'sin-conductor' ? 'Nadie tomó tu viaje' : `Buscando tu ${this.tipo()}…`;
+    const sin = this.fase() === 'sin-conductor';
+    if (this.esEncomienda()) return sin ? 'Nadie tomó tu envío' : 'Buscando quién lleve tu paquete…';
+    if (this.esDomicilio()) return sin ? 'Nadie tomó tu pedido' : 'Buscando domiciliario…';
+    return sin ? 'Nadie tomó tu viaje' : `Buscando tu ${this.tipo()}…`;
   });
   readonly mensaje = computed(() => {
     if (this.fase() === 'sin-conductor') return 'Los conductores cercanos están ocupados. Puedes intentarlo otra vez.';
-    const p = this.viaje.pedido()?.id === this.id ? this.viaje.pedido() : this.encomienda.pedido();
-    if (p && p.id === this.id) {
+    // En el domicilio se busca cerca de la tienda (el origen), no del cliente
+    const donde = this.esDomicilio() ? 'cerca de la tienda' : 'cerca de ti';
+    const p = [this.viaje.pedido(), this.encomienda.pedido(), this.domicilio.pedido()].find((x) => x?.id === this.id);
+    if (p) {
       const n = Number(p.conductores_notificados) || 0;
       if (n === 0) return 'Aún no hay conductores libres cerca; seguimos buscando.';
-      return n === 1 ? 'Le avisamos a 1 conductor cerca de ti.' : `Les avisamos a ${n} conductores cerca de ti.`;
+      return n === 1 ? `Le avisamos a 1 conductor ${donde}.` : `Les avisamos a ${n} conductores ${donde}.`;
     }
-    return 'Les estamos avisando a los conductores cerca de ti.';
+    return `Les estamos avisando a los conductores ${donde}.`;
   });
 
   ionViewDidEnter(): void {
@@ -83,8 +102,12 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
 
   async cancelar(): Promise<void> {
     const alerta = await this.alertas.create({
-      header: this.esEncomienda() ? '¿Cancelar el envío?' : '¿Cancelar la solicitud?',
-      message: this.esEncomienda() ? 'Dejaremos de buscar quién lleve tu paquete.' : 'Dejaremos de buscarte conductor.',
+      header: this.esEncomienda() ? '¿Cancelar el envío?' : this.esDomicilio() ? '¿Cancelar el domicilio?' : '¿Cancelar la solicitud?',
+      message: this.esEncomienda()
+        ? 'Dejaremos de buscar quién lleve tu paquete.'
+        : this.esDomicilio()
+          ? 'Dejaremos de buscarte domiciliario.'
+          : 'Dejaremos de buscarte conductor.',
       buttons: [
         { text: 'Seguir buscando', role: 'cancel' },
         { text: 'Sí, cancelar', role: 'destructive' },
@@ -122,6 +145,13 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
       this.nav.navigateRoot('/cliente/encomienda');
       return;
     }
+    if (this.esDomicilio()) {
+      // La tienda y la entrega quedan; el pedido se vuelve a escribir
+      this.domicilio.tienda.set({ nombre: s.origen, detalle: null, barrio: s.origen_barrio, lat: Number(s.origen_lat), lng: Number(s.origen_lng) });
+      this.domicilio.entrega.set({ nombre: s.destino, detalle: null, barrio: s.destino_barrio, lat: Number(s.destino_lat), lng: Number(s.destino_lng) });
+      this.nav.navigateRoot('/cliente/domicilio');
+      return;
+    }
     this.viaje.tipo.set(s.tipo_vehiculo);
     this.viaje.origen.set({ nombre: 'Mi ubicación', detalle: s.origen, barrio: s.origen_barrio, lat: Number(s.origen_lat), lng: Number(s.origen_lng) });
     this.viaje.destino.set({ nombre: s.destino, detalle: null, barrio: s.destino_barrio, lat: Number(s.destino_lat), lng: Number(s.destino_lng) });
@@ -148,9 +178,7 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
         case 'en_curso':
           clearInterval(this.sondeo);
           Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
-          this.nav.navigateRoot(s.tipo_servicio === 'encomienda' ? '/cliente/encomienda/seguimiento' : '/cliente/viaje/en-camino', {
-            queryParams: { id: this.id },
-          });
+          this.nav.navigateRoot(SEGUIMIENTO[s.tipo_servicio] ?? '/cliente/viaje/en-camino', { queryParams: { id: this.id } });
           break;
         case 'expirado':
           this.sinConductor();

@@ -10,7 +10,7 @@
         <span class="onda o2"></span>
         <span class="onda o3"></span>
         <span class="boton">
-          <span class="disco"><app-icono [nombre]="esEncomienda() ? 'encomienda' : tipo()" /></span>
+          <span class="disco" [class.domicilio]="esDomicilio()"><app-icono [nombre]="icono()" /></span>
         </span>
       </div>
 
@@ -33,7 +33,7 @@
           </span>
           <span class="valor">
             <span class="precio">{{ pesos(s.tarifa) }}</span>
-            <small>{{ esEncomienda() ? 'Envío en ' : '' }}{{ s.tipo_vehiculo === 'moto' ? 'Moto' : 'Taxi' }}</small>
+            <small>{{ esDomicilio() ? 'Domicilio' : (esEncomienda() ? 'Envío en ' : '') + (s.tipo_vehiculo === 'moto' ? 'Moto' : 'Taxi') }}</small>
           </span>
         </section>
       } @else {

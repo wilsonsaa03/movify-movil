@@ -1,0 +1,116 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="con-mapa">
+    <app-mapa-ciudad
+      [marcador]="vehiculo() ? (v()?.tipo_vehiculo ?? 'moto') : null"
+      [centro]="vehiculo()"
+      [ruta]="camino()"
+      [destino]="meta()"
+      [encuadrar]="true"
+      [margenInferior]="altoHoja()"
+    />
+
+    @if (enViaje()) {
+      <!-- Viaje 6 · EN VIAJE · Llegas a las 6:42 p. m. · 8 min -->
+      <section class="arriba entra" role="status" aria-live="polite">
+        <div class="fila">
+          <span>
+            <small>En viaje</small>
+            <b>{{ llegasA() ? 'Llegas a las ' + llegasA() : 'Calculando la llegada…' }}</b>
+          </span>
+          @if (minutos() !== null) {
+            <span class="min"><b>{{ minutos() }} min</b></span>
+          }
+        </div>
+        <div class="barra" aria-hidden="true"><i [style.width.%]="avance() * 100"></i></div>
+      </section>
+      <app-boton-sos class="sos" [servicioId]="id" [conLinea]="true" />
+    } @else {
+      <!-- Viaje 5 · Carlos llega en 3 min -->
+      <p class="pildora sola entra" role="status" aria-live="polite">
+        <app-icono nombre="reloj" class="reloj" />
+        <b>{{ aviso() }}</b>
+      </p>
+    }
+
+    <main class="hoja" #hoja>
+      <span class="asa" aria-hidden="true"></span>
+
+      @if (v(); as s) {
+        <section class="persona entra">
+          <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
+          <span class="datos">
+            <b>{{ conductor() }}</b>
+            <span class="fila">
+              @if (calificacion(); as c) {
+                <span class="estrellas"><app-icono nombre="estrella" /> {{ c }}</span>
+              }
+              <span class="verificada"><app-icono nombre="check" /> Verificado</span>
+            </span>
+          </span>
+          @if (s.conductor_placa) {
+            <span class="placa">
+              <b>{{ s.conductor_placa }}</b>
+              <small>{{ s.conductor_modelo }}{{ s.conductor_color ? ' · ' + s.conductor_color : '' }}</small>
+            </span>
+          }
+        </section>
+
+        @if (!enViaje()) {
+          @if (pin().length === 4) {
+            <section class="codigo entra" style="--d: 50ms" aria-label="Tu PIN de viaje">
+              <p><b>Tu PIN de viaje</b><small>Díselo al conductor para empezar</small></p>
+              <div class="digitos" role="img" [attr.aria-label]="'PIN ' + pin().join(' ')">
+                @for (d of pin(); track $index) {
+                  <span aria-hidden="true">{{ d }}</span>
+                }
+              </div>
+            </section>
+          }
+
+          <nav class="acciones entra" style="--d: 90ms" aria-label="Acciones">
+            <a class="accion" [href]="telefono() ? 'tel:' + telefono() : null" [attr.aria-disabled]="!telefono()">
+              <span class="disco"><app-icono nombre="telefono" /></span>Llamar
+            </a>
+            <a class="accion" [href]="telefono() ? 'sms:' + telefono() : null" [attr.aria-disabled]="!telefono()">
+              <span class="disco"><app-icono nombre="mensaje" /></span>Mensaje
+            </a>
+            <button type="button" class="accion" (click)="compartir()">
+              <span class="disco"><app-icono nombre="compartir" /></span>Compartir
+            </button>
+          </nav>
+
+          <button type="button" class="texto-rojo" [disabled]="cancelando()" (click)="cancelar()">
+            {{ cancelando() ? 'Cancelando…' : 'Cancelar viaje' }}
+          </button>
+        } @else {
+          <p class="familia entra" style="--d: 50ms">
+            <span class="disco teal"><app-icono nombre="compartir" /></span>
+            <span><b>Tu familia te acompaña</b><small>Comparte el viaje y que vean dónde vas.</small></span>
+          </p>
+        }
+      } @else {
+        <div class="esqueleto" aria-label="Cargando tu viaje"></div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">
+          {{ error() }}
+          @if (v()?.estado_codigo === 'cancelado') {
+            <button type="button" class="reintentar" (click)="alInicio()">Ir al inicio</button>
+          }
+        </p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+@if (enViaje()) {
+  <ion-footer class="ion-no-border">
+    <div class="pie">
+      <button type="button" class="mv-boton mv-boton--naranja" (click)="compartir()">
+        Compartir mi viaje
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6" /><circle cx="6" cy="12" r="2.6" /><circle cx="18" cy="19" r="2.6" /><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4" /></svg>
+      </button>
+    </div>
+  </ion-footer>
+}

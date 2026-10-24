@@ -1,0 +1,7 @@
+@use '../../../../theme/viaje-activo' as *;
+
+.pasajero {
+  padding: 12px 14px;
+  border: 2px solid $borde;
+  border-radius: 18px;
+}

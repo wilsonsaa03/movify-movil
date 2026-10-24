@@ -46,6 +46,9 @@ export class ReporteEnviadoPage {
     return r ? 'MV-' + String(r.id).padStart(4, '0') : '';
   });
 
+  /** Las solicitudes de "Ayuda" pueden no tener viaje (sugerencia, petición…). */
+  readonly sinViaje = computed(() => !!this.reporte() && !this.reporte()?.servicio_id);
+
   readonly nombre = computed(() => this.reporte()?.otro_nombres?.split(' ')[0] ?? '');
   readonly iniciales = computed(() => {
     const r = this.reporte();

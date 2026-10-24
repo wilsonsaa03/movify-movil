@@ -46,6 +46,10 @@ export class ApiService {
     return this.llamar(() => this.http.put<T>(this.base + ruta, cuerpo));
   }
 
+  borrar<T>(ruta: string): Promise<T> {
+    return this.llamar(() => this.http.delete<T>(this.base + ruta));
+  }
+
   /** Descarga un archivo protegido (p. ej. un documento propio) para mostrarlo en la app. */
   blob(ruta: string): Promise<Blob> {
     return this.llamar(() => this.http.get(this.base + ruta, { responseType: 'blob' }));

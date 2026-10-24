@@ -1,0 +1,80 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="noche">
+      <div class="sol" aria-hidden="true"></div>
+      <span class="avatar grande">
+        @if (foto(); as f) {
+          <img [src]="f" alt="" />
+        } @else {
+          {{ iniciales() }}
+        }
+      </span>
+      <h1>{{ nombre() }}</h1>
+      <p>{{ celular() }}</p>
+    </header>
+
+    <main class="cuerpo">
+      @if (perfil(); as p) {
+        <section class="numeros entra" aria-label="Tu actividad">
+          <span><b>{{ calificacion() }}</b><small><app-icono nombre="estrella" /> Calificación</small></span>
+          <span><b>{{ p.total_servicios ?? 0 }}</b><small>Viajes</small></span>
+          <span><b class="estado" [class]="claseEstado(p.estado)">{{ p.estado_nombre }}</b><small>Cuenta</small></span>
+        </section>
+
+        <!-- Vehículo: placa, marca, modelo y color (HU 2.6) -->
+        @if (p.vehiculo; as v) {
+          <section class="tarjeta entra" style="--d: 40ms" aria-label="Tu vehículo">
+            <h2><app-icono [nombre]="v.tipo_vehiculo" /> {{ v.tipo_vehiculo === 'taxi' ? 'Tu taxi' : 'Tu moto' }}</h2>
+            <div class="vehiculo">
+              <span class="placa"><b>{{ v.placa }}</b></span>
+              <dl>
+                <div><dt>Marca y modelo</dt><dd>{{ modelo() }}</dd></div>
+                <div><dt>Color</dt><dd>{{ v.color }}</dd></div>
+                @if (v.empresa_afiliadora) {
+                  <div><dt>Empresa</dt><dd>{{ v.empresa_afiliadora }}{{ v.numero_interno ? ' · N.º ' + v.numero_interno : '' }}</dd></div>
+                }
+              </dl>
+            </div>
+          </section>
+        } @else {
+          <p class="aviso">Todavía no registras tu vehículo.</p>
+        }
+
+        <section class="tarjeta entra" style="--d: 80ms" aria-label="Licencia">
+          <h2><app-icono nombre="persona" /> Licencia</h2>
+          <p class="categorias">
+            @for (c of p.categorias_licencia; track c) {
+              <span>{{ c }}</span>
+            }
+          </p>
+        </section>
+
+        @if (p.documentos.length) {
+          <section class="tarjeta entra" style="--d: 120ms" aria-label="Documentos">
+            <h2><app-icono nombre="lista" /> Documentos</h2>
+            <ul class="documentos">
+              @for (d of p.documentos; track $index) {
+                <li>
+                  <span>{{ d.nombre }}</span>
+                  <span class="estado" [class]="claseEstado(d.estado)">{{ d.estado_nombre }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      } @else if (!error()) {
+        <div class="esqueleto" aria-label="Cargando tu perfil"></div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">{{ error() }}</p>
+      }
+
+      <button type="button" class="salir" (click)="salir()"><app-icono nombre="poder" /> Cerrar sesión</button>
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <app-barra-inferior [items]="barra" activa="/conductor/perfil" />
+</ion-footer>

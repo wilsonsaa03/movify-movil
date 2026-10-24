@@ -128,6 +128,57 @@
   }
 }
 
+// ---------- Domicilio / encomienda ----------
+.pedido {
+  padding: 10px 12px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff4ea;
+
+  .textos {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  b {
+    font-size: 15px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 13px;
+    font-weight: 700;
+    color: $gris;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+.adelanta {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1.5px solid #ffd2ae;
+  border-radius: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fff8f1;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #8a3b07;
+
+  app-icono {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #d9620a;
+  }
+}
+
 // ---------- Referencia ----------
 .referencia {
   display: flex;

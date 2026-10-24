@@ -124,11 +124,47 @@ export const routes: Routes = [
     data: { roles: ['conductor'] },
     loadComponent: () => import('./pages/conductor/solicitud/conductor-solicitud.page').then((m) => m.ConductorSolicitudPage),
   },
+  // Viaje aceptado: 3 (Rumbo al pasajero) → 4 (PIN) → 5 (En viaje) → 7 (Calificar), todas con ?id=servicio
+  {
+    path: 'conductor/viaje/recogida',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'] },
+    loadComponent: () => import('./pages/conductor/recogida/conductor-recogida.page').then((m) => m.ConductorRecogidaPage),
+  },
+  {
+    path: 'conductor/viaje/pin',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'] },
+    loadComponent: () => import('./pages/conductor/pin/conductor-pin.page').then((m) => m.ConductorPinPage),
+  },
+  {
+    path: 'conductor/viaje/en-curso',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'] },
+    loadComponent: () => import('./pages/conductor/en-viaje/conductor-en-viaje.page').then((m) => m.ConductorEnViajePage),
+  },
+  {
+    path: 'conductor/viaje/calificar',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'], rol: 'conductor' },
+    loadComponent: () => import('./pages/viaje/calificar/viaje-calificar.page').then((m) => m.ViajeCalificarPage),
+  },
+  // Conductor app 9 · Mis viajes y el perfil (con su vehículo)
+  {
+    path: 'conductor/viajes',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'] },
+    loadComponent: () => import('./pages/conductor/viajes/conductor-viajes.page').then((m) => m.ConductorViajesPage),
+  },
+  {
+    path: 'conductor/perfil',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'] },
+    loadComponent: () => import('./pages/conductor/perfil/conductor-perfil.page').then((m) => m.ConductorPerfilPage),
+  },
   // Siguen en el flujo del conductor (provisionales)
-  { path: 'conductor/viaje/recogida', canActivate: [rolGuard], ...pendiente('Rumbo al pasajero', ['conductor']) },
-  { path: 'conductor/viajes', canActivate: [rolGuard], ...pendiente('Mis viajes', ['conductor']) },
+  { path: 'conductor/reportar', canActivate: [rolGuard], ...pendiente('Reportar usuario', ['conductor']) },
   { path: 'conductor/ganancias', canActivate: [rolGuard], ...pendiente('Ganancias', ['conductor']) },
-  { path: 'conductor/perfil', canActivate: [rolGuard], ...pendiente('Mi perfil', ['conductor']) },
   { path: 'conductor/notificaciones', canActivate: [rolGuard], ...pendiente('Notificaciones', ['conductor']) },
 
   // App del cliente (Viaje 1 · Inicio)
@@ -157,9 +193,45 @@ export const routes: Routes = [
     data: { roles: CLIENTE },
     loadComponent: () => import('./pages/cliente/viaje/buscando/viaje-buscando.page').then((m) => m.ViajeBuscandoPage),
   },
-  // Siguen en el flujo del cliente (provisionales)
-  { path: 'cliente/viaje/en-camino', canActivate: [rolGuard], ...pendiente('Tu conductor va en camino', CLIENTE) },
-  { path: 'cliente/domicilio', canActivate: [rolGuard], ...pendiente('Domicilio', CLIENTE) },
+  // Viaje 5 (Conductor asignado, con el PIN) y 6 (En viaje) en una pantalla → 8 (Calificar)
+  {
+    path: 'cliente/viaje/en-camino',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/viaje/en-camino/viaje-en-camino.page').then((m) => m.ViajeEnCaminoPage),
+  },
+  {
+    path: 'cliente/viaje/calificar',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE, rol: 'cliente' },
+    loadComponent: () => import('./pages/viaje/calificar/viaje-calificar.page').then((m) => m.ViajeCalificarPage),
+  },
+  // Pedir un domicilio: Domicilio 1 (Pedido) → 2 (Confirmar) → Buscando (la de Viaje 4)
+  // → 4 (Seguimiento, ?id=servicio) → 5 (Entregado, ?id=servicio)
+  {
+    path: 'cliente/domicilio',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/domicilio/pedido/domicilio-pedido.page').then((m) => m.DomicilioPedidoPage),
+  },
+  {
+    path: 'cliente/domicilio/confirmar',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/domicilio/confirmar/domicilio-confirmar.page').then((m) => m.DomicilioConfirmarPage),
+  },
+  {
+    path: 'cliente/domicilio/seguimiento',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/domicilio/seguimiento/domicilio-seguimiento.page').then((m) => m.DomicilioSeguimientoPage),
+  },
+  {
+    path: 'cliente/domicilio/entregado',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/domicilio/entregado/domicilio-entregado.page').then((m) => m.DomicilioEntregadoPage),
+  },
   // Enviar un paquete: Encomienda 1 (Destino) → 2 (Paquete) → 3 (Confirmar) → Buscando (la de Viaje 4)
   // → 4 (Seguimiento, ?id=servicio) → 5 (Entregada, ?id=servicio)
   {
@@ -206,10 +278,35 @@ export const routes: Routes = [
     data: { roles: ['conductor'], inicio: '/conductor/inicio', viajes: '/conductor/viajes' },
     loadComponent: () => import('./pages/reporte/enviado/reporte-enviado.page').then((m) => m.ReporteEnviadoPage),
   },
-  { path: 'cliente/reportes', canActivate: [rolGuard], ...pendiente('Mis reportes', CLIENTE) },
-  { path: 'cliente/lugares', canActivate: [rolGuard], ...pendiente('Tus lugares', CLIENTE) },
-  { path: 'cliente/pedidos', canActivate: [rolGuard], ...pendiente('Mis pedidos', CLIENTE) },
-  { path: 'cliente/perfil', canActivate: [rolGuard], ...pendiente('Mi perfil', CLIENTE) },
+  // Ayuda (PQRS): olvidé algo, me cobraron mal, seguridad, quejas… y "Mis solicitudes" con la respuesta
+  {
+    path: 'cliente/ayuda',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE, enviado: '/cliente/reporte/enviado' },
+    loadComponent: () => import('./pages/cliente/ayuda/cliente-ayuda.page').then((m) => m.ClienteAyudaPage),
+  },
+  { path: 'cliente/reportes', redirectTo: 'cliente/ayuda' },
+  // "Tus lugares" del inicio (?nuevo=Casa) abre "agregar lugar" en el perfil
+  { path: 'cliente/lugares', redirectTo: 'cliente/perfil' },
+  // Historial del cliente (HU 2.9): lista y detalle con la línea de tiempo (?id=servicio)
+  {
+    path: 'cliente/pedidos',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/pedidos/cliente-pedidos.page').then((m) => m.ClientePedidosPage),
+  },
+  {
+    path: 'cliente/pedidos/detalle',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/pedidos/detalle/pedido-detalle.page').then((m) => m.PedidoDetallePage),
+  },
+  {
+    path: 'cliente/perfil',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/perfil/cliente-perfil.page').then((m) => m.ClientePerfilPage),
+  },
   { path: 'cliente/notificaciones', canActivate: [rolGuard], ...pendiente('Notificaciones', CLIENTE) },
 
   // Pantallas que siguen (por ahora son provisionales)

@@ -1,0 +1,137 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver" (click)="volver()"><app-icono nombre="atras" /></button>
+        <h1>Ayuda</h1>
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      <!-- Peligro primero: la ayuda de la app no es para emergencias -->
+      <aside class="peligro entra" role="note">
+        <app-icono nombre="telefono" />
+        <p><b>¿Estás en peligro ahora?</b> Llama a la Línea de emergencias <a href="tel:123">123</a>.</p>
+      </aside>
+
+      <!-- Paso 1: el tipo -->
+      @if (!tipoElegido()) {
+        <section class="tarjeta entra" style="--d: 40ms" aria-labelledby="t-tipo">
+          <h2 id="t-tipo">¿En qué te ayudamos?</h2>
+          <ul class="tipos">
+            @for (t of tipos; track t.id) {
+              <li>
+                <button type="button" class="tipo" (click)="elegirTipo(t.id)">
+                  <span class="disco" [class.rojo]="t.id === 'incidente_seguridad'"><app-icono [nombre]="t.icono" /></span>
+                  <span class="textos"><b>{{ t.nombre }}</b><small>{{ t.detalle }}</small></span>
+                  <app-icono nombre="adelante" class="flecha" />
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      } @else {
+        <!-- Paso 2: el formulario -->
+        @let t = tipoElegido()!;
+        <section class="tarjeta entra" aria-labelledby="t-form">
+          <div class="cabeza">
+            <span class="disco" [class.rojo]="t.id === 'incidente_seguridad'"><app-icono [nombre]="t.icono" /></span>
+            <h2 id="t-form">{{ t.nombre }}</h2>
+            <button type="button" class="enlace" (click)="cancelar()">Cambiar</button>
+          </div>
+
+          @if (t.conViaje && recientes().length) {
+            <span class="etiqueta">¿De qué servicio? <small>(opcional)</small></span>
+            <div class="servicios" role="radiogroup" aria-label="Servicio relacionado">
+              <button type="button" role="radio" class="servicio" [class.elegido]="servicioId() === null" [attr.aria-checked]="servicioId() === null" (click)="servicioId.set(null)">
+                <span class="textos"><b>Ninguno en especial</b></span>
+              </button>
+              @for (p of recientes(); track p.id) {
+                <button type="button" role="radio" class="servicio" [class.elegido]="servicioId() === p.id" [attr.aria-checked]="servicioId() === p.id" (click)="servicioId.set(p.id)">
+                  <app-icono [nombre]="iconoServicio(p)" />
+                  <span class="textos">
+                    <b>{{ nombreServicio(p) }} · {{ pesos(p.tarifa) }}</b>
+                    <small>{{ fechaHora(p.fecha_solicitud) }} · {{ p.destino }}</small>
+                  </span>
+                </button>
+              }
+            </div>
+          }
+
+          <label class="etiqueta" for="a-asunto">Asunto</label>
+          <input id="a-asunto" class="entrada" type="text" maxlength="120" [value]="asunto()" (input)="asunto.set($any($event.target).value)" />
+
+          <label class="etiqueta" for="a-desc">Cuéntanos qué pasó</label>
+          <textarea
+            id="a-desc"
+            class="entrada texto"
+            rows="5"
+            maxlength="2000"
+            [placeholder]="t.id === 'objeto_olvidado' ? 'Qué dejaste, de qué color, dónde lo viste por última vez…' : 'Entre más detalles nos des, más rápido te ayudamos.'"
+            [value]="descripcion()"
+            (input)="descripcion.set($any($event.target).value)"
+          ></textarea>
+          <small class="contador">{{ descripcion().length }}/2000</small>
+
+          @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+
+          <div class="botones">
+            <button type="button" class="contorno" (click)="cancelar()">Cancelar</button>
+            <button type="button" class="mv-boton mv-boton--naranja" [disabled]="enviando()" (click)="enviar()">{{ enviando() ? 'Enviando…' : 'Enviar' }}</button>
+          </div>
+        </section>
+      }
+
+      <!-- Mis solicitudes -->
+      <section class="entra" style="--d: 80ms" aria-labelledby="t-mias">
+        <h2 id="t-mias" class="subtitulo">
+          <app-icono nombre="mensaje" /> Mis solicitudes
+          @if (abiertas()) { <span class="cuenta">{{ abiertas() }} abiertas</span> }
+        </h2>
+
+        @if (solicitudes(); as lista) {
+          @if (lista.length) {
+            <ul class="mias">
+              @for (s of lista; track s.id) {
+                <li class="solicitud">
+                  <div class="arriba">
+                    <span class="num">{{ numero(s.id) }} · {{ nombreTipo(s.tipo) }}</span>
+                    <span class="estado" [class]="claseEstado(s)">{{ s.estado_nombre }}</span>
+                  </div>
+                  <b class="asunto">{{ s.asunto }}</b>
+                  <small class="fecha">{{ fechaHora(s.creado_en) }}</small>
+                  @if (limite(s)) { <small class="fecha">{{ limite(s) }}</small> }
+                  @if (s.respuesta) {
+                    <div class="respuesta">
+                      <span class="etiqueta">Respuesta de MoviFY</span>
+                      <p>{{ s.respuesta }}</p>
+                    </div>
+                  }
+                  @if (s.estado === 'resuelto') {
+                    <div class="sirvio">
+                      <span>¿Te sirvió la respuesta?</span>
+                      <button type="button" class="contorno chico" [disabled]="respondiendo() === s.id" (click)="responder(s, false)">No</button>
+                      <button type="button" class="mv-boton mv-boton--naranja chico" [disabled]="respondiendo() === s.id" (click)="responder(s, true)">Sí</button>
+                    </div>
+                  }
+                </li>
+              }
+            </ul>
+          } @else if (errorCarga()) {
+            <p class="aviso" role="alert">{{ errorCarga() }}</p>
+          } @else {
+            <p class="vacio">Aquí verás lo que nos escribas y nuestras respuestas.</p>
+          }
+        } @else {
+          <div class="esqueleto" aria-label="Cargando tus solicitudes"></div>
+        }
+      </section>
+    </main>
+  </div>
+</ion-content>

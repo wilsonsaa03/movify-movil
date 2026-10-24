@@ -1,0 +1,190 @@
+@use '../../../../theme/encomienda' as *;
+
+.cielo {
+  padding: calc(env(safe-area-inset-top) + 34px) 24px 96px;
+  text-align: center;
+
+  h1 {
+    position: relative;
+    margin: 14px 0 4px;
+    font-size: 30px;
+  }
+  p {
+    position: relative;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+}
+.sello {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.45);
+
+  > span {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: $teal-d;
+    border: 4px solid #ffffff;
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba($navy, 0.25);
+  }
+  app-icono {
+    width: 36px;
+    height: 36px;
+    --grosor: 3;
+  }
+}
+
+.cuerpo {
+  margin-top: -30px;
+  gap: 12px;
+}
+.pregunta {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 800;
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+    background: $teal-claro;
+    box-shadow: none;
+  }
+}
+.estrellas {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+
+  button {
+    width: 52px;
+    height: 52px;
+    border: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: none;
+    color: #d5dee8;
+    cursor: pointer;
+    transition:
+      transform 140ms $ease-out,
+      color 140ms ease;
+
+    app-icono {
+      width: 38px;
+      height: 38px;
+    }
+    &.llena {
+      color: #f5a623;
+    }
+    &:active {
+      transform: scale(0.9);
+    }
+    &:focus-visible {
+      outline: 3px solid $teal;
+    }
+  }
+}
+
+.gusto {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+  }
+}
+.etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.etiqueta {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 2px solid #d5dee8;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+
+  app-icono {
+    width: 15px;
+    height: 15px;
+    --grosor: 3;
+  }
+  &.elegida {
+    border-color: $navy;
+    background: $navy;
+    color: #ffffff;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+.area {
+  height: auto;
+  min-height: 84px;
+  padding: 12px 14px;
+  line-height: 1.4;
+  resize: none;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.pie {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.secundario,
+.reportar {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.secundario {
+  color: $teal-d;
+}
+.reportar {
+  font-size: 14px;
+  color: #b42333;
+}
+.mv-boton .cargando {
+  width: 18px;
+  height: 18px;
+}

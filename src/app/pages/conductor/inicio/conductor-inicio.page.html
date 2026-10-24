@@ -5,7 +5,8 @@
       <div class="sol" aria-hidden="true"></div>
 
       <div class="fila">
-        <div class="saludo entra">
+        <!-- La foto y el saludo abren el perfil del conductor -->
+        <button type="button" class="saludo entra" aria-label="Abrir mi perfil" (click)="abrirPerfil()">
           <span class="avatar">
             @if (foto(); as f) {
               <img [src]="f" alt="" />
@@ -17,7 +18,7 @@
             <small>Modo conductor</small>
             <b>Hola, {{ nombre() }}</b>
           </span>
-        </div>
+        </button>
         <button type="button" class="campana entra" style="--d: 60ms" aria-label="Notificaciones" (click)="notificaciones()">
           <app-icono nombre="campana" />
         </button>

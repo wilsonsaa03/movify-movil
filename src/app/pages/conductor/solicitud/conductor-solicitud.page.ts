@@ -94,6 +94,28 @@ export class ConductorSolicitudPage implements ViewDidEnter, ViewWillLeave, Afte
     return c ? c.toFixed(1).replace('.', ',') : null;
   });
 
+  /** Viaje, domicilio o encomienda: el mototaxista recibe los tres; el taxista, viajes y encomiendas medianas. */
+  readonly clase = computed(() => this.s()?.tipo_servicio ?? 'transporte');
+  readonly banner = computed(() => {
+    const c = this.clase();
+    if (c === 'domicilio') return '¡Nuevo domicilio!';
+    if (c === 'encomienda') return '¡Nueva encomienda!';
+    return `¡Nueva solicitud de ${this.s()?.tipo_vehiculo ?? 'viaje'}!`;
+  });
+  /** Qué lleva: "Farmacia · Droguería La Económica" / "Pequeño · Frágil". */
+  readonly pedidoTitulo = computed(() => {
+    const s = this.s();
+    if (!s) return '';
+    if (this.clase() === 'domicilio') return s.establecimiento ? `Recoger en ${s.establecimiento}` : 'Domicilio';
+    const t = s.tamano === 'mediano' ? 'Paquete mediano' : s.tamano === 'grande' ? 'Paquete grande' : 'Paquete pequeño';
+    return s.fragil ? `${t} · Frágil` : t;
+  });
+  /** Domicilio en el que el domiciliario paga en la tienda: lo tiene que saber antes de aceptar. */
+  readonly adelanta = computed(() => {
+    const s = this.s();
+    return this.clase() === 'domicilio' && s?.requiere_compra ? Number(s.valor_productos_aprox) || 0 : 0;
+  });
+
   /** Para el círculo de la cuenta regresiva (0 = vacío, 1 = lleno). */
   readonly fraccion = computed(() => this.restante() / this.total());
 

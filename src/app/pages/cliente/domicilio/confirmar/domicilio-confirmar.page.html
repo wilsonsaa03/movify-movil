@@ -1,0 +1,75 @@
+<ion-content [fullscreen]="true" [scrollY]="false">
+  <div class="con-mapa">
+    <app-mapa-ciudad
+      marcador="usuario"
+      [centro]="casa()"
+      [ruta]="ruta()"
+      [destino]="tienda()"
+      [etiquetaRuta]="etiqueta()"
+      [encuadrar]="true"
+      [margenInferior]="altoHoja()"
+    />
+
+    <button type="button" class="flotante" aria-label="Volver" (click)="volver()">
+      <app-icono nombre="atras" />
+    </button>
+
+    <main class="hoja" #hoja>
+      <span class="asa" aria-hidden="true"></span>
+      <h1 class="entra">Confirma tu domicilio</h1>
+      <p class="sub entra" style="--d: 40ms">Lo lleva un conductor en moto.</p>
+
+      <div class="pedido entra" style="--d: 80ms">
+        <span class="disco"><app-icono [nombre]="icono()" /></span>
+        <span class="textos">
+          <b>{{ titulo() }}</b>
+          <small>{{ pedido.descripcion() }}</small>
+        </span>
+      </div>
+
+      @if (cargando() && !pedido.tarifa()) {
+        <div class="cuentas esqueleto" aria-hidden="true"></div>
+      } @else if (pedido.tarifa(); as t) {
+        <dl class="cuentas entra" style="--d: 120ms">
+          <div><dt>Domicilio</dt><dd>{{ pesos(t) }}</dd></div>
+          @if (pedido.pagaDomiciliario()) {
+            <div><dt>Pedido (aproximado)</dt><dd>{{ pesos(pedido.valorPedido()) }}</dd></div>
+          }
+          <div class="total"><dt>Pagas al recibir</dt><dd class="precio">{{ pesos(pedido.total()) }}</dd></div>
+        </dl>
+      }
+
+      <p class="info entra" style="--d: 160ms">
+        <app-icono nombre="dinero" />
+        @if (pedido.pagaDomiciliario()) {
+          El domiciliario te mostrará la factura. Pagas lo que diga la factura más el domicilio.
+        } @else {
+          El pedido ya está pago: solo pagas el domicilio, en efectivo, al recibir.
+        }
+      </p>
+
+      @if (error()) {
+        <p class="aviso" role="alert">
+          {{ error() }}
+          @if (!pedido.tarifa()) {
+            <button type="button" class="reintentar" (click)="reintentar()">Reintentar</button>
+          }
+        </p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!pedido.tarifa() || pidiendo()" (click)="pedir()">
+      @if (pidiendo()) {
+        <span class="cargando" aria-hidden="true"></span>
+        Pidiendo…
+      } @else {
+        Pedir domicilio
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      }
+    </button>
+  </div>
+</ion-footer>

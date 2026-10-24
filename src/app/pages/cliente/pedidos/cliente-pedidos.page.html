@@ -1,0 +1,78 @@
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="refrescar($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <h1>Mis pedidos</h1>
+      <div class="filtros" role="tablist" aria-label="Tipo de servicio">
+        @for (f of filtros; track f.id) {
+          <button type="button" role="tab" [class.elegido]="filtro() === f.id" [attr.aria-selected]="filtro() === f.id" (click)="filtro.set(f.id)">
+            {{ f.nombre }}
+          </button>
+        }
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      <section class="resumen entra" aria-label="Este mes">
+        <span>
+          <small>Pagado este mes</small>
+          <b class="precio">{{ pesos(mes().total) }}</b>
+        </span>
+        <span class="cuantos">
+          <small>Servicios</small>
+          <b>{{ mes().cantidad }}</b>
+        </span>
+      </section>
+
+      @if (cargando() && !pedidos().length) {
+        <div class="esqueleto" aria-label="Cargando tus pedidos"></div>
+      } @else if (grupos().length) {
+        @for (g of grupos(); track g.dia) {
+          <h2 class="dia">{{ g.dia }}</h2>
+          <ul class="lista">
+            @for (p of g.pedidos; track p.id) {
+              <li>
+                <button type="button" class="pedido" [class.apagado]="clase(p.estado_codigo) === 'mal'" (click)="abrir(p)">
+                  <span class="disco" [class]="p.tipo_servicio"><app-icono [nombre]="icono(p)" /></span>
+                  <span class="textos">
+                    <small>{{ nombre(p) }} · {{ hora(p.fecha_solicitud) }}</small>
+                    <b>{{ p.origen.split(',')[0] }} → {{ p.destino.split(',')[0] }}</b>
+                    <span class="estado" [class]="clase(p.estado_codigo)">{{ p.estado_nombre }}</span>
+                  </span>
+                  <span class="valor">
+                    <span class="precio">{{ pesos(clase(p.estado_codigo) === 'mal' ? 0 : p.tarifa) }}</span>
+                    <app-icono nombre="adelante" />
+                  </span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      } @else {
+        <div class="vacio">
+          <span class="disco"><app-icono nombre="lista" /></span>
+          <b>{{ textoVacio() }}</b>
+          <p>Aquí verás tus viajes, domicilios y encomiendas con su estado y fecha.</p>
+          <button type="button" class="mv-boton mv-boton--naranja" (click)="pedirAlgo()">Pedir un servicio</button>
+        </div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">{{ error() }}</p>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <app-barra-inferior [items]="barra" activa="/cliente/pedidos" />
+</ion-footer>

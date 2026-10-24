@@ -1,0 +1,56 @@
+@use '../../../../../theme/viaje-activo' as *;
+
+.pildora .reloj {
+  width: 22px;
+  height: 22px;
+  color: #ffc94d;
+}
+.persona .avatar {
+  background: $teal-claro;
+}
+
+// "Tu familia te acompaña"
+.familia {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1.5px solid #b8e7ea;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #eef8f9;
+
+  .disco {
+    width: 44px;
+    height: 44px;
+    color: #ffffff;
+    background: $teal-d;
+  }
+  b {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 13px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reintentar {
+  margin-left: auto;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: inherit;
+  font-weight: 800;
+  color: #b4530a;
+  cursor: pointer;
+}

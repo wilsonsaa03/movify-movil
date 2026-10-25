@@ -107,6 +107,16 @@ export class ApiService {
    */
   async cerrarSesion(): Promise<void> {
     const refresh = this.sesion.refreshToken;
+    // El celular deja de recibir los avisos de esta cuenta (si otra persona entra, registra el suyo)
+    let tokenPush: string | null = null;
+    try {
+      tokenPush = localStorage.getItem('movify.push.token');
+    } catch {
+      /* almacenamiento bloqueado */
+    }
+    if (tokenPush && this.sesion.token) {
+      await firstValueFrom(this.http.post(this.base + '/usuarios/dispositivos/baja', { token_push: tokenPush })).catch(() => undefined);
+    }
     this.sesion.cerrar();
     if (refresh) {
       await firstValueFrom(this.http.post(this.base + '/auth/logout', { refreshToken: refresh })).catch(() => undefined);

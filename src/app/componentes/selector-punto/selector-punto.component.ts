@@ -22,7 +22,7 @@ import { UbicacionService } from '../../servicios/ubicacion.service';
 export class SelectorPuntoComponent {
   private readonly gps = inject(UbicacionService);
 
-  readonly tipo = input<'origen' | 'destino'>('destino');
+  readonly tipo = input<'origen' | 'destino' | 'parada'>('destino');
   readonly elegido = output<Lugar>();
   readonly cerrar = output<void>();
   /** Solo en la recogida: volver a usar la ubicación del GPS. */

@@ -401,3 +401,77 @@
     background-position: -200% 0;
   }
 }
+
+// ---------- V14: chat, preferencias del pasajero y quién lo pidió ----------
+.redondo {
+  position: relative;
+}
+// Mensajes sin leer sobre el botón del chat
+.globo {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #e5484d;
+  border: 2px solid #ffffff;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+}
+.pidio {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $gris;
+}
+.requisitos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  li {
+    padding: 6px 12px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff4ea;
+    border: 1.5px solid #ffd2ae;
+    font-size: 13.5px;
+    font-weight: 800;
+  }
+  app-icono {
+    width: 14px;
+    height: 14px;
+    --grosor: 3;
+    color: $orange;
+  }
+}
+// Aviso destacado dentro de la hoja ("El pasajero cambió el destino", "Parada")
+.cambio {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff4ea;
+  border: 1.5px solid #ffd2ae;
+  font-size: 14px;
+  font-weight: 800;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: $orange;
+  }
+}

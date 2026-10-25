@@ -27,6 +27,9 @@
           <span class="avatar" aria-hidden="true">{{ inicial() }}</span>
           <span class="datos">
             <b>{{ pasajero() }}</b>
+            @if (pidioOtro(); as quien) {
+              <small class="pidio">Lo pidió {{ quien }}</small>
+            }
             <span class="fila">
               @if (calificacion(); as c) {
                 <span class="estrellas"><app-icono nombre="estrella" /> {{ c }}</span>
@@ -39,12 +42,21 @@
           <a class="redondo" [href]="telefono() ? 'tel:' + telefono() : null" [attr.aria-disabled]="!telefono()" aria-label="Llamar al pasajero">
             <app-icono nombre="telefono" />
           </a>
-          <a class="redondo" [href]="telefono() ? 'sms:' + telefono() : null" [attr.aria-disabled]="!telefono()" aria-label="Enviar mensaje al pasajero">
+          <button type="button" class="redondo" aria-label="Escribirle al pasajero por el chat" (click)="chat()">
             <app-icono nombre="mensaje" />
-          </a>
+            @if (sinLeer()) { <i class="globo">{{ sinLeer() }}</i> }
+          </button>
         </section>
 
         <p class="direccion entra" style="--d: 40ms">{{ s.origen }}{{ s.origen_barrio ? ', ' + s.origen_barrio : '' }}</p>
+
+        @if (requisitos().length) {
+          <ul class="requisitos entra" style="--d: 60ms" aria-label="Lo que pidió el pasajero">
+            @for (r of requisitos(); track r) {
+              <li><app-icono nombre="check" /> {{ r }}</li>
+            }
+          </ul>
+        }
 
         @if (s.origen_referencia || s.nota_voz_segundos) {
           <section class="referencia entra" style="--d: 80ms" aria-label="Punto de referencia">

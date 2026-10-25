@@ -334,3 +334,59 @@
     background-position: -200% 0;
   }
 }
+
+// "¡Subieron la tarifa!": naranja para que salte a la vista
+.banner.subida {
+  background: $orange;
+
+  app-icono {
+    color: #ffffff;
+  }
+}
+
+// Parada en el trayecto
+.punto.parada {
+  padding-left: 10px;
+  border-left: 3px solid $orange;
+
+  small {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #d9620a;
+  }
+}
+
+// Lo que pidió el pasajero
+.requisitos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  li {
+    padding: 6px 12px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff4ea;
+    border: 1.5px solid #ffd2ae;
+    font-size: 13.5px;
+    font-weight: 800;
+  }
+  app-icono {
+    width: 14px;
+    height: 14px;
+    --grosor: 3;
+    color: $orange;
+  }
+}
+.pidio {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $gris;
+}

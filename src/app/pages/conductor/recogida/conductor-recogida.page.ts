@@ -61,7 +61,20 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
     return v ? { lat: Number(v.origen_lat), lng: Number(v.origen_lng), nombre: primerNombre(v.usuario_nombre, 'Recogida') } : null;
   });
   readonly esViaje = computed(() => this.v()?.tipo_servicio === 'transporte');
-  readonly pasajero = computed(() => this.v()?.usuario_nombre?.trim() || 'Pasajero');
+  /** Si el viaje es para otra persona, se recoge a esa persona. */
+  readonly pasajero = computed(() => this.v()?.pasajero_nombre?.trim() || this.v()?.usuario_nombre?.trim() || 'Pasajero');
+  readonly pidioOtro = computed(() => (this.v()?.pasajero_nombre ? this.v()?.usuario_nombre?.trim() || null : null));
+  readonly sinLeer = computed(() => Number(this.v()?.mensajes_sin_leer) || 0);
+  readonly requisitos = computed(() => {
+    const v = this.v();
+    if (!v || v.tipo_servicio !== 'transporte') return [];
+    return [
+      v.necesita_casco ? 'Lleva casco para el pasajero' : '',
+      Number(v.pasajeros) > 1 ? `${v.pasajeros} pasajeros` : '',
+      v.lleva_equipaje ? 'Equipaje' : '',
+      v.lleva_mascota ? 'Mascota' : '',
+    ].filter(Boolean);
+  });
   readonly inicial = computed(() => iniciales(this.pasajero()).charAt(0));
   /** "RECOGE A ANA" o, en domicilio/encomienda, "RECOGE EL PEDIDO". */
   readonly titulo = computed(() => {
@@ -69,7 +82,7 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
     if (!v) return 'Recogida';
     if (v.tipo_servicio === 'domicilio') return `Recoge el pedido${v.establecimiento ? ' en ' + v.establecimiento : ''}`;
     if (v.tipo_servicio === 'encomienda') return 'Recoge el paquete';
-    return `Recoge a ${primerNombre(v.usuario_nombre, 'tu pasajero')}`;
+    return `Recoge a ${primerNombre(v.pasajero_nombre || v.usuario_nombre, 'tu pasajero')}`;
   });
   readonly llegada = computed(() => {
     const m = this.minutos();
@@ -81,7 +94,8 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
     const c = Number(this.v()?.usuario_calificacion);
     return c ? c.toFixed(1).replace('.', ',') : null;
   });
-  readonly telefono = computed(() => telefonoLimpio(this.v()?.usuario_telefono));
+  /** Se llama a quien viaja (si lo pidió otra persona, a ese celular). */
+  readonly telefono = computed(() => telefonoLimpio(this.v()?.pasajero_telefono || this.v()?.usuario_telefono));
 
   ngAfterViewInit(): void {
     this.medidor = new ResizeObserver(() => this.altoHoja.set(this.hojaRef().nativeElement.offsetHeight));
@@ -111,6 +125,10 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
     this.notaUrl.set(null);
   }
 
+  chat(): void {
+    this.nav.navigateForward('/conductor/viaje/chat', { queryParams: { id: this.id } });
+  }
+
   async llegue(): Promise<void> {
     if (this.llegando()) return;
     this.llegando.set(true);
@@ -132,7 +150,11 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
     try {
       const v = await this.viajes.detalle(this.id);
       const primera = !this.v();
+      const mensajesAntes = Number(this.v()?.mensajes_sin_leer) || 0;
       this.v.set(v);
+      if (!primera && (Number(v.mensajes_sin_leer) || 0) > mensajesAntes) {
+        Haptics.notification({ type: NotificationType.Warning }).catch(() => undefined);
+      }
       this.error.set('');
       if (v.estado_codigo === 'cancelado' || v.estado_codigo === 'expirado') {
         await this.salir('El pasajero canceló el viaje.');

@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IonContent, NavController, ViewDidEnter } from '@ionic/angular';
+import { IonContent, NavController, ToastController, ViewDidEnter } from '@ionic/angular';
+import { ViajeActivoService } from '../../../../servicios/viaje-activo.service';
 import { ErrorApi } from '../../../../core/api.service';
 import { pesos } from '../../../../core/formato';
 import { IconoComponent } from '../../../../componentes/icono/icono.component';
@@ -29,8 +30,12 @@ export class PedidoDetallePage implements ViewDidEnter {
   private readonly ruta = inject(ActivatedRoute);
   private readonly historial = inject(HistorialService);
 
+  private readonly activos = inject(ViajeActivoService);
+  private readonly avisos = inject(ToastController);
   readonly p = signal<Pedido | null>(null);
   readonly cambios = signal<CambioEstado[]>([]);
+  readonly favorito = signal(false);
+  readonly guardando = signal(false);
   readonly error = signal('');
   readonly pesos = pesos;
   readonly fechaHora = fechaHora;
@@ -63,10 +68,32 @@ export class PedidoDetallePage implements ViewDidEnter {
     this.nav.navigateForward('/cliente/reportes', { queryParams: { servicio: this.id } });
   }
 
+  /** Objetos olvidados (Uber): abre Ayuda con el tipo "Olvidé algo" y este servicio elegidos. */
+  olvide(): void {
+    this.nav.navigateForward('/cliente/ayuda', { queryParams: { servicio: this.id, tipo: 'objeto_olvidado' } });
+  }
+
+  async alternarFavorito(): Promise<void> {
+    if (this.guardando()) return;
+    const marcar = !this.favorito();
+    this.guardando.set(true);
+    this.favorito.set(marcar); // optimista
+    try {
+      const r = await this.activos.favorito(this.id, marcar);
+      (await this.avisos.create({ message: r.message, duration: 2500, position: 'top', color: 'dark' })).present();
+    } catch (e) {
+      this.favorito.set(!marcar);
+      this.error.set((e as ErrorApi).message || 'No pudimos guardar el cambio.');
+    } finally {
+      this.guardando.set(false);
+    }
+  }
+
   private async cargar(): Promise<void> {
     try {
       const [p, cambios] = await Promise.all([this.historial.detalle(this.id), this.historial.cambios(this.id)]);
       this.p.set(p);
+      this.favorito.set(!!p.es_favorito);
       this.cambios.set(cambios);
       this.error.set('');
     } catch (e) {

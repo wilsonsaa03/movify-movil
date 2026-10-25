@@ -1,8 +1,8 @@
 <ion-content [fullscreen]="true" [scrollY]="false">
   <div class="con-mapa">
-    <app-mapa-ciudad marcador="usuario" [centro]="origen()" [ruta]="ruta()" [destino]="destino()" [encuadrar]="true" [margenInferior]="altoHoja()" />
+    <app-mapa-ciudad marcador="usuario" [centro]="origen()" [ruta]="ruta()" [destino]="destino()" [parada]="parada()" [encuadrar]="true" [margenInferior]="altoHoja()" />
 
-    <p class="banner entra" role="alert">
+    <p class="banner entra" [class.subida]="!!s()?.tarifa_subida" role="alert">
       <app-icono nombre="campana" />
       {{ banner() }}
     </p>
@@ -37,6 +37,12 @@
                 <small>{{ c }}</small>
               }
             </span>
+            @if (v.parada) {
+              <span class="punto parada">
+                <small>Parada</small>
+                <b>{{ v.parada.split(',')[0] }}</b>
+              </span>
+            }
             <span class="punto">
               <b>{{ destinoNombre() }}</b>
               @if (destinoDetalle()) {
@@ -45,6 +51,15 @@
             </span>
           </span>
         </section>
+
+        <!-- Viaje: lo que pidió el pasajero (casco, cuántos van, equipaje, mascota) -->
+        @if (requisitos().length) {
+          <ul class="requisitos entra" style="--d: 70ms" aria-label="Lo que pidió el pasajero">
+            @for (r of requisitos(); track r) {
+              <li><app-icono nombre="check" /> {{ r }}</li>
+            }
+          </ul>
+        }
 
         <!-- Domicilio / encomienda: qué lleva y si hay que adelantar plata -->
         @if (clase() !== 'transporte') {
@@ -80,6 +95,9 @@
           <span class="avatar">{{ inicial() }}</span>
           <span class="datos">
             <b>{{ pasajero() }}</b>
+            @if (pidioOtro(); as quien) {
+              <small class="pidio">Lo pidió {{ quien }}</small>
+            }
             <span class="fila">
               @if (calificacion(); as c) {
                 <span class="estrellas"><app-icono nombre="estrella" /> {{ c }}</span>

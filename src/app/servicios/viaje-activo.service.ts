@@ -26,7 +26,37 @@ export interface ViajeActivo extends DetalleServicio {
   conductor_color: string | null;
   conductor_lat: number | null;
   conductor_lng: number | null;
+  // V14
+  /** La moto lleva casco para el pasajero. */
+  conductor_casco?: boolean | null;
+  /** Hay foto del vehículo (GET /servicios/{id}/vehiculo/foto). */
+  conductor_vehiculo_foto?: boolean | null;
+  conductor_viajes?: number | null;
+  /** Solo para quien pidió: el conductor está en sus favoritos. */
+  es_favorito?: boolean | null;
+  /** Hasta cuándo espera el conductor en la recogida (después puede marcar "no se presentó"). */
+  espera_hasta?: string | null;
+  mensajes_sin_leer?: number | null;
+  destino_cambiado_en?: string | null;
+  pasajero_telefono?: string | null;
 }
+
+/** GET /api/servicios/{id}/mensajes */
+export interface Mensaje {
+  id: number;
+  mio: boolean;
+  contenido: string;
+  creado_en: string;
+  leido_en: string | null;
+}
+
+/** Motivos del conductor (tabla motivos_cancelacion, actor conductor). */
+export const MOTIVOS_CONDUCTOR: { id: number; texto: string }[] = [
+  { id: 10, texto: 'El pasajero no se presentó' },
+  { id: 12, texto: 'La dirección de recogida está mal' },
+  { id: 11, texto: 'Problema con el vehículo' },
+  { id: 13, texto: 'Me sentí inseguro' },
+];
 
 /** Cambios de estado que da el conductor, con lo que pide cada uno. */
 export interface Avance {
@@ -76,8 +106,49 @@ export class ViajeActivoService {
     return this.api.post(`/servicios/${id}/estado`, a);
   }
 
-  cancelar(id: number): Promise<unknown> {
-    return this.api.post(`/servicios/${id}/estado`, { estado: 'cancelado' });
+  cancelar(id: number, motivoId?: number | null): Promise<unknown> {
+    return this.api.post(`/servicios/${id}/estado`, { estado: 'cancelado', motivo_id: motivoId ?? null });
+  }
+
+  // ---------- Chat dentro de la app (el número no se muestra) ----------
+
+  mensajes(id: number): Promise<Mensaje[]> {
+    return this.api.get<Mensaje[]>(`/servicios/${id}/mensajes`);
+  }
+
+  enviarMensaje(id: number, contenido: string): Promise<{ id: number }> {
+    return this.api.post(`/servicios/${id}/mensajes`, { contenido });
+  }
+
+  // ---------- Opciones del pasajero ----------
+
+  /** Enlace para que la familia siga el viaje en vivo en el navegador (sin cuenta). */
+  compartir(id: number): Promise<{ url: string; token: string; expira_en: string }> {
+    return this.api.post(`/servicios/${id}/compartir`, {});
+  }
+
+  cambiarDestino(
+    id: number,
+    d: { destino: string; destino_barrio: string | null; destino_lat: number; destino_lng: number; parada?: string | null; parada_lat?: number | null; parada_lng?: number | null },
+  ): Promise<{ tarifa: number; distancia_km: number; duracion_min: number; message: string }> {
+    return this.api.post(`/servicios/${id}/destino`, d);
+  }
+
+  /** Respuesta al "¿Todo bien?" cuando la app ve un desvío o una parada larga. */
+  alerta(id: number, tipo: 'desvio' | 'detenido', respuesta: 'estoy_bien' | 'sos' | 'sin_respuesta', lat: number | null, lng: number | null): Promise<unknown> {
+    return this.api.post(`/servicios/${id}/alertas`, { tipo, respuesta, lat, lng });
+  }
+
+  favorito(id: number, marcar: boolean): Promise<{ es_favorito: boolean; message: string }> {
+    return marcar ? this.api.put(`/servicios/${id}/favorito`, {}) : this.api.borrar(`/servicios/${id}/favorito`);
+  }
+
+  bloquear(id: number, motivo: string | null): Promise<{ message: string }> {
+    return this.api.post(`/servicios/${id}/bloquear`, { motivo });
+  }
+
+  fotoVehiculo(id: number): Promise<Blob> {
+    return this.api.blob(`/servicios/${id}/vehiculo/foto`);
   }
 
   calificar(id: number, puntuacion: number, comentario: string | null): Promise<unknown> {

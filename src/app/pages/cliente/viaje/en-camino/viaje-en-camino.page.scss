@@ -1,12 +1,165 @@
 @use '../../../../../theme/viaje-activo' as *;
 
-.pildora .reloj {
-  width: 22px;
-  height: 22px;
-  color: #ffc94d;
+.pildora {
+  .reloj {
+    width: 22px;
+    height: 22px;
+    color: #ffc94d;
+  }
+  // Deja lugar al SOS a la derecha
+  right: 84px;
+  padding-left: 16px;
 }
 .persona .avatar {
   background: $teal-claro;
+}
+
+// Cómo reconocer el vehículo: foto (o ícono), modelo con su color y si lleva casco
+.vehiculo {
+  padding: 10px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f5f8fb;
+
+  img {
+    width: 84px;
+    height: 64px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #e4ebf2;
+  }
+  .disco {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+  }
+  .textos {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  small {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $teal-d;
+  }
+  b {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .color {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid #c9d5e2;
+  }
+  .chip {
+    align-self: flex-start;
+    margin-top: 2px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e2f6f7;
+    font-size: 12px;
+    font-weight: 800;
+    color: $teal-d;
+
+    app-icono {
+      width: 12px;
+      height: 12px;
+      --grosor: 3;
+    }
+  }
+}
+
+// "Te espera hasta las 6:42 p. m. · 3:58"
+.espera {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff4ea;
+  border: 1.5px solid #ffd2ae;
+  font-size: 14px;
+  font-weight: 800;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+    color: $orange;
+  }
+  span {
+    flex: 1;
+  }
+  b {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+  }
+  &.vencida {
+    background: #fdecee;
+    border-color: #f5c2c7;
+    color: #b42333;
+
+    app-icono {
+      color: #b42333;
+    }
+  }
+}
+
+// Cuatro acciones (Mensaje, Llamar, Compartir, Destino)
+.acciones.cuatro {
+  grid-template-columns: repeat(4, 1fr);
+}
+.accion:disabled {
+  opacity: 0.55;
+}
+.disco {
+  position: relative;
+}
+
+// Parada del viaje
+.parada {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .rombo {
+    width: 14px;
+    height: 14px;
+    margin: 0 4px;
+    flex-shrink: 0;
+    transform: rotate(45deg);
+    border-radius: 3px;
+    background: $orange;
+  }
+  small {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $gris;
+  }
+  b {
+    font-size: 15px;
+    font-weight: 800;
+  }
 }
 
 // "Tu familia te acompaña"
@@ -53,4 +206,108 @@
   font-weight: 800;
   color: #b4530a;
   cursor: pointer;
+}
+
+// ¿Todo bien?
+.velo {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: rgba($navy, 0.45);
+  animation: aparecer 200ms ease-out both;
+}
+.todo-bien {
+  position: absolute;
+  z-index: 5;
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  padding: 22px 20px 16px;
+  border-radius: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba($navy, 0.3);
+  animation: subir 320ms $ease-out both;
+
+  .disco {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+
+    app-icono {
+      width: 30px;
+      height: 30px;
+    }
+  }
+  h2 {
+    margin: 0;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+  }
+  p {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: $gris;
+
+    b {
+      color: $navy;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+  .mv-boton {
+    width: 100%;
+  }
+}
+.ayuda {
+  width: 100%;
+  min-height: 52px;
+  border: 2px solid #f5c2c7;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fdecee;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  color: #b42333;
+  cursor: pointer;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+  }
+  &:active {
+    transform: scale(0.98);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .velo,
+  .todo-bien {
+    animation: none;
+  }
 }

@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { IonContent, IonFooter, IonRefresher, IonRefresherContent, NavController, ViewDidEnter } from '@ionic/angular';
+import { AlertController, IonContent, IonFooter, IonRefresher, IonRefresherContent, NavController, ViewDidEnter } from '@ionic/angular';
+import { ViajeProgramado, ViajeService } from '../../../servicios/viaje.service';
 import { ErrorApi } from '../../../core/api.service';
 import { pesos } from '../../../core/formato';
 import { IconoComponent } from '../../../componentes/icono/icono.component';
@@ -24,6 +25,8 @@ type Filtro = 'todos' | 'transporte' | 'domicilio' | 'encomienda';
 })
 export class ClientePedidosPage implements ViewDidEnter {
   private readonly historial = inject(HistorialService);
+  private readonly viaje = inject(ViajeService);
+  private readonly alertas = inject(AlertController);
   private readonly nav = inject(NavController);
 
   readonly barra = BARRA_CLIENTE;
@@ -35,6 +38,9 @@ export class ClientePedidosPage implements ViewDidEnter {
   ];
   readonly filtro = signal<Filtro>('todos');
   readonly pedidos = signal<Pedido[]>([]);
+  /** Viajes programados pendientes (y los del último día, para ver si salieron o fallaron). */
+  readonly programados = signal<ViajeProgramado[]>([]);
+  readonly cancelandoProgramado = signal<number | null>(null);
   readonly cargando = signal(true);
   readonly error = signal('');
   readonly pesos = pesos;
@@ -95,9 +101,41 @@ export class ClientePedidosPage implements ViewDidEnter {
     this.nav.navigateRoot('/cliente', { animationDirection: 'back' });
   }
 
+  /** "mar. 28 oct. · 5:30 a. m." */
+  cuandoProgramado(p: ViajeProgramado): string {
+    return new Intl.DateTimeFormat('es-CO', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(p.programado_para)) + ' · ' + hora(p.programado_para);
+  }
+
+  estadoProgramado(p: ViajeProgramado): string {
+    return { pendiente: 'Programado', enviado: 'Ya se pidió', cancelado: 'Cancelado', fallido: p.motivo_fallo || 'No se pudo pedir' }[p.estado];
+  }
+
+  async cancelarProgramado(p: ViajeProgramado): Promise<void> {
+    const alerta = await this.alertas.create({
+      header: '¿Cancelar el viaje programado?',
+      message: `${p.tipo_vehiculo === 'moto' ? 'Moto' : 'Taxi'} para el ${this.cuandoProgramado(p)}.`,
+      buttons: [
+        { text: 'No', role: 'cancel' },
+        { text: 'Sí, cancelar', role: 'destructive' },
+      ],
+    });
+    await alerta.present();
+    if ((await alerta.onDidDismiss()).role !== 'destructive') return;
+    this.cancelandoProgramado.set(p.id);
+    try {
+      await this.viaje.cancelarProgramado(p.id);
+      this.programados.update((l) => l.map((x) => (x.id === p.id ? { ...x, estado: 'cancelado' } : x)));
+    } catch (e) {
+      this.error.set((e as ErrorApi).message || 'No pudimos cancelar el viaje programado.');
+    } finally {
+      this.cancelandoProgramado.set(null);
+    }
+  }
+
   private async cargar(): Promise<void> {
     this.cargando.set(true);
     this.error.set('');
+    this.viaje.programados().then((l) => this.programados.set(l)).catch(() => undefined);
     try {
       this.pedidos.set(await this.historial.mios());
     } catch (e) {

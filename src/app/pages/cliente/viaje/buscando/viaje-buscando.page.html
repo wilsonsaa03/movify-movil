@@ -52,6 +52,26 @@
         </section>
       }
 
+      <!-- Nadie acepta todavía: subir la tarifa sin cancelar (inDrive / DiDi) -->
+      @if (fase() === 'buscando' && ofrecerMas() && servicio(); as s) {
+        <section class="ofrecer entra" aria-labelledby="ofrecer-titulo">
+          <h2 id="ofrecer-titulo">¿Ofreces un poco más?</h2>
+          <p>Los conductores aceptan más rápido cuando la tarifa sube. Pagas en efectivo al llegar.</p>
+          <div class="montos">
+            @for (a of aumentos; track a) {
+              <button type="button" class="monto" [disabled]="subiendo() !== null" (click)="subir(a)">
+                @if (subiendo() === a) {
+                  <span class="cargando" aria-hidden="true"></span>
+                } @else {
+                  <b>+{{ pesos(a) }}</b>
+                  <small>{{ pesos(s.tarifa + a) }}</small>
+                }
+              </button>
+            }
+          </div>
+        </section>
+      }
+
       <p class="verificados entra" style="--d: 140ms">
         <app-icono nombre="escudo" />
         Todos los conductores están verificados.
@@ -67,10 +87,18 @@
 <ion-footer class="ion-no-border">
   <div class="pie">
     @if (fase() === 'sin-conductor') {
-      <button type="button" class="mv-boton mv-boton--naranja" (click)="otraVez()">
-        Intentar de nuevo
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" /></svg>
-      </button>
+      @if (clase() === 'transporte' && servicio()) {
+        <button type="button" class="mv-boton mv-boton--naranja" (click)="otraVez(1000)">
+          Intentar ofreciendo +{{ pesos(1000) }}
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" /></svg>
+        </button>
+        <button type="button" class="contorno" (click)="otraVez()">Intentar con el mismo precio</button>
+      } @else {
+        <button type="button" class="mv-boton mv-boton--naranja" (click)="otraVez()">
+          Intentar de nuevo
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" /></svg>
+        </button>
+      }
       <button type="button" class="secundario" (click)="alInicio()">Volver al inicio</button>
     } @else {
       <button type="button" class="contorno" [disabled]="cancelando()" (click)="cancelar()">

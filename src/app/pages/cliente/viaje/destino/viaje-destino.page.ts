@@ -1,16 +1,18 @@
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { IonContent, IonFooter, NavController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
+import { AlertController, IonContent, IonFooter, NavController, ToastController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { ApiService } from '../../../../core/api.service';
+import { ApiService, ErrorApi } from '../../../../core/api.service';
+import { pesos } from '../../../../core/formato';
+import { ViajeActivoService } from '../../../../servicios/viaje-activo.service';
 import { IconoComponent, NombreIcono } from '../../../../componentes/icono/icono.component';
 import { NotaVozComponent, formatear } from '../../../../componentes/nota-voz/nota-voz.component';
 import { SelectorPuntoComponent } from '../../../../componentes/selector-punto/selector-punto.component';
 import { Grabadora, MAX_SEGUNDOS_NOTA } from '../../../../servicios/grabadora';
 import { Lugar, LugaresService, Parte, distanciaKm, normalizar, resaltar } from '../../../../servicios/lugares.service';
 import { UbicacionService } from '../../../../servicios/ubicacion.service';
-import { TipoVehiculo, ViajeService } from '../../../../servicios/viaje.service';
+import { DetalleServicio, TipoVehiculo, ViajeService } from '../../../../servicios/viaje.service';
 
 /** Fila de GET /api/usuarios/direcciones. */
 interface Direccion {
@@ -55,6 +57,9 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
   private readonly api = inject(ApiService);
   private readonly gps = inject(UbicacionService);
   private readonly lugares = inject(LugaresService);
+  private readonly activo = inject(ViajeActivoService);
+  private readonly alertas = inject(AlertController);
+  private readonly avisos = inject(ToastController);
   readonly viaje = inject(ViajeService);
 
   readonly texto = signal(this.viaje.destino()?.nombre ?? '');
@@ -80,10 +85,21 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
   /** Recogida marcada a mano en el mapa (null = la del GPS). */
   readonly origenElegido = signal<Lugar | null>(null);
   /** Qué punto se está eligiendo en el mapa (pantalla completa encima). */
-  readonly eligiendo = signal<'origen' | 'destino' | null>(null);
+  readonly eligiendo = signal<'origen' | 'destino' | 'parada' | null>(null);
+
+  /**
+   * ?cambiar=ID: el viaje ya va andando y el pasajero cambia el destino o la parada (Uber: "Cambiar destino").
+   * La recogida no se toca y antes de cambiar se muestra el valor nuevo.
+   */
+  readonly cambiarId = Number(this.ruta.snapshot.queryParamMap.get('cambiar')) || 0;
+  readonly servicioActual = signal<DetalleServicio | null>(null);
+  readonly cambiando = signal(false);
+  readonly errorCambio = signal('');
 
   /** DESDE: el punto elegido en el mapa o, si no, la posición del GPS con su dirección. */
   readonly origenTexto = computed(() => {
+    const s = this.servicioActual();
+    if (this.cambiarId) return s ? s.origen : 'Tu recogida';
     const o = this.origenElegido();
     if (o) return o.nombre;
     const u = this.gps.ubicacion();
@@ -111,9 +127,10 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
     });
   });
 
-  readonly puedeConfirmar = computed(
-    () => !!this.viaje.destino() && (!!this.origenElegido() || !!this.gps.ubicacion()) && !this.grabando(),
-  );
+  readonly puedeConfirmar = computed(() => {
+    if (this.cambiarId) return !!this.viaje.destino() && !!this.servicioActual() && !this.cambiando();
+    return !!this.viaje.destino() && (!!this.origenElegido() || !!this.gps.ubicacion()) && !this.grabando();
+  });
 
   constructor() {
     const tipo = this.ruta.snapshot.queryParamMap.get('tipo');
@@ -124,6 +141,7 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
     this.gps.seguir();
     this.cargarGuardados();
     this.lugares.catalogo().then((c) => this.catalogo.set(c));
+    if (this.cambiarId) this.cargarServicio();
   }
 
   ionViewWillLeave(): void {
@@ -148,10 +166,12 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
 
   // ---------- Elegir en el mapa ----------
 
-  /** El punto tocado en el mapa: la recogida o el destino. */
+  /** El punto tocado en el mapa: la recogida, la parada o el destino. */
   elegidoEnMapa(l: Lugar): void {
     if (this.eligiendo() === 'origen') {
       this.origenElegido.set(l);
+    } else if (this.eligiendo() === 'parada') {
+      this.viaje.parada.set(l);
     } else {
       clearTimeout(this.temporizador);
       this.consulta?.abort();
@@ -231,9 +251,17 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
     this.viaje.ponerNota(null);
   }
 
+  quitarParada(): void {
+    this.viaje.parada.set(null);
+  }
+
   // ---------- Confirmar ----------
 
   confirmar(): void {
+    if (this.cambiarId) {
+      this.confirmarCambio();
+      return;
+    }
     const u = this.gps.ubicacion();
     const d = this.viaje.destino();
     const o = this.origenElegido();
@@ -249,6 +277,72 @@ export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy 
     );
     this.lugares.recordar(d);
     this.nav.navigateForward('/cliente/viaje/confirmar');
+  }
+
+  /** Viaje andando: precio nuevo → "¿Cambiar?" → POST /servicios/{id}/destino → de vuelta al viaje. */
+  private async confirmarCambio(): Promise<void> {
+    const s = this.servicioActual();
+    const d = this.viaje.destino();
+    if (!s || !d || this.cambiando()) return;
+    this.cambiando.set(true);
+    this.errorCambio.set('');
+    const p = this.viaje.parada();
+    try {
+      // Lo que cuesta la ruta nueva + lo que el pasajero haya ofrecido de más al pedir
+      const c = await this.api.get<{ opciones: { tipo_vehiculo: string; valor_estimado: number }[] }>(
+        `/tarifas/cotizar?tipo_servicio=transporte&tipo_vehiculo=${s.tipo_vehiculo}&origen_lat=${s.origen_lat}&origen_lng=${s.origen_lng}` +
+          `&destino_lat=${d.lat}&destino_lng=${d.lng}` + (p ? `&parada_lat=${p.lat}&parada_lng=${p.lng}` : ''),
+      );
+      const extra = Math.max(0, Number(s.tarifa) - Number(s.valor_sugerido ?? s.tarifa));
+      const nuevo = Number(c.opciones[0]?.valor_estimado ?? 0) + extra;
+      const alerta = await this.alertas.create({
+        header: '¿Cambiar el destino?',
+        message: `El viaje quedará en ${pesos(nuevo)} (antes ${pesos(s.tarifa)}). Le avisaremos a tu conductor.`,
+        buttons: [
+          { text: 'No', role: 'cancel' },
+          { text: 'Sí, cambiar', role: 'confirm' },
+        ],
+      });
+      await alerta.present();
+      if ((await alerta.onDidDismiss()).role !== 'confirm') return;
+      const r = await this.activo.cambiarDestino(this.cambiarId, {
+        destino: d.detalle ? `${d.nombre}, ${d.detalle}` : d.nombre,
+        destino_barrio: d.barrio,
+        destino_lat: d.lat,
+        destino_lng: d.lng,
+        parada: p ? (p.detalle ? `${p.nombre}, ${p.detalle}` : p.nombre) : null,
+        parada_lat: p?.lat ?? null,
+        parada_lng: p?.lng ?? null,
+      });
+      this.lugares.recordar(d);
+      Haptics.impact({ style: ImpactStyle.Medium }).catch(() => undefined);
+      (await this.avisos.create({ message: r.message, duration: 3000, position: 'top', color: 'dark' })).present();
+      this.viaje.olvidar();
+      this.nav.navigateBack('/cliente/viaje/en-camino', { queryParams: { id: this.cambiarId } });
+    } catch (e) {
+      this.errorCambio.set((e as ErrorApi).message || 'No pudimos cambiar el destino. Intenta de nuevo.');
+    } finally {
+      this.cambiando.set(false);
+    }
+  }
+
+  /** Modo cambio: el viaje actual (recogida fija) con su destino y parada ya puestos. */
+  private async cargarServicio(): Promise<void> {
+    try {
+      const s = await this.viaje.detalle(this.cambiarId);
+      this.servicioActual.set(s);
+      this.viaje.tipo.set(s.tipo_vehiculo);
+      if (!this.viaje.destino()) {
+        const [nombre, ...resto] = s.destino.split(',');
+        this.viaje.destino.set({ nombre: nombre.trim(), detalle: resto.join(',').trim() || null, barrio: s.destino_barrio, lat: Number(s.destino_lat), lng: Number(s.destino_lng) });
+        this.texto.set(nombre.trim());
+      }
+      if (s.parada_lat != null && s.parada_lng != null && !this.viaje.parada()) {
+        this.viaje.parada.set({ nombre: s.parada ?? 'Parada', detalle: null, barrio: null, lat: Number(s.parada_lat), lng: Number(s.parada_lng) });
+      }
+    } catch (e) {
+      this.errorCambio.set((e as ErrorApi).message || 'No pudimos cargar tu viaje.');
+    }
   }
 
   private guardarNota(n: Parameters<ViajeService['ponerNota']>[0]): void {

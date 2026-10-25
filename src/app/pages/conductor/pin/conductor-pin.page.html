@@ -29,6 +29,18 @@
       </p>
 
       <app-teclado-numerico [deshabilitado]="enviando()" (digito)="digito($event)" (borrar)="borrar()" />
+
+      @if (!entrega()) {
+        <div class="espera">
+          <button type="button" class="chip" (click)="chat()"><app-icono nombre="mensaje" /> Escribirle</button>
+          @if (espera(); as e) {
+            <button type="button" class="chip rojo" [disabled]="!e.cumplida || cancelando()" (click)="noLlego()">
+              <app-icono nombre="reloj" />
+              {{ e.cumplida ? 'El pasajero no llegó' : 'Esperas ' + e.reloj }}
+            </button>
+          }
+        </div>
+      }
     </main>
   </div>
 </ion-content>

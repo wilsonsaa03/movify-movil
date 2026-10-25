@@ -1,0 +1,78 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="barra">
+      <button type="button" class="volver" aria-label="Volver al viaje" (click)="volver()"><app-icono nombre="atras" /></button>
+      <span class="avatar" aria-hidden="true">{{ inicialesOtro() }}</span>
+      <span class="quien">
+        <b>{{ otro() }}</b>
+        @if (detalle()) { <small>{{ detalle() }}</small> }
+      </span>
+      @if (telefono()) {
+        <a class="llamar" [href]="'tel:' + telefono()" [attr.aria-label]="'Llamar a ' + otroCorto()"><app-icono nombre="telefono" /></a>
+      }
+    </header>
+
+    <main class="mensajes" aria-live="polite" aria-label="Mensajes">
+      <p class="privado">
+        <app-icono nombre="candado" />
+        Tu número no se muestra en el chat. Soporte de MoviFY puede revisarlo si hay un reporte.
+      </p>
+
+      @if (cargando()) {
+        <div class="burbuja esqueleto" aria-hidden="true"></div>
+        <div class="burbuja esqueleto mia" aria-hidden="true"></div>
+      } @else if (!mensajes().length) {
+        <div class="vacio">
+          <span class="disco teal"><app-icono nombre="mensaje" /></span>
+          <b>Escríbele a {{ otroCorto() }}</b>
+          <small>Por ejemplo, dónde lo esperas o cómo reconocerte.</small>
+        </div>
+      } @else {
+        @for (m of mensajes(); track m.id) {
+          <div class="burbuja entra" [class.mia]="m.mio" [class.enviando]="m.id < 0">
+            <span class="texto">{{ m.contenido }}</span>
+            <small>
+              {{ hora(m.creado_en) }}
+              @if (m.mio) {
+                @if (m.id < 0) { · Enviando… } @else if (m.leido_en) { · Leído } @else { · Enviado }
+              }
+            </small>
+          </div>
+        }
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <div class="pie">
+    @if (!activo()) {
+      <p class="cerrado">El viaje terminó: ya no se pueden enviar mensajes.</p>
+    } @else {
+      <div class="rapidas" role="group" aria-label="Respuestas rápidas">
+        @for (r of rapidas; track r) {
+          <button type="button" class="rapida" [disabled]="enviando()" (click)="rapida(r)">{{ r }}</button>
+        }
+      </div>
+      @if (error()) {
+        <p class="aviso" role="alert">{{ error() }}</p>
+      }
+      <div class="escribir">
+        <label class="sr-only" for="chat-texto">Mensaje para {{ otroCorto() }}</label>
+        <textarea
+          #campo
+          id="chat-texto"
+          rows="1"
+          [attr.maxlength]="maxLargo"
+          placeholder="Escribe un mensaje…"
+          [value]="texto()"
+          (input)="escribir($any($event.target).value)"
+          (keydown)="tecla($event)"
+        ></textarea>
+        <button type="button" class="enviar" [disabled]="!puedeEnviar()" aria-label="Enviar mensaje" (click)="enviar()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5z" /></svg>
+        </button>
+      </div>
+    }
+  </div>
+</ion-footer>

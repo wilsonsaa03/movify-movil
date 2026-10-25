@@ -38,6 +38,19 @@
             <p class="conductor">
               <app-icono nombre="persona" /> {{ s.conductor_nombre }}
               @if (s.conductor_placa) { <span class="placa">{{ s.conductor_placa }}</span> }
+              @if (s.estado_codigo === 'finalizado') {
+                <button
+                  type="button"
+                  class="corazon"
+                  [class.activo]="favorito()"
+                  [disabled]="guardando()"
+                  [attr.aria-pressed]="favorito()"
+                  [attr.aria-label]="favorito() ? 'Quitar de mis conductores favoritos' : 'Agregar a mis conductores favoritos'"
+                  (click)="alternarFavorito()"
+                >
+                  <app-icono nombre="corazon" />
+                </button>
+              }
             </p>
           }
         </section>
@@ -62,6 +75,14 @@
             <p class="vacio">Este pedido todavía no tiene cambios registrados.</p>
           }
         </section>
+
+        @if (s.conductor_nombre && s.estado_codigo === 'finalizado') {
+          <button type="button" class="olvide entra" style="--d: 90ms" (click)="olvide()">
+            <span class="disco"><app-icono nombre="encomienda" /></span>
+            <span class="textos"><b>¿Olvidaste algo en el vehículo?</b><small>Le avisamos a soporte para contactar al conductor</small></span>
+            <app-icono nombre="adelante" class="ir" />
+          </button>
+        }
 
         <button type="button" class="reportar" (click)="reportar()">¿Tuviste un problema? Repórtalo</button>
       } @else if (!error()) {

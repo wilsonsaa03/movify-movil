@@ -165,10 +165,18 @@ export class LugaresService {
     }
   }
 
-  /** Ruta por calles (OSRM). Si no responde, línea recta: el mapa igual muestra hacia dónde va. */
-  async ruta(o: { lat: number; lng: number }, d: { lat: number; lng: number }): Promise<Ruta> {
+  /**
+   * Ruta por calles (OSRM), pasando por la parada si hay. Si no responde, línea recta: el mapa igual muestra
+   * hacia dónde va.
+   */
+  async ruta(
+    o: { lat: number; lng: number },
+    d: { lat: number; lng: number },
+    parada?: { lat: number; lng: number } | null,
+  ): Promise<Ruta> {
+    const puntos = parada ? [o, parada, d] : [o, d];
     try {
-      const url = `${OSRM}/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=geojson`;
+      const url = `${OSRM}/${puntos.map((p) => `${p.lng},${p.lat}`).join(';')}?overview=full&geometries=geojson`;
       const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
       if (!resp.ok) throw new Error('OSRM ' + resp.status);
       const r = (await resp.json()) as { routes?: { geometry: { coordinates: [number, number][] }; distance: number; duration: number }[] };
@@ -180,8 +188,9 @@ export class LugaresService {
         duracionMin: Math.max(1, Math.round(ruta.duration / 60)),
       };
     } catch {
-      const km = distanciaKm(o, d) * 1.3;
-      return { puntos: [o, d], distanciaKm: km, duracionMin: Math.max(1, Math.round(km * 3)) };
+      let km = 0;
+      for (let i = 1; i < puntos.length; i++) km += distanciaKm(puntos[i - 1], puntos[i]) * 1.3;
+      return { puntos, distanciaKm: km, duracionMin: Math.max(1, Math.round(km * 3)) };
     }
   }
 

@@ -149,6 +149,13 @@ export const routes: Routes = [
     data: { roles: ['conductor'], rol: 'conductor' },
     loadComponent: () => import('./pages/viaje/calificar/viaje-calificar.page').then((m) => m.ViajeCalificarPage),
   },
+  // Chat del viaje sin mostrar el número (?id=servicio). La misma pantalla para los dos.
+  {
+    path: 'conductor/viaje/chat',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'], rol: 'conductor' },
+    loadComponent: () => import('./pages/viaje/chat/viaje-chat.page').then((m) => m.ViajeChatPage),
+  },
   // Conductor app 9 · Mis viajes y el perfil (con su vehículo)
   {
     path: 'conductor/viajes',
@@ -205,6 +212,12 @@ export const routes: Routes = [
     canActivate: [rolGuard],
     data: { roles: CLIENTE, rol: 'cliente' },
     loadComponent: () => import('./pages/viaje/calificar/viaje-calificar.page').then((m) => m.ViajeCalificarPage),
+  },
+  {
+    path: 'cliente/viaje/chat',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE, rol: 'cliente' },
+    loadComponent: () => import('./pages/viaje/chat/viaje-chat.page').then((m) => m.ViajeChatPage),
   },
   // Pedir un domicilio: Domicilio 1 (Pedido) → 2 (Confirmar) → Buscando (la de Viaje 4)
   // → 4 (Seguimiento, ?id=servicio) → 5 (Entregado, ?id=servicio)

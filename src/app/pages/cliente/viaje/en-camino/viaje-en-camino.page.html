@@ -5,6 +5,7 @@
       [centro]="vehiculo()"
       [ruta]="camino()"
       [destino]="meta()"
+      [parada]="enViaje() && !paradaHecha() ? parada() : null"
       [encuadrar]="true"
       [margenInferior]="altoHoja()"
     />
@@ -14,7 +15,7 @@
       <section class="arriba entra" role="status" aria-live="polite">
         <div class="fila">
           <span>
-            <small>En viaje</small>
+            <small>{{ parada() && !paradaHecha() ? 'En viaje · con parada' : 'En viaje' }}</small>
             <b>{{ llegasA() ? 'Llegas a las ' + llegasA() : 'Calculando la llegada…' }}</b>
           </span>
           @if (minutos() !== null) {
@@ -23,19 +24,20 @@
         </div>
         <div class="barra" aria-hidden="true"><i [style.width.%]="avance() * 100"></i></div>
       </section>
-      <app-boton-sos class="sos" [servicioId]="id" [conLinea]="true" />
     } @else {
       <!-- Viaje 5 · Carlos llega en 3 min -->
-      <p class="pildora sola entra" role="status" aria-live="polite">
+      <p class="pildora entra" role="status" aria-live="polite">
         <app-icono nombre="reloj" class="reloj" />
         <b>{{ aviso() }}</b>
       </p>
     }
+    <app-boton-sos class="sos" [servicioId]="id" [conLinea]="enViaje()" />
 
     <main class="hoja" #hoja>
       <span class="asa" aria-hidden="true"></span>
 
       @if (v(); as s) {
+        <!-- Conductor y vehículo: lo que hay que mirar para no subirse al equivocado -->
         <section class="persona entra">
           <span class="avatar" aria-hidden="true">{{ iniciales() }}</span>
           <span class="datos">
@@ -48,14 +50,39 @@
             </span>
           </span>
           @if (s.conductor_placa) {
-            <span class="placa">
-              <b>{{ s.conductor_placa }}</b>
-              <small>{{ s.conductor_modelo }}{{ s.conductor_color ? ' · ' + s.conductor_color : '' }}</small>
-            </span>
+            <span class="placa"><b>{{ s.conductor_placa }}</b></span>
           }
         </section>
 
+        @if (modelo() || foto()) {
+          <section class="vehiculo entra" style="--d: 30ms" aria-label="Tu vehículo">
+            @if (foto(); as f) {
+              <img [src]="f" alt="Foto del vehículo de {{ corto() }}" />
+            } @else {
+              <span class="disco" [class]="s.tipo_vehiculo"><app-icono [nombre]="s.tipo_vehiculo" /></span>
+            }
+            <span class="textos">
+              <small>Búscalo así</small>
+              <b>
+                @if (colorVehiculo(); as c) { <i class="color" [style.background]="c" aria-hidden="true"></i> }
+                {{ modelo() || (s.tipo_vehiculo === 'moto' ? 'Moto' : 'Taxi') }}
+              </b>
+              @if (conCasco()) {
+                <span class="chip"><app-icono nombre="check" /> Lleva casco para ti</span>
+              }
+            </span>
+          </section>
+        }
+
         @if (!enViaje()) {
+          @if (espera(); as e) {
+            <p class="espera entra" [class.vencida]="e.vencida" role="timer" aria-live="polite">
+              <app-icono nombre="reloj" />
+              <span>{{ e.texto }}</span>
+              @if (e.reloj) { <b>{{ e.reloj }}</b> }
+            </p>
+          }
+
           @if (pin().length === 4) {
             <section class="codigo entra" style="--d: 50ms" aria-label="Tu PIN de viaje">
               <p><b>Tu PIN de viaje</b><small>Díselo al conductor para empezar</small></p>
@@ -66,26 +93,42 @@
               </div>
             </section>
           }
+        }
 
-          <nav class="acciones entra" style="--d: 90ms" aria-label="Acciones">
-            <a class="accion" [href]="telefono() ? 'tel:' + telefono() : null" [attr.aria-disabled]="!telefono()">
-              <span class="disco"><app-icono nombre="telefono" /></span>Llamar
-            </a>
-            <a class="accion" [href]="telefono() ? 'sms:' + telefono() : null" [attr.aria-disabled]="!telefono()">
-              <span class="disco"><app-icono nombre="mensaje" /></span>Mensaje
-            </a>
-            <button type="button" class="accion" (click)="compartir()">
-              <span class="disco"><app-icono nombre="compartir" /></span>Compartir
-            </button>
-          </nav>
+        <nav class="acciones cuatro entra" style="--d: 90ms" aria-label="Acciones">
+          <button type="button" class="accion" (click)="chat()">
+            <span class="disco teal">
+              <app-icono nombre="mensaje" />
+              @if (sinLeer()) { <i class="globo" [attr.aria-label]="sinLeer() + ' sin leer'">{{ sinLeer() }}</i> }
+            </span>
+            Mensaje
+          </button>
+          <a class="accion" [href]="telefono() ? 'tel:' + telefono() : null" [attr.aria-disabled]="!telefono()">
+            <span class="disco"><app-icono nombre="telefono" /></span>Llamar
+          </a>
+          <button type="button" class="accion" [disabled]="compartiendo()" (click)="compartir()">
+            <span class="disco"><app-icono nombre="compartir" /></span>Compartir
+          </button>
+          <button type="button" class="accion" (click)="cambiarDestino()">
+            <span class="disco"><app-icono nombre="pin" /></span>Destino
+          </button>
+        </nav>
 
+        @if (s.parada && enViaje()) {
+          <p class="parada entra">
+            <i class="rombo" aria-hidden="true"></i>
+            <span><small>{{ paradaHecha() ? 'Parada hecha' : 'Parada' }}</small><b>{{ s.parada }}</b></span>
+          </p>
+        }
+
+        @if (!enViaje()) {
           <button type="button" class="texto-rojo" [disabled]="cancelando()" (click)="cancelar()">
             {{ cancelando() ? 'Cancelando…' : 'Cancelar viaje' }}
           </button>
         } @else {
           <p class="familia entra" style="--d: 50ms">
             <span class="disco teal"><app-icono nombre="compartir" /></span>
-            <span><b>Tu familia te acompaña</b><small>Comparte el viaje y que vean dónde vas.</small></span>
+            <span><b>Tu familia te acompaña</b><small>Comparte el enlace y que vean en vivo dónde vas.</small></span>
           </p>
         }
       } @else {
@@ -101,15 +144,36 @@
         </p>
       }
     </main>
+
+    <!-- ¿Todo bien? (desvío o parada larga) -->
+    @if (pregunta(); as p) {
+      <div class="velo" aria-hidden="true"></div>
+      <section class="todo-bien" role="alertdialog" aria-labelledby="todo-bien-titulo" aria-describedby="todo-bien-texto">
+        <span class="disco amarillo"><app-icono nombre="alerta" /></span>
+        <h2 id="todo-bien-titulo">¿Todo bien?</h2>
+        <p id="todo-bien-texto">
+          {{ p.tipo === 'desvio' ? 'Vemos que el vehículo se salió de la ruta.' : 'Vemos que el vehículo lleva varios minutos detenido.' }}
+          Si no respondes en <b>{{ p.restante }} s</b>, le avisamos a soporte.
+        </p>
+        <button type="button" class="mv-boton mv-boton--naranja" (click)="estoyBien()">Estoy bien</button>
+        <button type="button" class="ayuda" (click)="necesitoAyuda()">
+          <app-icono nombre="alerta" /> Necesito ayuda
+        </button>
+      </section>
+    }
   </div>
 </ion-content>
 
 @if (enViaje()) {
   <ion-footer class="ion-no-border">
     <div class="pie">
-      <button type="button" class="mv-boton mv-boton--naranja" (click)="compartir()">
-        Compartir mi viaje
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6" /><circle cx="6" cy="12" r="2.6" /><circle cx="18" cy="19" r="2.6" /><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4" /></svg>
+      <button type="button" class="mv-boton mv-boton--naranja" [disabled]="compartiendo()" (click)="compartir()">
+        @if (compartiendo()) {
+          <span class="cargando" aria-hidden="true"></span> Creando el enlace…
+        } @else {
+          Compartir mi viaje en vivo
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6" /><circle cx="6" cy="12" r="2.6" /><circle cx="18" cy="19" r="2.6" /><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4" /></svg>
+        }
       </button>
     </div>
   </ion-footer>

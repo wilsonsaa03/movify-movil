@@ -1,9 +1,9 @@
-<div class="capa" role="dialog" aria-modal="true" [attr.aria-label]="tipo() === 'origen' ? 'Elegir punto de recogida' : 'Elegir destino'">
+<div class="capa" role="dialog" aria-modal="true" [attr.aria-label]="tipo() === 'origen' ? 'Elegir punto de recogida' : tipo() === 'parada' ? 'Elegir parada' : 'Elegir destino'">
   <app-mapa-ciudad class="mapa" marcador="usuario" [centro]="miPunto()" [destino]="pin()" [arrastrable]="true" (toque)="tocar($event)" />
 
   <div class="arriba">
     <button type="button" class="cerrar" aria-label="Cerrar" (click)="cerrar.emit()"><app-icono nombre="x" /></button>
-    <p class="titulo">Toca el mapa para marcar {{ tipo() === 'origen' ? 'dónde te recogen' : 'tu destino' }}</p>
+    <p class="titulo">Toca el mapa para marcar {{ tipo() === 'origen' ? 'dónde te recogen' : tipo() === 'parada' ? 'tu parada en el camino' : 'tu destino' }}</p>
   </div>
 
   <div class="hoja">

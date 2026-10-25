@@ -151,3 +151,259 @@ h1 {
     background-position: -200% 0;
   }
 }
+
+// ---------- Opciones del viaje (casco, pasajeros, equipaje, mascota) ----------
+.preferencias {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 2px solid $borde;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    transform 120ms $ease-out;
+
+  app-icono {
+    width: 16px;
+    height: 16px;
+    --grosor: 3;
+  }
+  &:active {
+    transform: scale(0.96);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  &.activo {
+    border-color: $navy;
+    background: #fff8ef;
+  }
+}
+.contador {
+  min-height: 40px;
+  padding: 0 4px;
+  border: 2px solid $borde;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  b {
+    min-width: 92px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  button {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: #eef3f8;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 800;
+    color: $navy;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+    &:focus-visible {
+      outline: 3px solid $teal;
+      outline-offset: 2px;
+    }
+  }
+}
+.nota-pref {
+  margin: 6px 2px 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $teal-d;
+}
+
+// ---------- ¿Para quién? / ¿Cuándo? ----------
+.filas {
+  margin-top: 12px;
+  border: 2px solid $borde;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.fila {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 12px;
+  border: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  text-align: left;
+  font-family: inherit;
+  color: $navy;
+  cursor: pointer;
+
+  & + & {
+    border-top: 1.5px solid $borde;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: -3px;
+  }
+  &.cuando {
+    cursor: default;
+  }
+  .disco {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+
+    app-icono {
+      width: 19px;
+      height: 19px;
+    }
+  }
+  .disco.gris {
+    background: #eef3f8;
+  }
+  .textos small {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $gris;
+  }
+  .textos b {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ir {
+    width: 18px;
+    height: 18px;
+    color: $gris;
+  }
+}
+.segmento {
+  padding: 3px;
+  border-radius: 14px;
+  display: flex;
+  gap: 2px;
+  background: #eef3f8;
+
+  button {
+    min-height: 36px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 11px;
+    background: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    color: $gris;
+    cursor: pointer;
+
+    &.activo {
+      background: #ffffff;
+      color: $navy;
+      box-shadow: 0 2px 6px rgba($navy, 0.12);
+    }
+    &:focus-visible {
+      outline: 3px solid $teal;
+      outline-offset: 1px;
+    }
+  }
+}
+.hora {
+  padding: 10px 12px 12px;
+  border-top: 1.5px solid $borde;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f8fafc;
+
+  span {
+    font-size: 13px;
+    font-weight: 800;
+  }
+  input {
+    min-height: 46px;
+    padding: 0 12px;
+    border: 2px solid $borde;
+    border-radius: 12px;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    color: $navy;
+
+    &:focus {
+      outline: none;
+      border-color: $teal;
+    }
+  }
+  small {
+    font-size: 12px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+
+// ---------- Oferta ----------
+.oferta {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff4ea;
+  border: 1.5px solid #ffd2ae;
+  font-size: 14px;
+  font-weight: 700;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+    color: $orange;
+  }
+  span {
+    flex: 1;
+  }
+  .borrar {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #ffffff;
+    color: $gris;
+    cursor: pointer;
+
+    app-icono {
+      width: 14px;
+      height: 14px;
+      color: $gris;
+    }
+  }
+}

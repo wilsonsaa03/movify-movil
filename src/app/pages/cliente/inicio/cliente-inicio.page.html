@@ -36,7 +36,7 @@
 
     <!-- Mapa en tiempo real: ocupa el resto de la pantalla; la hoja se monta encima -->
     <section class="mapa" aria-label="Tu ubicación">
-      <app-mapa-ciudad marcador="usuario" [centro]="miPunto()" [precision]="precision()" [margenInferior]="altoVisibleHoja()" />
+      <app-mapa-ciudad marcador="usuario" [centro]="miPunto()" [precision]="precision()" [vehiculos]="libres()" [margenInferior]="altoVisibleHoja()" />
       <button type="button" class="ubicacion entra" style="--d: 100ms" aria-live="polite" (click)="reubicar()">
         @if (buscandoLugar()) {
           <span class="cargando" aria-hidden="true"></span>

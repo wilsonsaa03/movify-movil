@@ -59,6 +59,21 @@ const SVG_TAXI =
     .mv-mapa-vehiculo svg {
       width: 24px; height: 24px; fill: none; stroke: #03274d; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
     }
+    /* Conductores libres cerca (antes de pedir): más pequeños y sin borde naranja para no confundirse con el asignado */
+    .mv-mapa-libre {
+      width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; box-sizing: border-box;
+      background: #ffffff; border: 2px solid #03274d; box-shadow: 0 3px 8px rgba(3, 39, 77, 0.25);
+      transition: transform 600ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .mv-mapa-libre.taxi { background: #ffc94d; }
+    .mv-mapa-libre svg {
+      width: 17px; height: 17px; fill: none; stroke: #03274d; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+    }
+    /* Parada: rombo naranja con borde blanco */
+    .mv-mapa-parada {
+      display: block; width: 18px; height: 18px; transform: rotate(45deg); border-radius: 4px;
+      background: #fe7b13; border: 3px solid #ffffff; box-shadow: 0 3px 8px rgba(3, 39, 77, 0.3);
+    }
     /* Destino: pin azul oscuro con el nombre al lado (como en el Figma).
        display: block es obligatorio: un <span> es inline e ignora width/height, la caja quedaba en 0×0
        y el pin se dibujaba 44 px por encima del punto tocado (parecía que marcaba "un aproximado"). */
@@ -108,6 +123,10 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
   readonly encuadrar = input(false);
   /** true = se mueve con un dedo (pantallas donde el mapa es lo principal, como elegir un punto). */
   readonly arrastrable = input(false);
+  /** Conductores libres cerca (posición aproximada): los "carritos" antes de pedir. */
+  readonly vehiculos = input<(PuntoMapa & { tipo_vehiculo: 'moto' | 'taxi' })[]>([]);
+  /** Una parada en el camino. */
+  readonly parada = input<PuntoMapa | null>(null);
   /** Punto que tocó el usuario en el mapa. */
   readonly toque = output<PuntoMapa>();
 
@@ -116,6 +135,7 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
   private aro?: L.Circle;
   private capaRuta?: L.LayerGroup;
   private capaZonas?: L.LayerGroup;
+  private capaLibres?: L.LayerGroup;
   private observador?: ResizeObserver;
   private centrado = false;
 
@@ -124,7 +144,8 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
     effect(() => this.pintarMarcador(this.centro(), this.marcador()));
     effect(() => this.pintarPrecision(this.centro(), this.precision()));
     effect(() => this.pintarZonas(this.zonas()));
-    effect(() => this.pintarRuta(this.ruta(), this.destino(), this.etiquetaRuta()));
+    effect(() => this.pintarRuta(this.ruta(), this.destino(), this.etiquetaRuta(), this.parada()));
+    effect(() => this.pintarLibres(this.vehiculos()));
     // Si la hoja sube o baja, el punto se desliza al centro de la parte visible
     effect(() => {
       this.margenInferior();
@@ -154,6 +175,7 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
     L.tileLayer(MOSAICOS, { attribution: ATRIBUCION, maxZoom: 19 }).addTo(this.mapa);
     this.mapa.on('click', (e: L.LeafletMouseEvent) => this.toque.emit({ lat: e.latlng.lat, lng: e.latlng.lng }));
     this.capaZonas = L.layerGroup().addTo(this.mapa);
+    this.capaLibres = L.layerGroup().addTo(this.mapa);
     this.capaRuta = L.layerGroup().addTo(this.mapa);
 
     // Ionic anima la entrada de la página: Leaflet necesita recalcular el tamaño cuando el contenedor cambia
@@ -163,7 +185,8 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
     this.pintarPrecision(this.centro(), this.precision());
     this.pintarMarcador(this.centro(), this.marcador());
     this.pintarZonas(this.zonas());
-    this.pintarRuta(this.ruta(), this.destino(), this.etiquetaRuta());
+    this.pintarLibres(this.vehiculos());
+    this.pintarRuta(this.ruta(), this.destino(), this.etiquetaRuta(), this.parada());
   }
 
   /** Vuelve a centrar el mapa en el punto (botón "mi ubicación"). */
@@ -235,9 +258,39 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
     this.centrado = true;
   }
 
-  private pintarRuta(ruta: PuntoMapa[], destino: (PuntoMapa & { nombre?: string }) | null, etiqueta: string | null): void {
+  private pintarLibres(libres: (PuntoMapa & { tipo_vehiculo: 'moto' | 'taxi' })[]): void {
+    if (!this.capaLibres) return;
+    this.capaLibres.clearLayers();
+    for (const v of libres) {
+      L.marker([v.lat, v.lng], {
+        interactive: false,
+        keyboard: false,
+        icon: L.divIcon({
+          className: '',
+          html: `<span class="mv-mapa-libre ${v.tipo_vehiculo}"><svg viewBox="0 0 24 24" aria-hidden="true">${v.tipo_vehiculo === 'taxi' ? SVG_TAXI : SVG_MOTO}</svg></span>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+        }),
+      }).addTo(this.capaLibres);
+    }
+  }
+
+  private pintarRuta(
+    ruta: PuntoMapa[],
+    destino: (PuntoMapa & { nombre?: string }) | null,
+    etiqueta: string | null,
+    parada: PuntoMapa | null = null,
+  ): void {
     if (!this.capaRuta) return;
     this.capaRuta.clearLayers();
+    if (parada) {
+      L.marker([parada.lat, parada.lng], {
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: 400,
+        icon: L.divIcon({ className: '', html: '<span class="mv-mapa-parada"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }),
+      }).addTo(this.capaRuta);
+    }
     if (ruta.length > 1) {
       const linea = ruta.map((p) => L.latLng(p.lat, p.lng));
       // Borde azul + línea naranja encima (como en el Figma)
@@ -274,8 +327,10 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
     const puntos: L.LatLngExpression[] = this.ruta().map((p) => [p.lat, p.lng] as [number, number]);
     const c = this.centro();
     const d = this.destino();
+    const p = this.parada();
     if (c) puntos.push([c.lat, c.lng]);
     if (d) puntos.push([d.lat, d.lng]);
+    if (p) puntos.push([p.lat, p.lng]);
     if (!puntos.length) return;
     const alto = this.mapa.getSize().y;
     const abajo = Math.min(this.margenInferior() + 40, Math.max(60, alto - 160));

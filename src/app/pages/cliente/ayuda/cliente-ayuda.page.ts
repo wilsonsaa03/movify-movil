@@ -58,9 +58,11 @@ export class ClienteAyudaPage implements ViewDidEnter {
 
   ionViewDidEnter(): void {
     this.cargar();
-    // Desde el detalle de un pedido: ?servicio=42 deja ese servicio elegido
+    // Desde el detalle de un pedido: ?servicio=42 deja ese servicio elegido (y ?tipo=objeto_olvidado, el tipo)
     const s = Number(this.ruta.snapshot.queryParamMap.get('servicio'));
     if (s) this.servicioId.set(s);
+    const t = this.ruta.snapshot.queryParamMap.get('tipo');
+    if (t && TIPOS_SOLICITUD.some((x) => x.id === t)) this.elegirTipo(t as TipoSolicitud);
   }
 
   volver(): void {

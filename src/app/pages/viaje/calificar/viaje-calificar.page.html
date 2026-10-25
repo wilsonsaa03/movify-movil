@@ -13,6 +13,21 @@
     </header>
 
     <main class="cuerpo">
+      @if (recibo(); as r) {
+        <section class="recibo entra" style="--d: 140ms" aria-label="Resumen del viaje">
+          <div class="total">
+            <span><small>Pagas en efectivo</small><b class="precio">{{ pesos(r.valor) }}</b></span>
+            @if (r.detalle) { <small>{{ r.detalle }}</small> }
+          </div>
+          <p class="ruta">
+            <span>{{ r.origen }}</span>
+            @if (r.parada) { <span class="por">por {{ r.parada }}</span> }
+            <app-icono nombre="adelante" />
+            <span>{{ r.destino }}</span>
+          </p>
+        </section>
+      }
+
       <h2 class="pregunta entra" style="--d: 160ms">
         @if (inicialesOtro()) { <span class="avatar" aria-hidden="true">{{ inicialesOtro() }}</span> }
         ¿Cómo te fue con {{ otroCorto() }}?
@@ -55,6 +70,19 @@
             (input)="comentario.set($any($event.target).value)"
           ></textarea>
         </section>
+
+        @if (ofrecerFavorito()) {
+          <label class="opcion-extra entra">
+            <input type="checkbox" [checked]="favorito()" (change)="favorito.set($any($event.target).checked)" />
+            <span><b>Agregar a {{ otroCorto() }} a mis favoritos</b><small>Le ofreceremos tus próximos viajes primero.</small></span>
+          </label>
+        }
+        @if (ofrecerBloqueo()) {
+          <label class="opcion-extra mala entra">
+            <input type="checkbox" [checked]="bloquear()" (change)="bloquear.set($any($event.target).checked)" />
+            <span><b>No volver a emparejarme con {{ otroCorto() }}</b><small>No te enviaremos de nuevo a este conductor.</small></span>
+          </label>
+        }
       }
 
       @if (error()) {

@@ -11,6 +11,10 @@ import { DomicilioService } from '../../../../servicios/domicilio.service';
 
 /** Cada cuánto se pregunta si algún conductor aceptó. */
 const CADA_MS = 4000;
+/** Después de este tiempo sin conductor aparece "¿Ofreces un poco más?". */
+const OFRECER_MAS_MS = 35000;
+/** Cuánto se puede subir de un toque (en efectivo, montos redondos). */
+const AUMENTOS = [1000, 2000, 3000];
 
 type Fase = 'buscando' | 'sin-conductor' | 'error';
 
@@ -45,6 +49,11 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
   readonly cancelando = signal(false);
   readonly error = signal('');
   readonly pesos = pesos;
+  /** Pasó un rato sin que nadie acepte: se ofrece subir la tarifa (inDrive / DiDi). */
+  readonly ofrecerMas = signal(false);
+  readonly subiendo = signal<number | null>(null);
+  readonly aumentos = AUMENTOS;
+  private espera?: ReturnType<typeof setTimeout>;
 
   /** Señal (no campo normal) para que "Les avisamos a N conductores" se recalcule al conocer el id. */
   private readonly idSenal = signal(0);
@@ -92,12 +101,35 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
       return;
     }
     this.fase.set('buscando');
+    this.ofrecerMas.set(false);
     this.revisar();
     this.sondeo = setInterval(() => this.revisar(), CADA_MS);
+    this.espera = setTimeout(() => this.ofrecerMas.set(this.clase() === 'transporte'), OFRECER_MAS_MS);
   }
 
   ionViewWillLeave(): void {
     clearInterval(this.sondeo);
+    clearTimeout(this.espera);
+  }
+
+  /** Sube la tarifa sin cancelar: la búsqueda se reinicia y les llega de nuevo a los que la rechazaron. */
+  async subir(extra: number): Promise<void> {
+    const s = this.servicio();
+    if (!s || this.subiendo() !== null) return;
+    this.subiendo.set(extra);
+    this.error.set('');
+    try {
+      const r = await this.viaje.subirTarifa(this.id, Number(s.tarifa) + extra);
+      this.servicio.set({ ...s, tarifa: Number(r.tarifa), expira_busqueda_en: r.expira_busqueda_en });
+      Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
+      this.ofrecerMas.set(false);
+      clearTimeout(this.espera);
+      this.espera = setTimeout(() => this.ofrecerMas.set(true), OFRECER_MAS_MS);
+    } catch (e) {
+      this.error.set((e as ErrorApi).message || 'No pudimos subir la tarifa.');
+    } finally {
+      this.subiendo.set(null);
+    }
   }
 
   async cancelar(): Promise<void> {
@@ -131,8 +163,8 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
     }
   }
 
-  /** Volver a pedir el mismo viaje (cuando nadie lo tomó). */
-  otraVez(): void {
+  /** Volver a pedir el mismo viaje (cuando nadie lo tomó), si quiere ofreciendo más. */
+  otraVez(extra = 0): void {
     const s = this.servicio();
     if (!s) {
       this.nav.navigateRoot('/cliente');
@@ -155,7 +187,17 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
     this.viaje.tipo.set(s.tipo_vehiculo);
     this.viaje.origen.set({ nombre: 'Mi ubicación', detalle: s.origen, barrio: s.origen_barrio, lat: Number(s.origen_lat), lng: Number(s.origen_lng) });
     this.viaje.destino.set({ nombre: s.destino, detalle: null, barrio: s.destino_barrio, lat: Number(s.destino_lat), lng: Number(s.destino_lng) });
+    this.viaje.parada.set(
+      s.parada_lat != null && s.parada_lng != null
+        ? { nombre: s.parada ?? 'Parada', detalle: null, barrio: null, lat: Number(s.parada_lat), lng: Number(s.parada_lng) }
+        : null,
+    );
     this.viaje.referencia.set(s.origen_referencia ?? '');
+    this.viaje.casco.set(!!s.necesita_casco);
+    this.viaje.pasajeros.set(Number(s.pasajeros) || 1);
+    this.viaje.equipaje.set(!!s.lleva_equipaje);
+    this.viaje.mascota.set(!!s.lleva_mascota);
+    this.viaje.ofrecido.set(extra ? Number(s.tarifa) + extra : null);
     this.nav.navigateRoot('/cliente/viaje/confirmar');
   }
 
@@ -200,6 +242,8 @@ export class ViajeBuscandoPage implements ViewDidEnter, ViewWillLeave {
 
   private sinConductor(): void {
     clearInterval(this.sondeo);
+    clearTimeout(this.espera);
+    this.ofrecerMas.set(false);
     if (this.fase() !== 'sin-conductor') Haptics.notification({ type: NotificationType.Warning }).catch(() => undefined);
     this.fase.set('sin-conductor');
   }

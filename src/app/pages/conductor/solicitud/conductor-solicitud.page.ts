@@ -87,7 +87,24 @@ export class ConductorSolicitudPage implements ViewDidEnter, ViewWillLeave, Afte
     return [resto, s.destino_barrio].filter(Boolean).join(', ');
   });
 
-  readonly pasajero = computed(() => this.s()?.usuario_nombre?.trim() || 'Pasajero');
+  /** Si el viaje es para otra persona, el conductor recoge a esa persona (no a quien pidió). */
+  readonly pasajero = computed(() => this.s()?.pasajero_nombre?.trim() || this.s()?.usuario_nombre?.trim() || 'Pasajero');
+  readonly pidioOtro = computed(() => (this.s()?.pasajero_nombre ? this.s()?.usuario_nombre?.trim() || null : null));
+  readonly parada = computed<PuntoMapa | null>(() => {
+    const s = this.s();
+    return s?.parada_lat != null && s.parada_lng != null ? { lat: Number(s.parada_lat), lng: Number(s.parada_lng) } : null;
+  });
+  /** Lo que el conductor tiene que saber antes de aceptar: casco, cuántos van, equipaje, mascota. */
+  readonly requisitos = computed(() => {
+    const s = this.s();
+    if (!s || s.tipo_servicio !== 'transporte') return [];
+    const r: string[] = [];
+    if (s.necesita_casco) r.push('Lleva casco para el pasajero');
+    if (Number(s.pasajeros) > 1) r.push(`${s.pasajeros} pasajeros`);
+    if (s.lleva_equipaje) r.push('Lleva equipaje');
+    if (s.lleva_mascota) r.push('Va con mascota');
+    return r;
+  });
   readonly inicial = computed(() => this.pasajero().charAt(0).toUpperCase());
   readonly calificacion = computed(() => {
     const c = Number(this.s()?.usuario_calificacion);
@@ -100,6 +117,7 @@ export class ConductorSolicitudPage implements ViewDidEnter, ViewWillLeave, Afte
     const c = this.clase();
     if (c === 'domicilio') return '¡Nuevo domicilio!';
     if (c === 'encomienda') return '¡Nueva encomienda!';
+    if (this.s()?.tarifa_subida) return '¡Subieron la tarifa!';
     return `¡Nueva solicitud de ${this.s()?.tipo_vehiculo ?? 'viaje'}!`;
   });
   /** Qué lleva: "Farmacia · Droguería La Económica" / "Pequeño · Frágil". */
@@ -193,7 +211,7 @@ export class ConductorSolicitudPage implements ViewDidEnter, ViewWillLeave, Afte
     this.empezarCuenta(s.expira_busqueda_en);
 
     this.lugares
-      .ruta({ lat: Number(s.origen_lat), lng: Number(s.origen_lng) }, { lat: Number(s.destino_lat), lng: Number(s.destino_lng) })
+      .ruta({ lat: Number(s.origen_lat), lng: Number(s.origen_lng) }, { lat: Number(s.destino_lat), lng: Number(s.destino_lng) }, this.parada())
       .then((r) => this.ruta.set(r.puntos));
     if (Number(s.nota_voz_segundos) > 0) {
       this.api

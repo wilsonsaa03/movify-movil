@@ -5,6 +5,8 @@
       [centro]="origen()"
       [ruta]="ruta()"
       [destino]="destino()"
+      [parada]="viaje.parada()"
+      [vehiculos]="carritos()"
       [etiquetaRuta]="etiqueta()"
       [encuadrar]="true"
       [margenInferior]="altoHoja()"
@@ -51,17 +53,86 @@
                 </small>
               </span>
               <span class="valor">
-                <span class="precio">{{ pesos(o.precio) }}</span>
-                <small>Precio fijo</small>
+                <span class="precio">{{ pesos(o.tipo === viaje.tipo() && ofrecido() ? ofrecido() : o.precio) }}</span>
+                <small>{{ o.recargo ? 'Tarifa nocturna' : 'Precio fijo' }}</small>
               </span>
             </button>
           }
         </div>
       }
 
-      <p class="garantia entra" style="--d: 200ms">
-        <app-icono nombre="candado" />
-        El precio no cambia en el camino, llueva o no.
+      <!-- Opciones del viaje -->
+      <section class="preferencias entra" style="--d: 160ms" aria-label="Opciones del viaje">
+        @if (viaje.tipo() === 'moto') {
+          <button type="button" class="chip" [class.activo]="viaje.casco()" [attr.aria-pressed]="viaje.casco()" (click)="alternarCasco()">
+            @if (viaje.casco()) { <app-icono nombre="check" /> }
+            No tengo casco
+          </button>
+        } @else {
+          <span class="contador" role="group" aria-label="Pasajeros">
+            <button type="button" aria-label="Menos pasajeros" [disabled]="viaje.pasajeros() <= 1" (click)="pasajeros(-1)">−</button>
+            <b aria-live="polite">{{ viaje.pasajeros() }} {{ viaje.pasajeros() === 1 ? 'pasajero' : 'pasajeros' }}</b>
+            <button type="button" aria-label="Más pasajeros" [disabled]="viaje.pasajeros() >= 4" (click)="pasajeros(1)">+</button>
+          </span>
+          <button type="button" class="chip" [class.activo]="viaje.equipaje()" [attr.aria-pressed]="viaje.equipaje()" (click)="viaje.equipaje.set(!viaje.equipaje())">
+            @if (viaje.equipaje()) { <app-icono nombre="check" /> }
+            Equipaje
+          </button>
+          <button type="button" class="chip" [class.activo]="viaje.mascota()" [attr.aria-pressed]="viaje.mascota()" (click)="viaje.mascota.set(!viaje.mascota())">
+            @if (viaje.mascota()) { <app-icono nombre="check" /> }
+            Mascota
+          </button>
+        }
+      </section>
+      @if (viaje.tipo() === 'moto' && viaje.casco()) {
+        <p class="nota-pref">Solo te enviaremos motos que llevan casco para el pasajero.</p>
+      }
+
+      <!-- ¿Para quién? y ¿Cuándo? -->
+      <div class="filas entra" style="--d: 190ms">
+        <button type="button" class="fila" (click)="paraQuien()">
+          <span class="disco gris"><app-icono nombre="persona" /></span>
+          <span class="textos">
+            <small>¿Para quién?</small>
+            <b>{{ viaje.paraOtro() ? viaje.paraOtro()!.nombre + ' · le llega un SMS' : 'Para mí' }}</b>
+          </span>
+          <app-icono nombre="adelante" class="ir" />
+        </button>
+        <div class="fila cuando">
+          <span class="disco gris"><app-icono nombre="reloj" /></span>
+          <span class="textos">
+            <small>¿Cuándo?</small>
+            <b>{{ programado() ? textoProgramado() : 'Ahora' }}</b>
+          </span>
+          <span class="segmento" role="radiogroup" aria-label="Cuándo">
+            <button type="button" role="radio" [attr.aria-checked]="!programado()" [class.activo]="!programado()" (click)="ahora()">Ahora</button>
+            <button type="button" role="radio" [attr.aria-checked]="!!programado()" [class.activo]="!!programado()" (click)="abrirHora()">Programar</button>
+          </span>
+        </div>
+        @if (eligiendoHora() && programado()) {
+          <label class="hora">
+            <span>Fecha y hora de recogida</span>
+            <input type="datetime-local" [min]="minHora()" [max]="maxHora()" [value]="valorHora()" (change)="elegirHora($any($event.target).value)" />
+            <small>Empezamos a buscar tu {{ viaje.tipo() }} unos minutos antes. Desde 30 min y hasta 7 días.</small>
+          </label>
+        }
+      </div>
+
+      @if (ofrecido(); as of) {
+        <p class="oferta entra">
+          <app-icono nombre="dinero" />
+          <span>Ofreces <b>{{ pesos(of) }}</b> para que te acepten más rápido.</span>
+          <button type="button" class="borrar" aria-label="Quitar la oferta" (click)="quitarOferta()"><app-icono nombre="x" /></button>
+        </p>
+      }
+
+      <p class="garantia entra" style="--d: 220ms">
+        <app-icono [nombre]="elegida()?.recargo ? 'reloj' : 'candado'" />
+        @if (elegida()?.recargo) {
+          De noche (9 p. m. a 5 a. m.) el precio incluye un recargo del {{ elegida()!.recargo }} %. No cambia en el camino.
+        } @else {
+          El precio no cambia en el camino, llueva o no. Pagas en efectivo.
+        }
       </p>
 
       @if (error()) {
@@ -81,9 +152,9 @@
     <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!elegida() || pidiendo()" (click)="pedir()">
       @if (pidiendo()) {
         <span class="cargando" aria-hidden="true"></span>
-        Pidiendo…
+        {{ programado() ? 'Programando…' : 'Pidiendo…' }}
       } @else {
-        Pedir {{ viaje.tipo() }}
+        {{ programado() ? 'Programar ' + viaje.tipo() : 'Pedir ' + viaje.tipo() }}
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       }
     </button>

@@ -188,3 +188,91 @@
   width: 18px;
   height: 18px;
 }
+
+// Recibo del pasajero
+.recibo {
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba($navy, 0.1);
+
+  .total {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+
+    small {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: $gris;
+    }
+    .precio {
+      font-size: 28px;
+      line-height: 1.1;
+    }
+  }
+  .ruta {
+    margin: 10px 0 0;
+    padding-top: 10px;
+    border-top: 1.5px dashed $borde;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 800;
+
+    .por {
+      font-weight: 700;
+      color: $gris;
+    }
+    app-icono {
+      width: 16px;
+      height: 16px;
+      color: $orange;
+    }
+  }
+}
+
+// Favorito / no volver a emparejar
+.opcion-extra {
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 2px solid $borde;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  cursor: pointer;
+
+  input {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    accent-color: $teal-d;
+  }
+  b {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+  &.mala input {
+    accent-color: #b42333;
+  }
+  &:has(input:checked) {
+    border-color: $navy;
+    background: #fff8ef;
+  }
+  &:focus-within {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}

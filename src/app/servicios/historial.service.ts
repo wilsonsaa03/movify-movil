@@ -19,6 +19,8 @@ export interface Pedido {
   conductor_nombre: string | null;
   /** Solo en el detalle (GET /api/servicios/{id}). */
   conductor_placa?: string | null;
+  /** Solo en el detalle: el conductor está en mis favoritos. */
+  es_favorito?: boolean | null;
   distancia_km: number | null;
 }
 

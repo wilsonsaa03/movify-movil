@@ -41,7 +41,29 @@ export class ViajeCalificarPage implements ViewDidEnter {
   readonly enviando = signal(false);
   readonly listo = signal(false);
   readonly error = signal('');
+  /** Pasajero: con 4–5 estrellas puede guardar al conductor en favoritos; con 1–2, no volver a emparejarse. */
+  readonly favorito = signal(false);
+  readonly bloquear = signal(false);
+  readonly pesos = pesos;
   private id = 0;
+
+  readonly ofrecerFavorito = computed(() => this.rol === 'cliente' && this.estrellas() >= 4 && !this.v()?.es_favorito);
+  readonly ofrecerBloqueo = computed(() => this.rol === 'cliente' && this.estrellas() > 0 && this.estrellas() <= 2);
+  /** Recibo: lo que pagó en efectivo, cuánto recorrió y cuánto duró. */
+  readonly recibo = computed(() => {
+    const v = this.v();
+    if (!v || this.rol !== 'cliente') return null;
+    const km = Number(v.distancia_km) || 0;
+    return {
+      valor: Number(v.valor_final ?? v.tarifa ?? 0),
+      detalle: [km ? `${km.toFixed(1).replace('.', ',')} km` : '', v.duracion_estimada_min ? `${v.duracion_estimada_min} min aprox.` : '']
+        .filter(Boolean)
+        .join(' · '),
+      origen: v.origen.split(',')[0],
+      destino: v.destino.split(',')[0],
+      parada: v.parada ? v.parada.split(',')[0] : null,
+    };
+  });
 
   readonly etiquetas = computed(() => {
     const base = ETIQUETAS[this.rol];
@@ -92,6 +114,9 @@ export class ViajeCalificarPage implements ViewDidEnter {
     const texto = [this.elegidas().join(', '), this.comentario().trim()].filter(Boolean).join('. ').slice(0, 300);
     try {
       await this.viajes.calificar(this.id, this.estrellas(), texto || null);
+      // Favorito o bloqueo: si fallan, la calificación ya quedó (no se le muestra error por eso)
+      if (this.ofrecerFavorito() && this.favorito()) await this.viajes.favorito(this.id, true).catch(() => undefined);
+      if (this.ofrecerBloqueo() && this.bloquear()) await this.viajes.bloquear(this.id, texto || null).catch(() => undefined);
       this.listo.set(true);
       setTimeout(() => this.alInicio(), 900);
     } catch (e) {

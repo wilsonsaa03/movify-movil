@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IonContent, IonFooter, NavController, ViewDidEnter } from '@ionic/angular';
+import { AlertController, IonContent, IonFooter, NavController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { ErrorApi } from '../../../core/api.service';
 import { IconoComponent } from '../../../componentes/icono/icono.component';
@@ -19,8 +19,9 @@ import { ViajeActivo, ViajeActivoService, primerNombre } from '../../../servicio
   styleUrls: ['conductor-pin.page.scss'],
   imports: [IonContent, IonFooter, IconoComponent, TecladoNumericoComponent],
 })
-export class ConductorPinPage implements ViewDidEnter {
+export class ConductorPinPage implements ViewDidEnter, ViewWillLeave {
   private readonly nav = inject(NavController);
+  private readonly alertas = inject(AlertController);
   private readonly ruta = inject(ActivatedRoute);
   private readonly viajes = inject(ViajeActivoService);
 
@@ -31,11 +32,27 @@ export class ConductorPinPage implements ViewDidEnter {
   readonly entrega = signal(false);
   private id = 0;
 
+  readonly ahora = signal(Date.now());
+  readonly cancelando = signal(false);
+  private reloj?: ReturnType<typeof setInterval>;
+
+  /**
+   * Cuánto falta para poder marcar "El pasajero no llegó" (minutos_espera_conductor). Antes de eso el backend
+   * no lo deja: así nadie se queda tirado por un conductor afanado.
+   */
+  readonly espera = computed(() => {
+    const hasta = this.v()?.espera_hasta;
+    if (this.entrega() || !hasta) return null;
+    const ms = new Date(hasta).getTime() - this.ahora();
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return { cumplida: ms <= 0, reloj: `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` };
+  });
+
   readonly casillas = computed(() => [0, 1, 2, 3].map((i) => this.pin().charAt(i)));
   readonly completo = computed(() => this.pin().length === 4);
   readonly titulo = computed(() => {
     if (this.entrega()) return 'Pide el código de entrega';
-    return `Pídele el PIN a ${primerNombre(this.v()?.usuario_nombre, 'tu pasajero')}`;
+    return `Pídele el PIN a ${primerNombre(this.v()?.pasajero_nombre || this.v()?.usuario_nombre, 'tu pasajero')}`;
   });
   readonly ayuda = computed(() =>
     this.entrega()
@@ -54,6 +71,41 @@ export class ConductorPinPage implements ViewDidEnter {
     }
     this.viajes.empezarReporte();
     this.viajes.detalle(this.id).then((v) => this.v.set(v)).catch(() => undefined);
+    clearInterval(this.reloj);
+    this.reloj = setInterval(() => this.ahora.set(Date.now()), 1000);
+  }
+
+  ionViewWillLeave(): void {
+    clearInterval(this.reloj);
+  }
+
+  chat(): void {
+    this.nav.navigateForward('/conductor/viaje/chat', { queryParams: { id: this.id } });
+  }
+
+  /** Pasó el tiempo de espera y el pasajero no aparece: se cancela sin que le cuente al conductor. */
+  async noLlego(): Promise<void> {
+    if (!this.espera()?.cumplida || this.cancelando()) return;
+    const alerta = await this.alertas.create({
+      header: '¿El pasajero no llegó?',
+      message: 'Cancelaremos el viaje. No cuenta como cancelación tuya.',
+      buttons: [
+        { text: 'Seguir esperando', role: 'cancel' },
+        { text: 'Sí, cancelar', role: 'destructive' },
+      ],
+    });
+    await alerta.present();
+    if ((await alerta.onDidDismiss()).role !== 'destructive') return;
+    this.cancelando.set(true);
+    try {
+      await this.viajes.cancelar(this.id, 10);
+      this.viajes.pararReporte();
+      this.nav.navigateRoot('/conductor/inicio', { animationDirection: 'back' });
+    } catch (e) {
+      this.error.set((e as ErrorApi).message || 'No pudimos cancelar. Intenta de nuevo.');
+    } finally {
+      this.cancelando.set(false);
+    }
   }
 
   volver(): void {

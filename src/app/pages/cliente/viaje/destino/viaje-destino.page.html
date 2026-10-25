@@ -12,9 +12,9 @@
         <button type="button" class="volver" aria-label="Volver" (click)="volver()">
           <app-icono nombre="atras" />
         </button>
-        <h1>¿A dónde vas?</h1>
+        <h1>{{ cambiarId ? 'Cambiar destino' : '¿A dónde vas?' }}</h1>
 
-        <div class="selector">
+        <div class="selector" [hidden]="!!cambiarId">
           <button type="button" class="tipo" [attr.aria-expanded]="menuTipo()" aria-haspopup="listbox" (click)="menuTipo.set(!menuTipo())">
             <span class="disco"><app-icono [nombre]="viaje.tipo()" /></span>
             {{ viaje.tipo() === 'moto' ? 'Moto' : 'Taxi' }}
@@ -49,10 +49,17 @@
       <section class="trayecto entra" aria-label="Trayecto">
         <span class="linea" aria-hidden="true"><i class="ini"></i><i class="fin"></i></span>
         <div class="campos">
-          <button type="button" class="campo desde" (click)="eligiendo.set('origen')" [attr.aria-label]="'Desde: ' + origenTexto() + '. Toca para cambiar el punto de recogida'">
-            <small>Desde · toca para cambiar</small>
-            <b>{{ origenTexto() }}</b>
-          </button>
+          @if (cambiarId) {
+            <div class="campo desde fijo">
+              <small>Te recogen en</small>
+              <b>{{ origenTexto() }}</b>
+            </div>
+          } @else {
+            <button type="button" class="campo desde" (click)="eligiendo.set('origen')" [attr.aria-label]="'Desde: ' + origenTexto() + '. Toca para cambiar el punto de recogida'">
+              <small>Desde · toca para cambiar</small>
+              <b>{{ origenTexto() }}</b>
+            </button>
+          }
           <label class="campo hasta">
             <small>Hasta</small>
             <span class="entrada">
@@ -77,10 +84,26 @@
         </div>
       </section>
 
-      <button type="button" class="opcion en-mapa entra" (click)="eligiendo.set('destino')">
-        <span class="disco gris"><app-icono nombre="pin" /></span>
-        <span class="textos"><b>Elegir en el mapa</b><small>Toca el sitio exacto si no aparece en la lista</small></span>
-      </button>
+      <!-- Parada en el camino (Uber: "Agregar parada") -->
+      @if (viaje.parada(); as p) {
+        <div class="opcion parada entra">
+          <span class="disco naranja"><i class="rombo" aria-hidden="true"></i></span>
+          <span class="textos"><small>Parada en el camino</small><b>{{ p.nombre }}</b></span>
+          <button type="button" class="borrar" aria-label="Quitar la parada" (click)="quitarParada()"><app-icono nombre="x" /></button>
+        </div>
+      }
+      <div class="atajos entra">
+        <button type="button" class="opcion en-mapa" (click)="eligiendo.set('destino')">
+          <span class="disco gris"><app-icono nombre="pin" /></span>
+          <span class="textos"><b>Elegir en el mapa</b><small>Toca el sitio exacto</small></span>
+        </button>
+        @if (!viaje.parada()) {
+          <button type="button" class="opcion en-mapa" (click)="eligiendo.set('parada')">
+            <span class="disco naranja"><i class="rombo" aria-hidden="true"></i></span>
+            <span class="textos"><b>Agregar parada</b><small>Pasa por un sitio antes</small></span>
+          </button>
+        }
+      </div>
 
       <!-- Resultados / guardados / recientes -->
       <ul class="opciones" aria-live="polite">
@@ -109,8 +132,12 @@
         <p class="aviso">{{ errorBusqueda() }}</p>
       }
 
+      @if (errorCambio()) {
+        <p class="aviso" role="alert">{{ errorCambio() }}</p>
+      }
+
       <!-- Punto de referencia -->
-      <section class="referencia">
+      <section class="referencia" [hidden]="!!cambiarId">
         <h2>Punto de referencia</h2>
         <p class="ayuda">Para que el conductor llegue sin perderse.</p>
         <input
@@ -149,8 +176,12 @@
 <ion-footer class="ion-no-border">
   <div class="pie">
     <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!puedeConfirmar()" (click)="confirmar()">
-      Confirmar destino
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      @if (cambiando()) {
+        <span class="cargando" aria-hidden="true"></span> Calculando…
+      } @else {
+        {{ cambiarId ? 'Cambiar destino' : 'Confirmar destino' }}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      }
     </button>
   </div>
 </ion-footer>

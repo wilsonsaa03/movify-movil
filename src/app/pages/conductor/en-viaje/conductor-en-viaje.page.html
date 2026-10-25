@@ -5,6 +5,7 @@
       [centro]="yo()"
       [ruta]="camino()"
       [destino]="meta()"
+      [parada]="!porRecoger() && !paradaHecha() ? parada() : null"
       [encuadrar]="true"
       [margenInferior]="altoHoja()"
     />
@@ -44,10 +45,24 @@
               }
             </span>
           </span>
-          <a class="redondo" [href]="telefono() ? 'sms:' + telefono() : null" [attr.aria-disabled]="!telefono()" aria-label="Enviar mensaje">
+          <button type="button" class="redondo" aria-label="Abrir el chat con el pasajero" (click)="chat()">
             <app-icono nombre="mensaje" />
-          </a>
+            @if (sinLeer()) { <i class="globo">{{ sinLeer() }}</i> }
+          </button>
         </section>
+
+        @if (destinoCambiado()) {
+          <p class="cambio entra" role="status">
+            <app-icono nombre="pin" />
+            Nuevo destino: {{ s.destino.split(',')[0] }}
+          </p>
+        }
+        @if (s.parada && !porRecoger()) {
+          <p class="cambio entra" role="status">
+            <app-icono [nombre]="paradaHecha() ? 'check' : 'pin'" />
+            {{ paradaHecha() ? 'Parada hecha' : 'Primero la parada' }}: {{ s.parada.split(',')[0] }}
+          </p>
+        }
 
         @if (tipo() !== 'transporte' && s.descripcion) {
           <p class="pedido entra" style="--d: 30ms"><app-icono [nombre]="tipo() === 'encomienda' ? 'encomienda' : 'domicilio'" /> {{ s.descripcion }}</p>

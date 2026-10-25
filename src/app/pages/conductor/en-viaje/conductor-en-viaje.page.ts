@@ -13,6 +13,8 @@ import { ViajeActivo, ViajeActivoService, iniciales, primerNombre, telefonoLimpi
 
 const CADA_MS = 5000;
 const RECALCULAR_KM = 0.1;
+/** Al pasar a menos de esto de la parada, se da por hecha. */
+const PARADA_HECHA_KM = 0.12;
 
 /**
  * Conductor app 5 · En viaje (?id=servicio).
@@ -53,6 +55,15 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
   private sondeo?: ReturnType<typeof setInterval>;
   private ultimaRuta: { desde: PuntoMapa; fase: string } | null = null;
 
+  /** El pasajero cambió el destino durante el viaje (se resalta hasta terminar). */
+  readonly destinoCambiado = signal(false);
+  readonly paradaHecha = signal(false);
+  readonly parada = computed<PuntoMapa | null>(() => {
+    const v = this.v();
+    return v?.parada_lat != null && v.parada_lng != null ? { lat: Number(v.parada_lat), lng: Number(v.parada_lng) } : null;
+  });
+  readonly sinLeer = computed(() => Number(this.v()?.mensajes_sin_leer) || 0);
+
   /** Domicilio/encomienda en la tienda o donde se recoge: todavía falta recoger. */
   readonly porRecoger = computed(() => this.v()?.estado_codigo === 'en_origen');
   readonly tipo = computed(() => this.v()?.tipo_servicio ?? 'transporte');
@@ -68,19 +79,19 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
       ? { lat: Number(v.origen_lat), lng: Number(v.origen_lng), nombre: v.establecimiento ?? 'Recogida' }
       : { lat: Number(v.destino_lat), lng: Number(v.destino_lng), nombre: v.destino.split(',')[0] };
   });
-  readonly pasajero = computed(() => this.v()?.usuario_nombre?.trim() || 'Pasajero');
+  readonly pasajero = computed(() => this.v()?.pasajero_nombre?.trim() || this.v()?.usuario_nombre?.trim() || 'Pasajero');
   readonly inicial = computed(() => iniciales(this.pasajero()).charAt(0));
   readonly calificacion = computed(() => {
     const c = Number(this.v()?.usuario_calificacion);
     return c ? c.toFixed(1).replace('.', ',') : null;
   });
-  readonly telefono = computed(() => telefonoLimpio(this.v()?.usuario_telefono));
+  readonly telefono = computed(() => telefonoLimpio(this.v()?.pasajero_telefono || this.v()?.usuario_telefono));
   /** "LLEVANDO A ANA", "LLEVANDO EL PEDIDO"… */
   readonly etiqueta = computed(() => {
     if (this.porRecoger()) return this.tipo() === 'domicilio' ? (this.compra() ? 'Compra el pedido' : 'Recoge el pedido') : 'Recoge el paquete';
     if (this.tipo() === 'domicilio') return 'Llevando el pedido';
     if (this.tipo() === 'encomienda') return 'Llevando el paquete';
-    return `Llevando a ${primerNombre(this.v()?.usuario_nombre, 'tu pasajero')}`;
+    return `Llevando a ${primerNombre(this.v()?.pasajero_nombre || this.v()?.usuario_nombre, 'tu pasajero')}`;
   });
   readonly lugar = computed(() => this.meta()?.nombre ?? '');
   /** Avance del viaje: lo recorrido sobre la distancia total. */
@@ -181,10 +192,32 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
     }
   }
 
+  chat(): void {
+    this.nav.navigateForward('/conductor/viaje/chat', { queryParams: { id: this.id } });
+  }
+
   private async revisar(): Promise<void> {
     try {
       const v = await this.viajes.detalle(this.id);
+      const antes = this.v();
       this.v.set(v);
+      // El pasajero cambió el destino o la parada: aviso fuerte y ruta nueva (Uber hace lo mismo)
+      if (antes && v.destino_cambiado_en && v.destino_cambiado_en !== antes.destino_cambiado_en) {
+        Haptics.notification({ type: NotificationType.Warning }).catch(() => undefined);
+        this.destinoCambiado.set(true);
+        this.paradaHecha.set(false);
+        this.ultimaRuta = null;
+        const t = await this.avisos.create({
+          message: `El pasajero cambió el destino: ${v.destino.split(',')[0]} · ${pesos(v.tarifa)}`,
+          duration: 5000,
+          position: 'top',
+          color: 'warning',
+        });
+        t.present();
+      }
+      if (antes && (Number(v.mensajes_sin_leer) || 0) > (Number(antes.mensajes_sin_leer) || 0)) {
+        Haptics.notification({ type: NotificationType.Warning }).catch(() => undefined);
+      }
       if (v.estado_codigo === 'cancelado' || v.estado_codigo === 'expirado') {
         clearInterval(this.sondeo);
         this.viajes.pararReporte();
@@ -215,10 +248,16 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
     const meta = this.meta();
     const fase = this.v()?.estado_codigo ?? '';
     if (!desde || !meta) return;
+    // Pasó por la parada: desde ahí la ruta va directo al destino
+    const parada = this.parada();
+    if (parada && !this.paradaHecha() && distanciaKm(desde, parada) < PARADA_HECHA_KM) {
+      this.paradaHecha.set(true);
+      this.ultimaRuta = null;
+    }
     const u = this.ultimaRuta;
     if (u && u.fase === fase && distanciaKm(u.desde, desde) < RECALCULAR_KM) return;
     this.ultimaRuta = { desde, fase };
-    const r = await this.lugares.ruta(desde, meta);
+    const r = await this.lugares.ruta(desde, meta, this.porRecoger() || this.paradaHecha() ? null : parada);
     this.camino.set(r.puntos);
     this.minutos.set(r.duracionMin);
     this.falta.set(r.distanciaKm);

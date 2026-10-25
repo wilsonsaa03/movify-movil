@@ -208,3 +208,96 @@
     background-position: -200% 0;
   }
 }
+
+// Conductor favorito (corazón)
+.corazon {
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #eef3f8;
+  color: $gris;
+  cursor: pointer;
+  transition:
+    transform 160ms $ease-out,
+    background-color 160ms ease,
+    color 160ms ease;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+  }
+  &.activo {
+    background: #fdecee;
+    color: #e5484d;
+  }
+  &:active {
+    transform: scale(0.9);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+
+// ¿Olvidaste algo?
+.olvide {
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 2px solid $borde;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  text-align: left;
+  font-family: inherit;
+  color: $navy;
+  cursor: pointer;
+
+  .disco {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: #ffe3cc;
+
+    app-icono {
+      width: 22px;
+      height: 22px;
+    }
+  }
+  .textos {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  b {
+    font-size: 15px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+  .ir {
+    width: 18px;
+    height: 18px;
+    color: $gris;
+  }
+  &:active {
+    background: #f4f7fb;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}

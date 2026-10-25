@@ -9,6 +9,7 @@ import { IconoComponent, NombreIcono } from '../../../componentes/icono/icono.co
 import { MapaCiudadComponent, PuntoMapa } from '../../../componentes/mapa-ciudad/mapa-ciudad.component';
 import { BarraInferiorComponent, ItemBarra } from '../../../componentes/barra-inferior/barra-inferior.component';
 import { urlFoto } from '../../../core/formato';
+import { VehiculoCercano, ViajeService } from '../../../servicios/viaje.service';
 
 type TipoServicio = 'moto' | 'taxi' | 'domicilio' | 'encomienda';
 
@@ -41,6 +42,8 @@ export const BARRA_CLIENTE: ItemBarra[] = [
 
 /** Velocidad (px/ms) a partir de la cual un "lanzamiento" corto decide abrir o cerrar la hoja. */
 const LANZAMIENTO = 0.35;
+/** Cada cuánto se refrescan los conductores libres del mapa. */
+const LIBRES_MS = 15000;
 /** Mapa que queda a la vista con la hoja abierta (px). */
 const FRANJA_MAPA = 96;
 
@@ -91,6 +94,9 @@ export class ClienteInicioPage implements AfterViewInit, OnDestroy, ViewDidEnter
   private readonly gps = inject(UbicacionService);
   private readonly mapa = viewChild(MapaCiudadComponent);
   readonly precision = computed(() => this.gps.ubicacion()?.precision ?? null);
+  private readonly viaje = inject(ViajeService);
+  readonly libres = signal<VehiculoCercano[]>([]);
+  private refrescoLibres?: ReturnType<typeof setInterval>;
 
   readonly barra = BARRA_CLIENTE;
 
@@ -176,6 +182,7 @@ export class ClienteInicioPage implements AfterViewInit, OnDestroy, ViewDidEnter
   ngOnDestroy(): void {
     this.gesto?.destroy();
     this.medidor?.disconnect();
+    clearInterval(this.refrescoLibres);
   }
 
   ionViewDidEnter(): void {
@@ -183,6 +190,14 @@ export class ClienteInicioPage implements AfterViewInit, OnDestroy, ViewDidEnter
     this.cargarLugares();
     this.gps.seguir(); // el punto del mapa se mueve en tiempo real mientras esta pantalla está abierta
     this.medir();
+    this.cargarLibres();
+    this.refrescoLibres = setInterval(() => this.cargarLibres(), LIBRES_MS);
+  }
+
+  /** Los carritos del mapa: hay motos y taxis libres cerca (posición aproximada, sin datos del conductor). */
+  private async cargarLibres(): Promise<void> {
+    const u = this.gps.ubicacion();
+    if (u) this.libres.set(await this.viaje.cercanos(u));
   }
 
   alternarHoja(): void {
@@ -225,6 +240,7 @@ export class ClienteInicioPage implements AfterViewInit, OnDestroy, ViewDidEnter
 
   ionViewWillLeave(): void {
     this.gps.dejarDeSeguir();
+    clearInterval(this.refrescoLibres);
   }
 
   /** Tocar el chip vuelve a pedir la ubicación (útil si negó el permiso) y centra el mapa en el usuario. */

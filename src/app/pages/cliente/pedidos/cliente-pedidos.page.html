@@ -33,6 +33,34 @@
         </span>
       </section>
 
+      <!-- Viajes programados -->
+      @if (programados().length && (filtro() === 'todos' || filtro() === 'transporte')) {
+        <h2 class="dia">Programados</h2>
+        <ul class="lista">
+          @for (p of programados(); track p.id) {
+            <li>
+              <div class="pedido programado" [class.apagado]="p.estado === 'cancelado' || p.estado === 'fallido'">
+                <span class="disco" [class]="p.tipo_vehiculo"><app-icono nombre="reloj" /></span>
+                <span class="textos">
+                  <small>{{ p.tipo_vehiculo === 'moto' ? 'Moto' : 'Taxi' }} · {{ cuandoProgramado(p) }}</small>
+                  <b>{{ p.origen.split(',')[0] }} → {{ p.destino.split(',')[0] }}</b>
+                  <span class="estado" [class.mal]="p.estado === 'fallido' || p.estado === 'cancelado'" [class.ok]="p.estado === 'enviado'" [class.curso]="p.estado === 'pendiente'">
+                    {{ estadoProgramado(p) }}{{ p.pasajero_nombre ? ' · para ' + p.pasajero_nombre : '' }}
+                  </span>
+                </span>
+                @if (p.estado === 'pendiente') {
+                  <button type="button" class="quitar" [disabled]="cancelandoProgramado() === p.id" [attr.aria-label]="'Cancelar el viaje programado del ' + cuandoProgramado(p)" (click)="cancelarProgramado(p)">
+                    <app-icono nombre="x" />
+                  </button>
+                } @else if (p.valor_cotizado) {
+                  <span class="valor"><span class="precio">{{ pesos(p.valor_cotizado) }}</span></span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+
       @if (cargando() && !pedidos().length) {
         <div class="esqueleto" aria-label="Cargando tus pedidos"></div>
       } @else if (grupos().length) {

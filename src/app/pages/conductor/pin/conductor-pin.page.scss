@@ -108,3 +108,45 @@
     animation: none;
   }
 }
+
+// Escribirle al pasajero y "El pasajero no llegó" (después del tiempo de espera)
+.espera {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.chip {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 2px solid $borde;
+  border-radius: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+
+  app-icono {
+    width: 18px;
+    height: 18px;
+  }
+  &.rojo {
+    border-color: #f5c2c7;
+    color: #b42333;
+    font-variant-numeric: tabular-nums;
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}

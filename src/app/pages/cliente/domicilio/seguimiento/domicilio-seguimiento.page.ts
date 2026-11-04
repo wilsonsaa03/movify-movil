@@ -140,7 +140,7 @@ export class DomicilioSeguimientoPage implements ViewDidEnter, ViewWillLeave, Af
       await navigator.share({ text: texto }).catch(() => undefined);
       return;
     }
-    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
   }
 
   async cancelar(): Promise<void> {

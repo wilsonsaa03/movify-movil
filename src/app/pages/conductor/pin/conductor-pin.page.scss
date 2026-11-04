@@ -2,7 +2,7 @@
 
 // Cielo con el título (Figma "Conductor app 4 · PIN")
 .cielo {
-  padding: calc(env(safe-area-inset-top) + 18px) 20px 84px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 18px) 20px 84px;
 
   .volver {
     position: relative;

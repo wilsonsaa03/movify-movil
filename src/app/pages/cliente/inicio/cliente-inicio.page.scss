@@ -21,7 +21,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: calc(env(safe-area-inset-top) + 34px) 22px 78px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 34px) 22px 78px;
   background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 50%, #fe7b13 100%);
   overflow: hidden;
 }
@@ -29,7 +29,7 @@
 .gaviotas {
   position: absolute;
   left: 52%;
-  top: calc(env(safe-area-inset-top) + 16px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 16px);
   width: 64px;
   height: 24px;
   fill: none;

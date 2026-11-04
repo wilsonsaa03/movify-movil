@@ -4,6 +4,7 @@ import { IonContent, IonFooter, NavController, ToastController, ViewDidEnter, Vi
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { ErrorApi } from '../../../core/api.service';
 import { distancia } from '../../../core/formato';
+import { appNavegacion, navegarA, nombreAppNavegacion } from '../../../core/navegacion';
 import { IconoComponent } from '../../../componentes/icono/icono.component';
 import { MapaCiudadComponent, PuntoMapa } from '../../../componentes/mapa-ciudad/mapa-ciudad.component';
 import { NotaVozComponent } from '../../../componentes/nota-voz/nota-voz.component';
@@ -61,6 +62,8 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
     return v ? { lat: Number(v.origen_lat), lng: Number(v.origen_lng), nombre: primerNombre(v.usuario_nombre, 'Recogida') } : null;
   });
   readonly esViaje = computed(() => this.v()?.tipo_servicio === 'transporte');
+  /** "Navegar con Waze" (la app que eligió en Perfil › Ajustes). */
+  readonly appNav = computed(() => nombreAppNavegacion(appNavegacion()));
   /** Si el viaje es para otra persona, se recoge a esa persona. */
   readonly pasajero = computed(() => this.v()?.pasajero_nombre?.trim() || this.v()?.usuario_nombre?.trim() || 'Pasajero');
   readonly pidioOtro = computed(() => (this.v()?.pasajero_nombre ? this.v()?.usuario_nombre?.trim() || null : null));
@@ -200,5 +203,11 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
     const t = await this.avisos.create({ message: mensaje, duration: 3000, position: 'top', color: 'dark' });
     t.present();
     this.nav.navigateRoot('/conductor/inicio', { animationDirection: 'back' });
+  }
+
+  /** Abre Google Maps o Waze hasta la recogida. */
+  navegar(): void {
+    const r = this.recogida();
+    navegarA(r?.lat, r?.lng);
   }
 }

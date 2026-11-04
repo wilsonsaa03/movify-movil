@@ -4,7 +4,7 @@
 .cielo {
   position: relative;
   z-index: 2; // el menú de moto/taxi queda por encima de la tarjeta
-  padding: calc(env(safe-area-inset-top) + 22px) 18px 92px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 22px) 18px 92px;
   background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 50%, #fe7b13 100%);
 }
 .sol {
@@ -13,7 +13,7 @@
 .gaviotas {
   position: absolute;
   left: 52%;
-  top: calc(env(safe-area-inset-top) + 8px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 8px);
   width: 56px;
   height: 22px;
   fill: none;

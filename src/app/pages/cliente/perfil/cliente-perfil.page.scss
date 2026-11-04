@@ -1,7 +1,7 @@
 @use '../../../../theme/encomienda' as *;
 
 .cielo {
-  padding: calc(env(safe-area-inset-top) + 26px) 20px 92px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 26px) 20px 92px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -95,7 +95,7 @@
   padding: 14px 6px;
   border-radius: 22px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   background: #ffffff;
   box-shadow:
     0 6px 0 #e4ebf2,
@@ -135,7 +135,7 @@
 // Accesos rápidos: tres cuadros grandes
 .rapidos {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 
   button {
@@ -551,4 +551,10 @@
   to {
     background-position: -200% 0;
   }
+}
+
+/* Cambiar el celular (abre la hoja de verificación por SMS) */
+.cambiar-celular {
+  margin-left: 6px; padding: 2px 10px; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12); font: inherit; font-size: 12px; font-weight: 800; color: inherit;
 }

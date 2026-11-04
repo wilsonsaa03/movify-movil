@@ -29,7 +29,7 @@ const CLAVE_CENTRAL = 'movify.telefono_central';
     :host { position: fixed; z-index: 30000; left: 0; right: 0; top: 0; pointer-events: none; }
     .aviso {
       pointer-events: auto;
-      margin: calc(env(safe-area-inset-top) + 8px) 12px 0; padding: 10px 12px; border-radius: 16px;
+      margin: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 8px) 12px 0; padding: 10px 12px; border-radius: 16px;
       display: flex; align-items: center; gap: 10px;
       background: #03274d; color: #ffffff; box-shadow: 0 10px 24px rgba(3, 39, 77, 0.35);
       font-family: 'Nunito', system-ui, sans-serif;

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from '../core/api.service';
 import { UbicacionService } from './ubicacion.service';
+import { ConductorEnLineaService } from './conductor-en-linea.service';
 import { DetalleServicio } from './viaje.service';
 
 /** Cada cuánto el conductor con viaje manda su posición. */
@@ -32,6 +33,13 @@ export interface ViajeActivo extends DetalleServicio {
   /** Hay foto del vehículo (GET /servicios/{id}/vehiculo/foto). */
   conductor_vehiculo_foto?: boolean | null;
   conductor_viajes?: number | null;
+  // V17: lo que el pasajero ve de su conductor
+  /** Aprobado por MoviFY (documentos revisados). */
+  conductor_verificado?: boolean | null;
+  /** Su presentación corta ("Sobre mí"). */
+  conductor_sobre_mi?: string | null;
+  /** Sus 3 elogios más repetidos, separados por "|". */
+  conductor_elogios?: string | null;
   /** Solo para quien pidió: el conductor está en sus favoritos. */
   es_favorito?: boolean | null;
   /** Hasta cuándo espera el conductor en la recogida (después puede marcar "no se presentó"). */
@@ -74,6 +82,7 @@ export interface Avance {
 export class ViajeActivoService {
   private readonly api = inject(ApiService);
   private readonly gps = inject(UbicacionService);
+  private readonly enLinea = inject(ConductorEnLineaService);
   private reporte: ReturnType<typeof setInterval> | null = null;
 
   /**
@@ -83,6 +92,9 @@ export class ViajeActivoService {
   empezarReporte(): void {
     if (this.reporte) return;
     this.gps.seguir();
+    // En el celular el GPS nativo sigue mandando la ubicación con la pantalla apagada (y no busca otros viajes)
+    this.enLinea.mantenerGps();
+    this.enLinea.pausar();
     const enviar = () => {
       const u = this.gps.ubicacion();
       if (u) this.api.post('/conductor/ubicacion', { lat: u.lat, lng: u.lng }).catch(() => undefined);
@@ -96,6 +108,8 @@ export class ViajeActivoService {
     clearInterval(this.reporte);
     this.reporte = null;
     this.gps.dejarDeSeguir();
+    this.enLinea.soltarGps();
+    this.enLinea.reanudar();
   }
 
   detalle(id: number): Promise<ViajeActivo> {
@@ -151,13 +165,19 @@ export class ViajeActivoService {
     return this.api.blob(`/servicios/${id}/vehiculo/foto`);
   }
 
-  calificar(id: number, puntuacion: number, comentario: string | null): Promise<unknown> {
-    return this.api.post(`/servicios/${id}/calificar`, { puntuacion, comentario });
+  /** Los elogios van aparte del comentario (lista cerrada en el backend). */
+  calificar(id: number, puntuacion: number, comentario: string | null, elogios: string[] = []): Promise<unknown> {
+    return this.api.post(`/servicios/${id}/calificar`, { puntuacion, comentario, elogios });
   }
 
   /** Botón SOS: avisa a soporte con la ubicación. */
-  sos(id: number, lat: number | null, lng: number | null): Promise<{ message: string }> {
-    return this.api.post<{ message: string }>('/sos', { servicio_id: id, lat, lng });
+  sos(id: number, lat: number | null, lng: number | null): Promise<{ id: number; message: string }> {
+    return this.api.post<{ id: number; message: string }>('/sos', { servicio_id: id, lat, lng });
+  }
+
+  /** SOS enviado sin querer: soporte deja de tratarlo como emergencia (solo si sigue abierto). */
+  falsaAlarma(alertaId: number): Promise<{ message: string }> {
+    return this.api.post<{ message: string }>(`/sos/${alertaId}/falsa-alarma`, {});
   }
 
   /** El servicio en curso de quien está en sesión (204 = ninguno → null). */

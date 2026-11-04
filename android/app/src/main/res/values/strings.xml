@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MoviFY</string>
+    <string name="title_activity_main">MoviFY</string>
+    <string name="package_name">co.movify.app</string>
+    <string name="custom_url_scheme">co.movify.app</string>
+
+    <!-- Notificación fija del conductor en línea (GPS en segundo plano) -->
+    <string name="capacitor_background_geolocation_notification_channel_name">Conductor en línea</string>
+    <string name="capacitor_background_geolocation_notification_icon">drawable/ic_movify_aviso</string>
+    <string name="capacitor_background_geolocation_notification_color">#02AAB4</string>
+</resources>

@@ -6,7 +6,7 @@
   z-index: 3;
   left: 18px;
   right: 18px;
-  top: calc(env(safe-area-inset-top) + 18px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 18px);
   margin: 0;
   padding: 14px 18px;
   border-radius: 22px;

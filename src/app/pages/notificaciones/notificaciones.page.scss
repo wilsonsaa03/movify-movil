@@ -1,0 +1,262 @@
+@use '../../../theme/encomienda' as *;
+
+// Cabecera: el mismo cielo de "Mis pedidos"
+.cielo {
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 22px) 18px 86px;
+
+  .barra {
+    margin-bottom: 14px;
+  }
+}
+.filtros {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+
+  button {
+    min-height: 40px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba($navy, 0.12);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    color: $navy;
+    cursor: pointer;
+
+    &.elegido {
+      background: $navy;
+      color: #ffffff;
+    }
+    &:focus-visible {
+      outline: 3px solid #ffffff;
+      outline-offset: 2px;
+    }
+  }
+  .num {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: #e5484d;
+    color: #ffffff;
+    font-size: 11px;
+  }
+}
+
+.cuerpo {
+  margin-top: -56px;
+  gap: 8px;
+}
+
+.leer-todas {
+  align-self: flex-end;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba($navy, 0.12);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: $teal-d;
+  cursor: pointer;
+
+  app-icono {
+    width: 16px;
+    height: 16px;
+    --grosor: 3;
+  }
+  &:disabled {
+    opacity: 0.6;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+
+.dia {
+  margin: 10px 4px 2px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: $gris;
+}
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.aviso-item {
+  width: 100%;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba($navy, 0.07);
+  text-align: left;
+  font-family: inherit;
+  color: $navy;
+  cursor: pointer;
+  transition: transform 120ms $ease-out;
+
+  &:active {
+    transform: scale(0.99);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  // Sin leer: fondo cálido y título más fuerte
+  &.nueva {
+    background: #fff8ef;
+    box-shadow: 0 3px 10px rgba($orange, 0.15), inset 3px 0 0 $orange;
+  }
+  .disco {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+}
+.disco.verde {
+  background: #e2f6ec;
+  color: #0b6e4f;
+}
+.disco.rojo {
+  background: #fdecee;
+  color: #b42333;
+}
+.disco.azul {
+  background: #e8eef6;
+}
+.textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  b {
+    font-size: 15px;
+    font-weight: 800;
+  }
+  .cuerpo-txt {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #33475e;
+  }
+  small {
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+.aviso-item:not(.nueva) .textos b {
+  font-weight: 700;
+}
+.punto {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: $orange;
+}
+
+.mas {
+  align-self: center;
+  margin-top: 6px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2px solid $borde;
+  border-radius: 22px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.vacio {
+  margin-top: 30px;
+  padding: 28px 20px;
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  text-align: center;
+
+  .grande {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+
+    app-icono {
+      width: 30px;
+      height: 30px;
+    }
+  }
+  b {
+    margin-top: 6px;
+    font-size: 17px;
+  }
+  p {
+    margin: 0;
+    max-width: 280px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: $gris;
+  }
+}
+
+.esqueleto {
+  height: 140px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #f2f6fa 0%, #e8eef4 50%, #f2f6fa 100%);
+  background-size: 200% 100%;
+  animation: brillo 1.2s linear infinite;
+
+  &.corto {
+    height: 72px;
+  }
+}
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto {
+    animation: none;
+  }
+}

@@ -19,8 +19,11 @@
             <b>Hola, {{ nombre() }}</b>
           </span>
         </button>
-        <button type="button" class="campana entra" style="--d: 60ms" aria-label="Notificaciones" (click)="notificaciones()">
+        <button type="button" class="campana entra" style="--d: 60ms" [attr.aria-label]="notificacionesSinLeer() ? 'Notificaciones: ' + notificacionesSinLeer() + ' sin leer' : 'Notificaciones'" (click)="notificaciones()">
           <app-icono nombre="campana" />
+          @if (notificacionesSinLeer()) {
+            <span class="aviso con-numero" aria-hidden="true">{{ notificacionesSinLeer() > 9 ? '9+' : notificacionesSinLeer() }}</span>
+          }
         </button>
       </div>
 
@@ -63,6 +66,12 @@
       @if (aviso()) {
         <p class="aviso" role="alert">{{ aviso() }}</p>
       }
+      @if (enLinea() && sinPermisoGps()) {
+        <div class="aviso aviso-gps" role="alert">
+          <p>MoviFY necesita tu ubicación <b>"Permitir siempre"</b> para enviarte viajes con la pantalla apagada.</p>
+          <button type="button" class="aviso-gps-btn" (click)="darPermisoGps()">Abrir ajustes</button>
+        </div>
+      }
 
       <section class="ganado entra" style="--d: 140ms" aria-label="Lo que llevas hoy">
         <div class="cifras">
@@ -72,7 +81,7 @@
           </div>
           <div class="meta">
             <small>Meta del día</small>
-            <b>{{ metaTexto }}</b>
+            <b>{{ metaTexto() }}</b>
           </div>
         </div>
         <div class="barra" role="progressbar" aria-label="Avance de la meta" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="porcentaje()">

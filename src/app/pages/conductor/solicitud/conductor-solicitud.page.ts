@@ -10,6 +10,7 @@ import { NotaVozComponent } from '../../../componentes/nota-voz/nota-voz.compone
 import { LugaresService, distanciaKm } from '../../../servicios/lugares.service';
 import { UbicacionService } from '../../../servicios/ubicacion.service';
 import { DetalleServicio, ViajeService } from '../../../servicios/viaje.service';
+import { ConductorEnLineaService } from '../../../servicios/conductor-en-linea.service';
 
 /** Segundos que tiene el conductor para decidir (como en el Figma, el círculo naranja se va vaciando). */
 const PARA_DECIDIR = 20;
@@ -42,6 +43,9 @@ export class ConductorSolicitudPage implements ViewDidEnter, ViewWillLeave, Afte
   private readonly viaje = inject(ViajeService);
   private readonly lugares = inject(LugaresService);
   private readonly gps = inject(UbicacionService);
+  /** Mientras decide esta solicitud no se buscan otras. */
+  private readonly enLinea = inject(ConductorEnLineaService);
+  private pausado = false;
 
   readonly s = signal<DetalleServicio | null>(null);
   readonly ruta = signal<PuntoMapa[]>([]);
@@ -155,6 +159,10 @@ export class ConductorSolicitudPage implements ViewDidEnter, ViewWillLeave, Afte
       return;
     }
     this.gps.seguir();
+    if (!this.pausado) {
+      this.enLinea.pausar();
+      this.pausado = true;
+    }
     Haptics.notification({ type: NotificationType.Warning }).catch(() => undefined);
     this.cargar();
   }
@@ -162,6 +170,10 @@ export class ConductorSolicitudPage implements ViewDidEnter, ViewWillLeave, Afte
   ionViewWillLeave(): void {
     clearInterval(this.reloj);
     this.gps.dejarDeSeguir();
+    if (this.pausado) {
+      this.enLinea.reanudar();
+      this.pausado = false;
+    }
     const url = this.notaUrl();
     if (url) URL.revokeObjectURL(url);
     this.notaUrl.set(null);

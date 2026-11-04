@@ -54,7 +54,7 @@
               </span>
               <span class="valor">
                 <span class="precio">{{ pesos(o.tipo === viaje.tipo() && ofrecido() ? ofrecido() : o.precio) }}</span>
-                <small>{{ o.recargo ? 'Tarifa nocturna' : 'Precio fijo' }}</small>
+                <small>{{ o.lluvia ? 'Tarifa con lluvia' : o.recargo ? 'Tarifa nocturna' : 'Precio fijo' }}</small>
               </span>
             </button>
           }
@@ -127,8 +127,10 @@
       }
 
       <p class="garantia entra" style="--d: 220ms">
-        <app-icono [nombre]="elegida()?.recargo ? 'reloj' : 'candado'" />
-        @if (elegida()?.recargo) {
+        <app-icono [nombre]="elegida()?.recargo || elegida()?.lluvia ? 'reloj' : 'candado'" />
+        @if (elegida()?.lluvia) {
+          Está lloviendo y hay menos conductores: el precio incluye un recargo del {{ elegida()!.lluvia }} %{{ elegida()?.recargo ? ' y el nocturno del ' + elegida()!.recargo + ' %' : '' }}. No cambia en el camino.
+        } @else if (elegida()?.recargo) {
           De noche (9 p. m. a 5 a. m.) el precio incluye un recargo del {{ elegida()!.recargo }} %. No cambia en el camino.
         } @else {
           El precio no cambia en el camino, llueva o no. Pagas en efectivo.

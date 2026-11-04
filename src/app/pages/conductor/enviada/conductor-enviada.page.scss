@@ -2,7 +2,7 @@
 
 .cielo {
   position: relative;
-  padding: calc(env(safe-area-inset-top) + 40px) 24px 74px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 40px) 24px 74px;
   background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 50%, #fe7b13 100%);
   text-align: center;
   overflow: hidden;
@@ -51,7 +51,7 @@
 .gaviotas {
   position: absolute;
   left: 50%;
-  top: calc(env(safe-area-inset-top) + 34px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 34px);
   width: 300px;
   margin-left: -150px;
   fill: none;

@@ -1,0 +1,153 @@
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="refrescar($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  <div class="pantalla">
+    <header class="noche">
+      <div class="sol" aria-hidden="true"></div>
+      <h1>Ganancias</h1>
+      <div class="periodos" role="tablist" aria-label="Periodo">
+        @for (p of periodos; track p.id) {
+          <button type="button" role="tab" [class.elegido]="periodo() === p.id" [attr.aria-selected]="periodo() === p.id" (click)="elegir(p.id)">
+            {{ p.nombre }}
+          </button>
+        }
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      @if (cargando() && !resumen()) {
+        <div class="esqueleto alto" aria-label="Cargando ganancias"></div>
+        <div class="esqueleto" aria-hidden="true"></div>
+      } @else if (resumen(); as r) {
+        <!-- Total del periodo (o de la barra tocada) -->
+        <section class="tarjeta total entra" aria-live="polite">
+          @if (detalleBarra(); as d) {
+            <small>{{ d.nombre }}</small>
+            <b class="precio grande">{{ pesos(d.valor) }}</b>
+            <p class="sub">{{ d.viajes }} {{ d.viajes === 1 ? 'servicio' : 'servicios' }} ·
+              <button type="button" class="enlace" (click)="elegida.set(null)">Ver el total</button>
+            </p>
+          } @else {
+            <small>{{ rotulo() }}</small>
+            <b class="precio grande">{{ pesos(r.total) }}</b>
+            @if (tendencia(); as t) {
+              <p class="tendencia" [class.sube]="t.sube" [class.baja]="t.baja">
+                <span aria-hidden="true">{{ t.sube ? '▲' : t.baja ? '▼' : '=' }}</span>
+                {{ t.sube || t.baja ? t.valor + '%' : 'Igual' }} {{ t.sube ? 'más' : t.baja ? 'menos' : '' }} que {{ contra() }}
+              </p>
+            } @else {
+              <p class="sub">Cobrado en efectivo a tus clientes</p>
+            }
+          }
+
+          <div class="cifras">
+            <span><b>{{ r.viajes }}</b><small>{{ r.viajes === 1 ? 'Servicio' : 'Servicios' }}</small></span>
+            <span><b>{{ pesos(r.promedio) }}</b><small>Promedio</small></span>
+            <span><b>{{ r.km.toString().replace('.', ',') }}</b><small>Km</small></span>
+            <span><b>{{ duracion(r.minutos) }}</b><small>En viaje</small></span>
+          </div>
+        </section>
+
+        <!-- Gráfica: tocar una barra muestra su valor arriba -->
+        <section class="tarjeta grafica entra" style="--d: 60ms">
+          <div class="titulo">
+            <h2>{{ periodo() === 'hoy' ? 'Por hora' : 'Por día' }}</h2>
+            @if (mejor(); as m) {
+              <span class="mejor"><app-icono nombre="estrella" /> Mejor: {{ m.nombre }}</span>
+            }
+          </div>
+          <div class="barras" [class.mes]="periodo() === 'mes'" role="group" [attr.aria-label]="periodo() === 'hoy' ? 'Ganancias por franja horaria' : 'Ganancias por día'">
+            @for (c of columnas(); track c.b.desde; let i = $index) {
+              <button type="button" class="columna" [class.actual]="c.actual" [class.elegida]="elegida() === i"
+                      [attr.aria-pressed]="elegida() === i" [attr.aria-label]="barraLabel(c)" (click)="tocarBarra(i)">
+                <span class="riel"><span class="relleno" [style.transform]="'scaleY(' + c.alto + ')'"></span></span>
+                <span class="etiqueta" aria-hidden="true">{{ c.etiqueta }}</span>
+              </button>
+            }
+          </div>
+        </section>
+
+        <!-- Meta del día (la ve también en el inicio) -->
+        @if (periodo() === 'hoy') {
+          <section class="tarjeta meta entra" style="--d: 120ms">
+            <div class="titulo">
+              <h2>Meta del día</h2>
+              @if (!editandoMeta()) {
+                <button type="button" class="enlace" (click)="editandoMeta.set(true)">Cambiar</button>
+              }
+            </div>
+            @if (editandoMeta()) {
+              <form class="editar-meta" (submit)="$event.preventDefault(); guardarMeta(valorMeta.value)">
+                <label for="valor-meta">¿Cuánto quieres ganar hoy?</label>
+                <div class="fila">
+                  <span class="signo" aria-hidden="true">$</span>
+                  <input #valorMeta id="valor-meta" type="text" inputmode="numeric" autocomplete="off" maxlength="9"
+                         [value]="meta()" [attr.aria-describedby]="'ayuda-meta'" />
+                  <button type="submit" class="guardar">Guardar</button>
+                </div>
+                <small id="ayuda-meta">Entre {{ pesos(metaMin) }} y {{ pesos(metaMax) }}. Se guarda en este celular.</small>
+              </form>
+            } @else {
+              <div class="meta-fila">
+                <b class="precio">{{ pesos(meta()) }}</b>
+                <span>{{ textoMeta() }}</span>
+              </div>
+              <div class="progreso" role="progressbar" aria-label="Avance de la meta" aria-valuemin="0" aria-valuemax="100"
+                   [attr.aria-valuenow]="(avanceMeta() * 100).toFixed(0)">
+                <span [style.transform]="'scaleX(' + avanceMeta() + ')'" [class.lista]="avanceMeta() >= 1"></span>
+              </div>
+            }
+          </section>
+        }
+
+        <!-- Desglose por tipo -->
+        @if (r.por_tipo.length) {
+          <section class="tarjeta entra" style="--d: 180ms">
+            <h2>Por tipo de servicio</h2>
+            <ul class="tipos">
+              @for (t of r.por_tipo; track t.tipo) {
+                <li>
+                  <span class="disco {{ tipo(t.tipo).tono }}"><app-icono [nombre]="tipo(t.tipo).icono" /></span>
+                  <span class="textos">
+                    <b>{{ tipo(t.tipo).nombre }}</b>
+                    <small>{{ t.viajes }} {{ t.viajes === 1 ? 'servicio' : 'servicios' }}</small>
+                    <span class="parte" aria-hidden="true"><span [style.transform]="'scaleX(' + (totalTipos() ? t.valor / totalTipos() : 0) + ')'"></span></span>
+                  </span>
+                  <b class="precio">{{ pesos(t.valor) }}</b>
+                </li>
+              }
+            </ul>
+          </section>
+        } @else {
+          <div class="vacio entra" style="--d: 180ms">
+            <span class="disco amarillo"><app-icono nombre="dinero" /></span>
+            <b>Todavía no has cobrado {{ periodo() === 'hoy' ? 'hoy' : periodo() === 'semana' ? 'esta semana' : 'este mes' }}</b>
+            <p>Conéctate en el inicio para recibir solicitudes. Aquí verás lo que vayas ganando.</p>
+            <button type="button" class="boton" (click)="irAInicio()">Ir al inicio</button>
+          </div>
+        }
+
+        <p class="nota">
+          <app-icono nombre="dinero" />
+          <span>Cobras en efectivo, directo al cliente. Por eso no hay saldo en la app ni retiros.</span>
+        </p>
+        <button type="button" class="ver-viajes" (click)="verViajes()">
+          Ver mis viajes <app-icono nombre="adelante" />
+        </button>
+      }
+
+      @if (error()) {
+        <div class="aviso" role="alert">
+          {{ error() }}
+          <button type="button" class="enlace" (click)="cargar()">Reintentar</button>
+        </div>
+      }
+    </main>
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <app-barra-inferior [items]="barra" activa="/conductor/ganancias" />
+</ion-footer>

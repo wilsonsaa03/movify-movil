@@ -8,7 +8,7 @@ ion-content {
   position: sticky;
   top: 0;
   z-index: 2;
-  padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 12px) 16px 12px;
   display: flex;
   align-items: center;
   gap: 12px;

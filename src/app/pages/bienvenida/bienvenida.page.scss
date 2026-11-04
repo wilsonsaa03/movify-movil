@@ -31,7 +31,7 @@ ion-content {
 .marca {
   position: relative;
   z-index: 2;
-  margin-top: calc(22vh + env(safe-area-inset-top));
+  margin-top: calc(22vh + var(--safe-area-inset-top, env(safe-area-inset-top)));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -152,7 +152,7 @@ ion-content {
   position: absolute;
   z-index: 3;
   left: 50%;
-  bottom: calc(34px + env(safe-area-inset-bottom));
+  bottom: calc(34px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
   width: min(calc(100% - 48px), 360px);
   height: 64px;
   margin-left: calc(min(calc(100% - 48px), 360px) / -2);

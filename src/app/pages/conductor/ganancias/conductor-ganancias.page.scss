@@ -1,0 +1,528 @@
+@use '../../../../theme/viaje' as *;
+
+// Encabezado azul noche, igual a "Mis viajes"
+.noche {
+  position: relative;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 26px) 20px 72px;
+  background: $navy;
+  color: #ffffff;
+  overflow: hidden;
+
+  h1 {
+    position: relative;
+    margin: 0 0 16px;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+  }
+  .sol {
+    opacity: 0.9;
+  }
+}
+.periodos {
+  position: relative;
+  padding: 4px;
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.14);
+
+  button {
+    min-height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    color: #ffffff;
+    cursor: pointer;
+
+    &.elegido {
+      background: #ffffff;
+      color: $navy;
+    }
+    &:focus-visible {
+      outline: 3px solid #ffc94d;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.cuerpo {
+  position: relative;
+  z-index: 1;
+  margin-top: -46px;
+  padding: 0 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tarjeta {
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba($navy, 0.08);
+  color: $navy;
+
+  h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .titulo {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+}
+
+.enlace {
+  min-height: 36px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $teal-d;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+// ── Total del periodo ──
+.total {
+  box-shadow:
+    0 6px 0 #e4ebf2,
+    0 14px 30px rgba($navy, 0.14);
+
+  > small {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $gris;
+  }
+  .grande {
+    display: block;
+    font-size: 38px;
+    line-height: 1.1;
+  }
+  .sub,
+  .tendencia {
+    margin: 4px 0 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+  .sub .enlace {
+    min-height: 0;
+    font-size: 13.5px;
+  }
+  .tendencia {
+    &.sube {
+      color: #0b6e4f;
+    }
+    &.baja {
+      color: #b42333;
+    }
+  }
+}
+.cifras {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1.5px solid #eef3f8;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+
+  span {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  b {
+    font-size: 15px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+  small {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+
+// ── Gráfica de barras ──
+.mejor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #b4530a;
+
+  app-icono {
+    width: 14px;
+    height: 14px;
+    color: #ffb020;
+  }
+}
+.barras {
+  height: 150px;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+
+  &.mes {
+    gap: 2px;
+  }
+}
+.columna {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+
+  .riel {
+    flex: 1;
+    width: 100%;
+    max-width: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    background: #f2f6fa;
+  }
+  .relleno {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    background: $teal-claro;
+    transform-origin: bottom;
+    transition: transform 380ms $ease-out, background-color 150ms;
+  }
+  .etiqueta {
+    height: 14px;
+    font-size: 11px;
+    font-weight: 800;
+    color: $gris;
+  }
+  &.actual .relleno {
+    background: $teal;
+  }
+  &.actual .etiqueta {
+    color: $navy;
+  }
+  &.elegida .relleno {
+    background: $orange;
+  }
+  &.elegida .riel {
+    box-shadow: 0 0 0 2px rgba($orange, 0.35);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+}
+.mes .columna .riel,
+.mes .columna .relleno {
+  border-radius: 4px;
+}
+
+// ── Meta del día ──
+.meta-fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+
+  .precio {
+    font-size: 24px;
+  }
+  span {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: $gris;
+    text-align: right;
+  }
+}
+.progreso {
+  margin-top: 10px;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #eef3f8;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 5px;
+    background: linear-gradient(90deg, $teal, $teal-claro);
+    transform-origin: left;
+    transition: transform 500ms $ease-out;
+
+    &.lista {
+      background: linear-gradient(90deg, #12a36b, #45d39a);
+    }
+  }
+}
+.editar-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .fila {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .signo {
+    font-size: 20px;
+    font-weight: 800;
+  }
+  input {
+    flex: 1;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 12px;
+    border: 2px solid $borde;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 18px; // ≥16px: iOS no hace zoom
+    font-weight: 800;
+    color: $navy;
+    font-variant-numeric: tabular-nums;
+
+    &:focus {
+      outline: none;
+      border-color: $teal;
+    }
+  }
+  .guardar {
+    min-height: 48px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 14px;
+    background: $navy;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    color: #ffffff;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 3px solid $teal;
+      outline-offset: 2px;
+    }
+  }
+  small {
+    font-size: 12px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+
+// ── Por tipo ──
+.tipos {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .precio {
+    font-size: 16px;
+    white-space: nowrap;
+  }
+}
+.textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  b {
+    font-size: 14.5px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 12px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+.parte {
+  margin-top: 4px;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #eef3f8;
+
+  span {
+    display: block;
+    height: 100%;
+    background: $teal;
+    transform-origin: left;
+  }
+}
+
+// ── Vacío, nota y enlaces ──
+.vacio {
+  padding: 22px 18px;
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  text-align: center;
+  color: $navy;
+
+  .disco {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+  }
+  b {
+    margin-top: 4px;
+    font-size: 16px;
+  }
+  p {
+    margin: 0;
+    max-width: 280px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: $gris;
+  }
+}
+.boton {
+  margin-top: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 24px;
+  background: $navy;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+.nota {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #eef8f2;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #0b6e4f;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+}
+.ver-viajes {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2px solid $borde;
+  border-radius: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $navy;
+  cursor: pointer;
+
+  app-icono {
+    width: 16px;
+    height: 16px;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+.aviso .enlace {
+  min-height: 0;
+  margin-left: 6px;
+  font-size: 13px;
+  color: #b4530a;
+}
+
+.esqueleto {
+  height: 140px;
+  border-radius: 22px;
+  background: linear-gradient(90deg, #f2f6fa 0%, #e8eef4 50%, #f2f6fa 100%);
+  background-size: 200% 100%;
+  animation: brillo 1.2s linear infinite;
+
+  &.alto {
+    height: 200px;
+  }
+}
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto {
+    animation: none;
+  }
+  .columna .relleno,
+  .progreso span {
+    transition: none;
+  }
+}

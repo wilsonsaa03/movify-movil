@@ -5,3 +5,33 @@
   border: 2px solid $borde;
   border-radius: 18px;
 }
+
+// Abrir Google Maps o Waze (la que eligió en el perfil)
+.navegar {
+  width: 100%;
+  min-height: 48px;
+  border: 2px solid #d4f3f5;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #effafb;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  color: #007c85;
+  cursor: pointer;
+
+  app-icono {
+    width: 19px;
+    height: 19px;
+  }
+  &:active {
+    background: #def4f6;
+  }
+  &:focus-visible {
+    outline: 3px solid #02aab4;
+    outline-offset: 2px;
+  }
+}

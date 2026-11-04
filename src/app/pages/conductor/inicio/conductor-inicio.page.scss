@@ -3,14 +3,14 @@
 // ---------- Encabezado azul ----------
 .cielo {
   position: relative;
-  padding: calc(env(safe-area-inset-top) + 30px) 20px 70px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 30px) 20px 70px;
   background: linear-gradient(180deg, #0a3a6b 0%, #03274d 100%);
   color: #ffffff;
   overflow: hidden;
 }
 .sol {
   right: -60px;
-  top: calc(env(safe-area-inset-top) - 70px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) - 70px);
 }
 
 .fila {
@@ -267,7 +267,7 @@
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 
   li {
@@ -303,4 +303,12 @@
   .interruptor.activo .luz {
     animation: none;
   }
+}
+
+/* Falta el permiso de ubicación en segundo plano */
+.aviso-gps { display: flex; flex-direction: column; gap: 8px; }
+.aviso-gps p { margin: 0; }
+.aviso-gps-btn {
+  align-self: flex-start; padding: 8px 14px; border: 0; border-radius: 999px;
+  background: var(--movify-turquesa, #02AAB4); color: #03274D; font: inherit; font-weight: 800;
 }

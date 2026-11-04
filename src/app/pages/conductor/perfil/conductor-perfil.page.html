@@ -1,37 +1,214 @@
 <ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="refrescar($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
   <div class="pantalla">
+    <!-- Encabezado: foto (se cambia aquí), nombre, calificación, viajes, antigüedad y placa -->
     <header class="noche">
       <div class="sol" aria-hidden="true"></div>
-      <span class="avatar grande">
+      <label class="avatar grande" [class.subiendo]="subiendoFoto()">
         @if (foto(); as f) {
           <img [src]="f" alt="" />
         } @else {
           {{ iniciales() }}
         }
-      </span>
+        <span class="camara" aria-hidden="true"><app-icono nombre="camara" /></span>
+        <input type="file" accept="image/*" class="oculto" aria-label="Cambiar foto de perfil" [disabled]="subiendoFoto()" (change)="cambiarFoto($event)" />
+      </label>
       <h1>{{ nombre() }}</h1>
-      <p>{{ celular() }}</p>
+      <p class="linea">
+        <span class="calif"><app-icono nombre="estrella" /> {{ calificacion() }}</span>
+        @if (perfil(); as p) {
+          <span aria-hidden="true">·</span> <span>{{ p.total_servicios ?? 0 }} {{ p.total_servicios === 1 ? 'viaje' : 'viajes' }}</span>
+        }
+        @if (desde()) {
+          <span aria-hidden="true">·</span> <span>Desde {{ desde() }}</span>
+        }
+      </p>
+      @if (perfil(); as p) {
+        <div class="sellos">
+          @if (p.vehiculo; as v) {
+            <span class="sello tipo"><app-icono [nombre]="v.tipo_vehiculo" /> {{ v.tipo_vehiculo === 'taxi' ? 'Taxi' : 'Moto' }}</span>
+          }
+          @if (p.estado === 'aprobado') {
+            <span class="sello verificado"><app-icono nombre="escudo" /> Verificado por MoviFY</span>
+          } @else {
+            <span class="sello">{{ p.estado_nombre }}</span>
+          }
+          @if (p.vehiculo; as v) {
+            <span class="sello placa-mini">{{ v.placa }}</span>
+          }
+        </div>
+      }
     </header>
 
     <main class="cuerpo">
+      <!-- Accesos rápidos (como Uber) -->
+      <nav class="accesos entra" aria-label="Accesos rápidos">
+        @for (a of accesos; track a.ruta) {
+          <button type="button" (click)="irA(a.ruta)">
+            <span class="icono">
+              <app-icono [nombre]="a.icono" />
+              @if (a.icono === 'campana' && notificaciones()) {
+                <span class="numero" aria-hidden="true">{{ notificaciones() > 9 ? '9+' : notificaciones() }}</span>
+              }
+            </span>
+            <span>{{ a.texto }}</span>
+            @if (a.icono === 'campana' && notificaciones()) {
+              <span class="sr">{{ notificaciones() }} sin leer</span>
+            }
+          </button>
+        }
+      </nav>
+
+      <!-- Lo urgente primero: sanción, suspensión, documentos -->
+      @for (a of alertasCuenta(); track a.titulo) {
+        <section class="alerta entra" [class.rojo]="a.tono === 'rojo'" role="status">
+          <app-icono nombre="alerta" />
+          <span class="textos">
+            <b>{{ a.titulo }}</b>
+            <span>{{ a.texto }}</span>
+          </span>
+          @if (a.doc; as d) {
+            <button type="button" class="accion" (click)="renovar(d)">{{ estadoDoc(d).accion === 'corregir' ? 'Corregir' : 'Renovar' }}</button>
+          }
+        </section>
+      }
+
       @if (perfil(); as p) {
-        <section class="numeros entra" aria-label="Tu actividad">
-          <span><b>{{ calificacion() }}</b><small><app-icono nombre="estrella" /> Calificación</small></span>
-          <span><b>{{ p.total_servicios ?? 0 }}</b><small>Viajes</small></span>
-          <span><b class="estado" [class]="claseEstado(p.estado)">{{ p.estado_nombre }}</b><small>Cuenta</small></span>
+        <!-- Tu desempeño -->
+        @if (desempeno(); as d) {
+          <section class="tarjeta entra" style="--d: 40ms" aria-labelledby="t-desempeno">
+            <h2 id="t-desempeno"><app-icono nombre="estrella" /> Tu desempeño</h2>
+            <div class="calificacion">
+              <div class="grande-calif">
+                <b>{{ calificacion() }}</b>
+                <span class="estrellitas" [attr.aria-label]="'Promedio ' + calificacion() + ' de 5'">
+                  @for (i of [1, 2, 3, 4, 5]; track i) {
+                    <app-icono nombre="estrella" [class.llena]="i <= Math.round(d.calificacion_promedio ?? 0)" />
+                  }
+                </span>
+                <small>{{ d.total_calificaciones ?? 0 }} {{ d.total_calificaciones === 1 ? 'calificación' : 'calificaciones' }}</small>
+              </div>
+              <ul class="barras-estrellas" aria-label="Calificaciones por puntaje">
+                @for (e of estrellas(); track e.puntos) {
+                  <li [attr.aria-label]="e.puntos + ' estrellas: ' + e.n">
+                    <span aria-hidden="true">{{ e.puntos }}</span>
+                    <span class="riel" aria-hidden="true"><span [style.transform]="'scaleX(' + e.parte + ')'"></span></span>
+                  </li>
+                }
+              </ul>
+            </div>
+
+            @if (cancelacion(); as c) {
+              <div [class]="'cancelacion ' + c.nivel">
+                <div class="fila">
+                  <span>Tasa de cancelación</span>
+                  <b>{{ c.texto }}</b>
+                </div>
+                <div class="medidor" role="meter" aria-label="Tasa de cancelación" aria-valuemin="0" [attr.aria-valuemax]="c.limite * 2"
+                     [attr.aria-valuenow]="c.tasa" [attr.aria-valuetext]="c.texto + ', máximo ' + c.limite + ' %'">
+                  <span class="lleno" [style.transform]="'scaleX(' + c.ancho + ')'"></span>
+                  <span class="limite" aria-hidden="true"></span>
+                </div>
+                <small>
+                  @if (c.pocos) {
+                    Cuenta desde tus primeros {{ d.minimo_cierres }} servicios. Máximo {{ c.limite }} %.
+                  } @else if (c.nivel === 'mal') {
+                    Pasaste el máximo de {{ c.limite }} %: no recibes solicitudes por ahora.
+                  } @else {
+                    Si pasas de {{ c.limite }} % dejas de recibir solicitudes. Cancela solo si es necesario.
+                  }
+                </small>
+              </div>
+            }
+
+            @if (d.elogios.length) {
+              <div class="elogios">
+                <small>Lo que más te elogian</small>
+                <ul aria-label="Elogios de tus pasajeros">
+                  @for (e of d.elogios; track e.elogio) {
+                    <li><app-icono nombre="estrella" /> {{ e.elogio }} <b>×{{ e.veces }}</b></li>
+                  }
+                </ul>
+              </div>
+            }
+
+            @if (d.favoritos) {
+              <p class="favoritos"><app-icono nombre="corazon" /> {{ d.favoritos }} {{ d.favoritos === 1 ? 'pasajero te tiene' : 'pasajeros te tienen' }} como conductor favorito</p>
+            }
+          </section>
+
+          <!-- Lo que dicen tus pasajeros -->
+          <section class="tarjeta entra" style="--d: 80ms" aria-labelledby="t-comentarios">
+            <h2 id="t-comentarios"><app-icono nombre="mensaje" /> Lo que dicen tus pasajeros</h2>
+            @if (d.comentarios.length) {
+              <ul class="comentarios">
+                @for (c of d.comentarios; track $index) {
+                  <li>
+                    <span class="estrellitas" [attr.aria-label]="c.puntuacion + ' de 5 estrellas'">
+                      @for (i of [1, 2, 3, 4, 5]; track i) {
+                        <app-icono nombre="estrella" [class.llena]="i <= c.puntuacion" />
+                      }
+                    </span>
+                    <p>“{{ c.comentario }}”</p>
+                    <small>{{ hace(c.creado_en) }}</small>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="vacio-txt">Cuando tus pasajeros te dejen comentarios, los verás aquí (sin su nombre).</p>
+            }
+          </section>
+        }
+
+        <!-- Sobre mí: la frase que ve el pasajero cuando lo asignan -->
+        <section class="tarjeta entra" style="--d: 100ms" aria-labelledby="t-sobre-mi">
+          <h2 id="t-sobre-mi"><app-icono nombre="persona" /> Sobre mí</h2>
+          @if (editandoSobreMi()) {
+            <form class="formulario" (submit)="$event.preventDefault(); guardarSobreMi()">
+              <label for="sobre-mi">Preséntate en una frase</label>
+              <textarea id="sobre-mi" class="entrada area" rows="3" maxlength="160"
+                        placeholder="Ej.: Llevo 8 años manejando en Buenaventura. Conozco bien la zona del puerto."
+                        [value]="sobreMiTexto()" (input)="sobreMiTexto.set($any($event.target).value)"
+                        aria-describedby="sobre-mi-ayuda"></textarea>
+              <small id="sobre-mi-ayuda" class="contador">{{ sobreMiTexto().length }}/160 · Sin teléfonos, correos ni enlaces</small>
+              @if (errorSobreMi()) { <p class="error" role="alert">{{ errorSobreMi() }}</p> }
+              <div class="botones">
+                <button type="button" class="secundario" (click)="editandoSobreMi.set(false)">Cancelar</button>
+                <button type="submit" class="primario" [disabled]="guardandoSobreMi()">{{ guardandoSobreMi() ? 'Guardando…' : 'Guardar' }}</button>
+              </div>
+            </form>
+          } @else if (p.sobre_mi) {
+            <p class="sobre-mi">“{{ p.sobre_mi }}”</p>
+            <button type="button" class="fila-boton" (click)="editarSobreMi()"><app-icono nombre="mensaje" /> Cambiar mi presentación</button>
+          } @else {
+            <p class="ayuda-txt">Tus pasajeros la ven cuando te asignan. Una frase amable genera confianza.</p>
+            <button type="button" class="fila-boton" (click)="editarSobreMi()"><app-icono nombre="mensaje" /> Escribir mi presentación</button>
+          }
         </section>
 
-        <!-- Vehículo: placa, marca, modelo y color (HU 2.6) -->
+        <!-- Vehículo -->
         @if (p.vehiculo; as v) {
-          <section class="tarjeta entra" style="--d: 40ms" aria-label="Tu vehículo">
-            <h2><app-icono [nombre]="v.tipo_vehiculo" /> {{ v.tipo_vehiculo === 'taxi' ? 'Tu taxi' : 'Tu moto' }}</h2>
+          <section class="tarjeta entra" style="--d: 120ms" aria-labelledby="t-vehiculo">
+            <h2 id="t-vehiculo"><app-icono [nombre]="v.tipo_vehiculo" /> {{ v.tipo_vehiculo === 'taxi' ? 'Tu taxi' : 'Tu moto' }}</h2>
             <div class="vehiculo">
-              <span class="placa"><b>{{ v.placa }}</b></span>
+              <span class="placa"><b>{{ v.placa }}</b><small>Buenaventura</small></span>
               <dl>
                 <div><dt>Marca y modelo</dt><dd>{{ modelo() }}</dd></div>
                 <div><dt>Color</dt><dd>{{ v.color }}</dd></div>
                 @if (v.empresa_afiliadora) {
                   <div><dt>Empresa</dt><dd>{{ v.empresa_afiliadora }}{{ v.numero_interno ? ' · N.º ' + v.numero_interno : '' }}</dd></div>
+                }
+                @if (v.tipo_vehiculo === 'moto') {
+                  @if (v.cilindraje_cc) {
+                    <div><dt>Cilindraje</dt><dd>{{ v.cilindraje_cc }} cc</dd></div>
+                  }
+                  <div><dt>Casco para el pasajero</dt><dd>{{ v.casco_pasajero ? 'Sí lleva' : 'No lleva' }}</dd></div>
+                }
+                @if (p.categorias_licencia.length) {
+                  <div><dt>Licencia</dt><dd class="categorias">@for (c of p.categorias_licencia; track c) { <span>{{ c }}</span> }</dd></div>
                 }
               </dl>
             </div>
@@ -40,26 +217,47 @@
           <p class="aviso">Todavía no registras tu vehículo.</p>
         }
 
-        <section class="tarjeta entra" style="--d: 80ms" aria-label="Licencia">
-          <h2><app-icono nombre="persona" /> Licencia</h2>
-          <p class="categorias">
-            @for (c of p.categorias_licencia; track c) {
-              <span>{{ c }}</span>
-            }
-          </p>
-        </section>
-
-        @if (p.documentos.length) {
-          <section class="tarjeta entra" style="--d: 120ms" aria-label="Documentos">
-            <h2><app-icono nombre="lista" /> Documentos</h2>
-            <ul class="documentos">
-              @for (d of p.documentos; track $index) {
+        <!-- Servicios autorizados: lo que puede recibir según su vehículo -->
+        @if (p.servicios_autorizados.length) {
+          <section class="tarjeta entra" style="--d: 140ms" aria-labelledby="t-servicios">
+            <h2 id="t-servicios"><app-icono nombre="check" /> Servicios autorizados</h2>
+            <ul class="servicios">
+              @for (s of p.servicios_autorizados; track s.codigo) {
                 <li>
-                  <span>{{ d.nombre }}</span>
-                  <span class="estado" [class]="claseEstado(d.estado)">{{ d.estado_nombre }}</span>
+                  <span class="disco" [class.teal]="s.codigo === 'transporte'" [class.naranja]="s.codigo !== 'transporte'"><app-icono [nombre]="servicio(s.codigo).icono" /></span>
+                  <span class="textos"><b>{{ s.nombre }}</b><small>{{ servicio(s.codigo).texto }}</small></span>
+                  <app-icono nombre="check" class="ok" />
                 </li>
               }
             </ul>
+            @if (p.vehiculo && p.vehiculo.tipo_vehiculo === 'moto' && !p.vehiculo.casco_pasajero) {
+              <p class="ayuda-txt">No te llegan viajes donde el pasajero necesita casco, porque no registraste casco para pasajero.</p>
+            }
+          </section>
+        }
+
+        <!-- Documentos: estado, vencimiento y renovar -->
+        @if (p.documentos.length) {
+          <section class="tarjeta entra" style="--d: 160ms" aria-labelledby="t-documentos">
+            <h2 id="t-documentos"><app-icono nombre="documento" /> Documentos</h2>
+            <ul class="documentos">
+              @for (doc of p.documentos; track doc.id) {
+                <li>
+                  <span class="textos">
+                    <b>{{ doc.nombre }}</b>
+                    <small>{{ estadoDoc(doc).detalle }}</small>
+                  </span>
+                  @if (estadoDoc(doc).accion) {
+                    <button type="button" class="accion chica" (click)="renovar(doc)" [attr.aria-label]="(estadoDoc(doc).accion === 'corregir' ? 'Corregir ' : 'Renovar ') + doc.nombre">
+                      {{ estadoDoc(doc).accion === 'corregir' ? 'Corregir' : 'Renovar' }}
+                    </button>
+                  } @else {
+                    <span class="estado" [class]="'estado ' + estadoDoc(doc).clase">{{ estadoDoc(doc).texto }}</span>
+                  }
+                </li>
+              }
+            </ul>
+            <p class="nota-doc">Si un documento obligatorio se vence, tu cuenta se suspende hasta que lo renueves.</p>
           </section>
         }
       } @else if (!error()) {
@@ -70,11 +268,163 @@
         <p class="aviso" role="alert">{{ error() }}</p>
       }
 
+      <!-- Seguridad: contactos de emergencia y clave -->
+      <section class="tarjeta entra" style="--d: 200ms" aria-labelledby="t-seguridad">
+        <h2 id="t-seguridad"><app-icono nombre="escudo" /> Seguridad</h2>
+        <p class="sos-info"><span class="sos-punto" aria-hidden="true">SOS</span> Durante un viaje, el botón rojo SOS avisa a MoviFY con tu ubicación. Tus contactos de emergencia nos sirven para ubicar a tu familia.</p>
+        @if (contactos().length) {
+          <ul class="contactos">
+            @for (c of contactos(); track c.id) {
+              <li>
+                <span class="disco teal"><app-icono nombre="persona" /></span>
+                <span class="textos"><b>{{ c.nombre }}</b><small>{{ telefonoBonito(c.telefono) }}</small></span>
+                <button type="button" class="quitar" [attr.aria-label]="'Quitar a ' + c.nombre" (click)="borrarContacto(c)"><app-icono nombre="x" /></button>
+              </li>
+            }
+          </ul>
+        }
+        @if (agregandoContacto()) {
+          <form class="formulario" (submit)="$event.preventDefault(); guardarContacto()">
+            <label for="c-nombre">Nombre</label>
+            <input id="c-nombre" class="entrada" autocomplete="name" [value]="contactoNombre()" (input)="contactoNombre.set($any($event.target).value)" />
+            <label for="c-cel">Celular</label>
+            <input id="c-cel" class="entrada" inputmode="numeric" autocomplete="tel-national" placeholder="300 000 0000"
+                   [value]="contactoCelular()" (input)="$any($event.target).value = escribirCelular($any($event.target).value)" />
+            @if (errorContacto()) { <p class="error" role="alert">{{ errorContacto() }}</p> }
+            <div class="botones">
+              <button type="button" class="secundario" (click)="agregandoContacto.set(false)">Cancelar</button>
+              <button type="submit" class="primario">Guardar</button>
+            </div>
+          </form>
+        } @else if (contactos().length < 3) {
+          <button type="button" class="fila-boton" (click)="agregandoContacto.set(true)"><app-icono nombre="persona" /> Agregar contacto de emergencia</button>
+        }
+
+        @if (cambiandoClave()) {
+          <form class="formulario" (submit)="$event.preventDefault(); guardarClave()">
+            <label for="k-actual">Clave actual</label>
+            <input id="k-actual" class="entrada clave" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password"
+                   [value]="claveActual()" (input)="claveActual.set(soloNumeros($any($event.target).value)); $any($event.target).value = claveActual()" />
+            <label for="k-nueva">Clave nueva</label>
+            <input id="k-nueva" class="entrada clave" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password"
+                   [value]="claveNueva()" (input)="claveNueva.set(soloNumeros($any($event.target).value)); $any($event.target).value = claveNueva()" />
+            <label for="k-repetir">Repite la clave nueva</label>
+            <input id="k-repetir" class="entrada clave" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password"
+                   [value]="claveRepetida()" (input)="claveRepetida.set(soloNumeros($any($event.target).value)); $any($event.target).value = claveRepetida()" />
+            @if (errorClave()) { <p class="error" role="alert">{{ errorClave() }}</p> }
+            <div class="botones">
+              <button type="button" class="secundario" (click)="cambiandoClave.set(false)">Cancelar</button>
+              <button type="submit" class="primario">Cambiar clave</button>
+            </div>
+          </form>
+        } @else {
+          <button type="button" class="fila-boton" (click)="cambiandoClave.set(true)"><app-icono nombre="candado" /> Cambiar mi clave de 4 números</button>
+        }
+        <button type="button" class="fila-boton" (click)="reportarIncidente()"><app-icono nombre="alerta" /> Reportar un incidente</button>
+
+        <h3 class="subtitulo">Personas desvinculadas</h3>
+        @if (desvinculados().length) {
+          <ul class="contactos">
+            @for (d of desvinculados(); track d.id) {
+              <li>
+                <span class="disco"><app-icono nombre="x" /></span>
+                <span class="textos"><b>{{ d.nombre }}</b><small>{{ hace(d.creado_en) }}</small></span>
+                <button type="button" class="accion chica clara" [attr.aria-label]="'Volver a vincular a ' + d.nombre" (click)="volverAVincular(d)">Vincular</button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="ayuda-txt">Si calificas a un pasajero con 1 o 2 estrellas puedes desvincularlo: no te volverán a llegar sus solicitudes.</p>
+        }
+      </section>
+
+      <!-- Ajustes -->
+      <section class="tarjeta entra" style="--d: 220ms" aria-labelledby="t-ajustes">
+        <h2 id="t-ajustes"><app-icono nombre="lista" /> Ajustes</h2>
+
+        <div class="ajuste">
+          <span class="textos">
+            <b>Ubicación</b>
+            <small>{{ ubicacion() === 'lista' ? 'Activa: te llegan solicitudes cerca' : ubicacion() === 'sin-permiso' ? 'Bloqueada: no puedes recibir viajes' : 'Sin confirmar' }}</small>
+          </span>
+          @if (ubicacion() === 'lista') {
+            <span class="estado ok">Activa</span>
+          } @else {
+            <button type="button" class="accion chica" (click)="activarUbicacion()">Activar</button>
+          }
+        </div>
+
+        <div class="ajuste">
+          <span class="textos">
+            <b>Notificaciones</b>
+            <small>{{ permisoPush() === 'permitidas' ? 'Te avisamos de solicitudes y mensajes' : permisoPush() === 'bloqueadas' ? 'Bloqueadas en el celular' : permisoPush() === 'preguntar' ? 'Todavía no las has permitido' : 'Solo en la app instalada' }}</small>
+          </span>
+          @if (permisoPush() === 'permitidas') {
+            <span class="estado ok">Activas</span>
+          } @else if (permisoPush() !== 'no-disponible') {
+            <button type="button" class="accion chica" (click)="activarNotificaciones()">Activar</button>
+          }
+        </div>
+
+        <div class="ajuste columna">
+          <span class="textos">
+            <b>App para navegar</b>
+            <small>Se abre con un toque en la recogida y durante el viaje</small>
+          </span>
+          <div class="segmentos" role="radiogroup" aria-label="App para navegar">
+            <button type="button" role="radio" [attr.aria-checked]="appNav() === 'google'" [class.elegido]="appNav() === 'google'" (click)="elegirNavegacion('google')">Google Maps</button>
+            <button type="button" role="radio" [attr.aria-checked]="appNav() === 'waze'" [class.elegido]="appNav() === 'waze'" (click)="elegirNavegacion('waze')">Waze</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cuenta -->
+      <section class="tarjeta entra" style="--d: 240ms" aria-labelledby="t-cuenta">
+        <h2 id="t-cuenta"><app-icono nombre="persona" /> Cuenta</h2>
+        <dl class="datos">
+          <div><dt>Celular</dt><dd>{{ celular() }} <button type="button" class="cambiar" (click)="cambiandoCelular.set(true)">Cambiar</button></dd></div>
+        </dl>
+        <p class="ayuda-txt">Tu nombre está verificado con tu documento. Para cambiarlo, escríbenos en Ayuda.</p>
+        <button type="button" class="fila-boton" (click)="invitar()"><app-icono nombre="compartir" /> Invita a otros conductores</button>
+        <button type="button" class="fila-boton" (click)="irA('/conductor/ayuda')"><app-icono nombre="mensaje" /> Ayuda y soporte</button>
+      </section>
+
       <button type="button" class="salir" (click)="salir()"><app-icono nombre="poder" /> Cerrar sesión</button>
+      <button type="button" class="eliminar" (click)="eliminarCuenta()">Eliminar mi cuenta</button>
+      <p class="version">MoviFY Conductor{{ version() ? ' · versión ' + version() : '' }}</p>
     </main>
   </div>
+
+  <!-- Hoja: renovar / corregir un documento -->
+  @if (renovando(); as d) {
+    <div class="velo" (click)="cerrarRenovar()" aria-hidden="true"></div>
+    <section class="hoja" role="dialog" aria-modal="true" aria-labelledby="t-renovar">
+      <span class="agarre" aria-hidden="true"></span>
+      <h2 id="t-renovar">{{ estadoDoc(d).accion === 'corregir' ? 'Corregir' : 'Renovar' }} {{ d.nombre }}</h2>
+      <p>{{ estadoDoc(d).detalle }}. Toma una foto clara o sube el PDF. Lo revisamos y te avisamos.</p>
+      @if (d.fecha_vencimiento) {
+        <label class="rotulo" for="vence-nuevo">Nueva fecha de vencimiento</label>
+        <input id="vence-nuevo" class="entrada" type="date" [min]="hoy" [value]="venceNueva()" (input)="venceNueva.set($any($event.target).value); errorRenovar.set('')" />
+      }
+      @if (errorRenovar()) { <p class="error" role="alert">{{ errorRenovar() }}</p> }
+      @if (avanceDoc() !== null) {
+        <div class="progreso" role="progressbar" aria-label="Subiendo" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="((avanceDoc() ?? 0) * 100).toFixed(0)">
+          <span [style.transform]="'scaleX(' + (avanceDoc() ?? 0) + ')'"></span>
+        </div>
+      }
+      <label class="primario subir" [class.deshabilitado]="enviandoDoc()">
+        <app-icono nombre="camara" /> {{ enviandoDoc() ? 'Subiendo…' : 'Elegir foto o PDF' }}
+        <input type="file" class="oculto" accept="image/*,application/pdf" [disabled]="enviandoDoc()" (change)="subirRenovado($event)" />
+      </label>
+      <button type="button" class="secundario" [disabled]="enviandoDoc()" (click)="cerrarRenovar()">Ahora no</button>
+    </section>
+  }
 </ion-content>
 
 <ion-footer class="ion-no-border">
   <app-barra-inferior [items]="barra" activa="/conductor/perfil" />
 </ion-footer>
+
+@if (cambiandoCelular()) {
+  <app-cambiar-celular (cerrar)="cambiandoCelular.set(false)" (cambiado)="celularCambiado()" />
+}

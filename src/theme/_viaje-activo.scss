@@ -16,7 +16,7 @@
   z-index: 3;
   left: 16px;
   right: 84px;
-  top: calc(env(safe-area-inset-top) + 18px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 18px);
   margin: 0;
   min-height: 56px;
   padding: 8px 16px 8px 8px;
@@ -54,7 +54,7 @@
   position: absolute;
   z-index: 3;
   right: 16px;
-  top: calc(env(safe-area-inset-top) + 20px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 20px);
 }
 
 // Tarjeta blanca de arriba con barra de avance ("LLEVANDO A ANA · Muelle turístico · 8 min")
@@ -63,7 +63,7 @@
   z-index: 3;
   left: 16px;
   right: 84px;
-  top: calc(env(safe-area-inset-top) + 16px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 16px);
   padding: 12px 16px 14px;
   border-radius: 20px;
   background: #ffffff;
@@ -311,7 +311,7 @@
 }
 .digitos {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 
   span {
@@ -330,7 +330,7 @@
 
 .acciones {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .accion {

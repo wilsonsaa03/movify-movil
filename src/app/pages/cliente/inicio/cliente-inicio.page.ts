@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Gesture, GestureController, IonContent, IonFooter, NavController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ApiService } from '../../../core/api.service';
+import { NotificacionesService } from '../../../servicios/notificaciones.service';
 import { SesionService } from '../../../core/sesion.service';
 import { UbicacionService } from '../../../servicios/ubicacion.service';
 import { IconoComponent, NombreIcono } from '../../../componentes/icono/icono.component';
@@ -90,6 +91,9 @@ export class ClienteInicioPage implements AfterViewInit, OnDestroy, ViewDidEnter
   private readonly nav = inject(NavController);
   private readonly ruta = inject(ActivatedRoute);
   private readonly api = inject(ApiService);
+  private readonly avisos = inject(NotificacionesService);
+  /** Número de la campana (notificaciones sin leer). */
+  readonly notificacionesSinLeer = this.avisos.noLeidas;
   private readonly sesion = inject(SesionService);
   private readonly gps = inject(UbicacionService);
   private readonly mapa = viewChild(MapaCiudadComponent);
@@ -186,6 +190,7 @@ export class ClienteInicioPage implements AfterViewInit, OnDestroy, ViewDidEnter
   }
 
   ionViewDidEnter(): void {
+    this.avisos.contar();
     this.saludo.set(this.saludoSegunHora());
     this.cargarLugares();
     this.gps.seguir(); // el punto del mapa se mueve en tiempo real mientras esta pantalla está abierta

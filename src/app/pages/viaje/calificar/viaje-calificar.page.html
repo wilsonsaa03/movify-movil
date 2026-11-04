@@ -80,7 +80,7 @@
         @if (ofrecerBloqueo()) {
           <label class="opcion-extra mala entra">
             <input type="checkbox" [checked]="bloquear()" (change)="bloquear.set($any($event.target).checked)" />
-            <span><b>No volver a emparejarme con {{ otroCorto() }}</b><small>No te enviaremos de nuevo a este conductor.</small></span>
+            <span><b>No volver a emparejarme con {{ otroCorto() }}</b><small>{{ rol === 'conductor' ? 'No te volveremos a mostrar sus solicitudes. Puedes deshacerlo en tu perfil.' : 'No te enviaremos de nuevo a este conductor.' }}</small></span>
           </label>
         }
       }

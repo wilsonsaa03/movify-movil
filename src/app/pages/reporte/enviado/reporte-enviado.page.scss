@@ -2,7 +2,7 @@
 
 .cielo {
   position: relative;
-  padding: calc(env(safe-area-inset-top) + 36px) 24px 96px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 36px) 24px 96px;
   text-align: center;
   background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 45%, #fe7b13 100%);
   color: $navy;

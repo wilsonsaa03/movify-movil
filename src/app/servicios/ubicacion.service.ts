@@ -85,6 +85,15 @@ export class UbicacionService {
     }
   }
 
+  /**
+   * Posición que llega del GPS nativo en segundo plano (ConductorEnLineaService): actualiza el mismo punto que
+   * ven las pantallas, así el mapa sigue al día aunque la app haya estado con la pantalla apagada.
+   */
+  aplicarExterna(lat: number, lng: number, precision: number | null): void {
+    this.aplicar({ coords: { latitude: lat, longitude: lng, accuracy: precision ?? Number.NaN } } as GeolocationPosition)
+      .catch(() => undefined);
+  }
+
   /** Mueve el punto de una vez y, si se desplazó lo suficiente, busca el barrio y la dirección nuevos. */
   private aplicar(p: GeolocationPosition): Promise<void> {
     const { latitude: lat, longitude: lng, accuracy } = p.coords;

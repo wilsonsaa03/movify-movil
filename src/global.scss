@@ -44,7 +44,21 @@
 
 :root {
   --ion-font-family: 'Nunito', system-ui, sans-serif;
+  /*
+   * Áreas seguras (barra de estado arriba, barra de navegación o gestos abajo, muesca de la cámara).
+   * Desde Android 15 la app se dibuja de borde a borde y en muchos WebView env(safe-area-inset-*) llega en 0:
+   * Capacitor 8 (SystemBars) mide las barras y las deja en --safe-area-inset-*. Se usa eso, y env() de respaldo
+   * (iPhone, navegador). Así ningún botón queda debajo de los botones ◁ ○ ▢ del celular.
+   */
+  --ion-safe-area-top: var(--safe-area-inset-top, env(safe-area-inset-top));
+  --ion-safe-area-right: var(--safe-area-inset-right, env(safe-area-inset-right));
+  --ion-safe-area-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom));
+  --ion-safe-area-left: var(--safe-area-inset-left, env(safe-area-inset-left));
 }
+
+/* Nada más ancho que la pantalla (un texto largo o una imagen no debe dejar scroll de lado) */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video { max-width: 100%; }
 
 /* ---------- MoviFY: botones compartidos ---------- */
 .mv-boton {

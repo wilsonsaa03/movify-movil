@@ -48,7 +48,8 @@ export class ViajeCalificarPage implements ViewDidEnter {
   private id = 0;
 
   readonly ofrecerFavorito = computed(() => this.rol === 'cliente' && this.estrellas() >= 4 && !this.v()?.es_favorito);
-  readonly ofrecerBloqueo = computed(() => this.rol === 'cliente' && this.estrellas() > 0 && this.estrellas() <= 2);
+  /** Con 1–2 estrellas, cualquiera de los dos puede desvincular al otro (como DiDi). */
+  readonly ofrecerBloqueo = computed(() => this.estrellas() > 0 && this.estrellas() <= 2);
   /** Recibo: lo que pagó en efectivo, cuánto recorrió y cuánto duró. */
   readonly recibo = computed(() => {
     const v = this.v();
@@ -110,10 +111,10 @@ export class ViajeCalificarPage implements ViewDidEnter {
     if (!this.estrellas() || this.enviando()) return;
     this.enviando.set(true);
     this.error.set('');
-    // Lo que le gustó va primero en el comentario ("Muy amable, Pagó completo. Todo bien")
-    const texto = [this.elegidas().join(', '), this.comentario().trim()].filter(Boolean).join('. ').slice(0, 300);
+    // Los elogios van aparte (se cuentan en el perfil del otro); el comentario es solo lo que escribió
+    const texto = this.comentario().trim().slice(0, 300);
     try {
-      await this.viajes.calificar(this.id, this.estrellas(), texto || null);
+      await this.viajes.calificar(this.id, this.estrellas(), texto || null, this.elegidas());
       // Favorito o bloqueo: si fallan, la calificación ya quedó (no se le muestra error por eso)
       if (this.ofrecerFavorito() && this.favorito()) await this.viajes.favorito(this.id, true).catch(() => undefined);
       if (this.ofrecerBloqueo() && this.bloquear()) await this.viajes.bloquear(this.id, texto || null).catch(() => undefined);

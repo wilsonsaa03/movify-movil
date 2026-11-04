@@ -66,6 +66,23 @@ export class PushService {
     }
   }
 
+  /** Para Perfil › Ajustes: si las notificaciones están permitidas en este celular. */
+  async permiso(): Promise<'permitidas' | 'bloqueadas' | 'preguntar' | 'no-disponible'> {
+    if (!Capacitor.isNativePlatform()) return 'no-disponible';
+    try {
+      const p = await PushNotifications.checkPermissions();
+      return p.receive === 'granted' ? 'permitidas' : p.receive === 'denied' ? 'bloqueadas' : 'preguntar';
+    } catch {
+      return 'no-disponible';
+    }
+  }
+
+  /** "Activar": vuelve a intentar el registro (pide el permiso si todavía no lo ha respondido). */
+  async activar(): Promise<void> {
+    this.iniciado = false;
+    await this.iniciar();
+  }
+
   private async guardarToken(token: string): Promise<void> {
     try {
       localStorage.setItem(CLAVE_TOKEN_PUSH, token);
@@ -106,12 +123,16 @@ export class PushService {
 export function rutaDelAviso(datos: DatosPush | null | undefined, conductor: boolean): { ruta: string; params?: Record<string, number> } | null {
   const id = Number(datos?.servicio_id) || 0;
   const evento = datos?.evento ?? '';
+  // Comunicados del admin ("Hoy hay paro"...): a la bandeja de notificaciones
+  if (evento === 'comunicado') return { ruta: conductor ? '/conductor/notificaciones' : '/cliente/notificaciones' };
   if (conductor) {
     if (evento === 'solicitud' && id) return { ruta: '/conductor/viaje/solicitud', params: { id } };
     if (evento === 'mensaje' && id) return { ruta: '/conductor/viaje/chat', params: { id } };
+    if (evento === 'soporte') return { ruta: '/conductor/ayuda' };
     return { ruta: '/conductor/inicio' };
   }
   if (evento === 'programado') return { ruta: '/cliente/pedidos' };
+  if (evento === 'soporte') return { ruta: '/cliente/ayuda' };
   if (!id) return { ruta: '/cliente' };
   if (evento === 'mensaje') return { ruta: '/cliente/viaje/chat', params: { id } };
   if (evento === 'finalizado') return { ruta: '/cliente/viaje/calificar', params: { id } };

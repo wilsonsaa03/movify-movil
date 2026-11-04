@@ -8,7 +8,8 @@ export type NombreIcono =
   | 'telefono' | 'mensaje' | 'compartir'
   | 'estrella' | 'check' | 'x' | 'play' | 'pausa' | 'microfono'
   | 'campana' | 'lista' | 'persona' | 'dinero' | 'poder' | 'navegar'
-  | 'comida' | 'farmacia' | 'mercado' | 'diligencia';
+  | 'comida' | 'farmacia' | 'mercado' | 'diligencia'
+  | 'camara' | 'documento';
 
 /**
  * Íconos de línea de MoviFY (24×24, trazo redondeado, toman el color del texto).
@@ -64,6 +65,8 @@ export type NombreIcono =
         @case ('lista') { <svg:path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" /> }
         @case ('persona') { <svg:circle cx="12" cy="8" r="4" /><svg:path d="M4 21a8 8 0 0 1 16 0" /> }
         @case ('dinero') { <svg:path d="M3 6h18v12H3zM6.5 9.5v.01M17.5 14.5v.01" /><svg:circle cx="12" cy="12" r="2.8" /> }
+        @case ('camara') { <svg:path d="M4 8h3l2-3h6l2 3h3v11H4z" /><svg:circle cx="12" cy="13" r="3.5" /> }
+        @case ('documento') { <svg:path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6" /> }
         @case ('poder') { <svg:path d="M12 3v8M6.4 6.8a8 8 0 1 0 11.2 0" /> }
         @case ('navegar') { <svg:path d="M12 3l7.5 18-7.5-4.5L4.5 21z" /> }
         @case ('comida') { <svg:path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M16 21V3c-2 1.5-3 4-3 7v3h3" /> }

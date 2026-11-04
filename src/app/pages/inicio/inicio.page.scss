@@ -26,13 +26,14 @@ ion-content {
 .cielo {
   position: relative;
   flex-shrink: 0;
-  height: max(50vh, 420px);
-  padding-top: env(safe-area-inset-top);
+  // Crece con el alto de la pantalla, pero en un celular bajito no se come los botones
+  height: clamp(330px, 48vh, 470px);
+  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: clamp(8px, 1.6vh, 14px);
   padding-bottom: 70px; // espacio para las olas
   background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 45%, #fe7b13 100%);
   overflow: hidden;
@@ -41,7 +42,7 @@ ion-content {
 .sol {
   position: absolute;
   left: 50%;
-  top: calc(env(safe-area-inset-top) + 28%);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 28%);
   width: 290px;
   height: 290px;
   margin: -145px 0 0 -145px;
@@ -65,12 +66,12 @@ ion-content {
   }
   &.g1 {
     left: 9%;
-    top: calc(env(safe-area-inset-top) + 13%);
+    top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 13%);
     animation: planear 6s ease-in-out infinite;
   }
   &.g2 {
     right: 8%;
-    top: calc(env(safe-area-inset-top) + 24%);
+    top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 24%);
     animation: planear 7s ease-in-out -2s infinite;
   }
 }
@@ -79,8 +80,8 @@ ion-content {
 .insignia {
   position: relative;
   z-index: 1;
-  width: 140px;
-  height: 140px;
+  width: clamp(96px, 17vh, 140px);
+  height: clamp(96px, 17vh, 140px);
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -109,7 +110,7 @@ ion-content {
   margin: 0;
   font-family: 'Baloo 2', system-ui, sans-serif;
   font-weight: 800;
-  font-size: 56px;
+  font-size: clamp(42px, 7.4vh, 56px);
   line-height: 1;
   letter-spacing: -1px;
   color: $navy;
@@ -128,7 +129,7 @@ ion-content {
 
 .lema {
   margin: 8px 24px 0;
-  font-size: 16px;
+  font-size: clamp(14px, 2.2vh, 16px);
   font-weight: 700;
   color: $navy;
 }
@@ -172,15 +173,21 @@ ion-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 4px 24px calc(20px + env(safe-area-inset-bottom));
+  gap: clamp(12px, 2.2vh, 18px);
+  // Abajo deja el espacio de la barra de navegación del celular (◁ ○ ▢ o la línea de gestos)
+  padding: 4px clamp(16px, 6vw, 24px) calc(20px + var(--ion-safe-area-bottom, 0px));
+  // En tableta o celular acostado no se estira de lado a lado
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .pregunta {
   margin: 0;
   font-family: 'Baloo 2', system-ui, sans-serif;
   font-weight: 800;
-  font-size: 28px;
+  font-size: clamp(24px, 7.5vw, 30px);
   line-height: 1.1;
   color: #ffffff;
 }
@@ -188,8 +195,10 @@ ion-content {
 // ---------- Baldosas de servicio (3D) ----------
 .servicios {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  // Cuatro columnas IGUALES: un nombre largo ("Encomiendas") ya no le quita espacio a los demás
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(6px, 2.5vw, 14px);
+  align-items: start;
 }
 
 .servicio {
@@ -197,6 +206,7 @@ ion-content {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   padding: 0;
   border: 0;
   background: none;
@@ -211,9 +221,11 @@ ion-content {
 }
 
 .baldosa {
-  width: min(70px, 100%);
+  // Mismo tamaño las cuatro: todo el ancho de su columna, hasta 76 px
+  width: 100%;
+  max-width: 76px;
   aspect-ratio: 1;
-  border-radius: 24px;
+  border-radius: 28%;
   display: grid;
   place-items: center;
   background:
@@ -250,10 +262,12 @@ ion-content {
 }
 
 .etiqueta {
-  font-size: 13px;
+  // En celulares angostos (320 px) la letra baja un poco para que "Encomiendas" quepa
+  font-size: clamp(11px, 3.4vw, 13.5px);
   font-weight: 800;
   color: #ffffff;
   white-space: nowrap;
+  text-align: center;
 }
 
 // ---------- Botones ----------
@@ -262,11 +276,11 @@ ion-content {
   padding-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: clamp(10px, 1.8vh, 14px);
 }
 
 .boton {
-  height: 56px;
+  height: clamp(50px, 7vh, 56px);
   border-radius: 28px;
   display: flex;
   align-items: center;
@@ -317,7 +331,7 @@ ion-content {
 }
 
 .contorno {
-  height: 54px;
+  height: clamp(48px, 6.8vh, 54px);
   border: 2px solid #ffffff;
   color: #ffffff;
   background: transparent;

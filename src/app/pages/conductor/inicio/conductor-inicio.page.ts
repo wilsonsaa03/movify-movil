@@ -2,6 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { IonContent, IonFooter, NavController, ViewDidEnter, ViewDidLeave } from '@ionic/angular';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ApiService, ErrorApi } from '../../../core/api.service';
+import { NotificacionesService } from '../../../servicios/notificaciones.service';
+import { GananciasService } from '../../../servicios/ganancias.service';
 import { SesionService } from '../../../core/sesion.service';
 import { urlFoto } from '../../../core/formato';
 import { ConductorRegistroService } from '../../../servicios/conductor-registro.service';
@@ -11,6 +13,7 @@ import { IconoComponent } from '../../../componentes/icono/icono.component';
 import { MapaCiudadComponent, PuntoMapa, ZonaDemanda } from '../../../componentes/mapa-ciudad/mapa-ciudad.component';
 import { BarraInferiorComponent, ItemBarra } from '../../../componentes/barra-inferior/barra-inferior.component';
 import { TiempoEnLinea } from './tiempo-en-linea';
+import { ConductorEnLineaService } from '../../../servicios/conductor-en-linea.service';
 
 /** GET /api/conductor/mi-perfil (solo los campos que usa esta pantalla). */
 interface MiPerfil {
@@ -25,10 +28,6 @@ interface ResumenHoy {
 }
 
 /** GET /api/servicios/disponibles (el backend devuelve servicio_id, no id). */
-interface SolicitudDisponible {
-  servicio_id: number;
-}
-
 export const BARRA_CONDUCTOR: ItemBarra[] = [
   { texto: 'Inicio', icono: 'casa', ruta: '/conductor/inicio' },
   { texto: 'Mis viajes', icono: 'lista', ruta: '/conductor/viajes' },
@@ -36,10 +35,9 @@ export const BARRA_CONDUCTOR: ItemBarra[] = [
   { texto: 'Perfil', icono: 'persona', ruta: '/conductor/perfil' },
 ];
 
-/** Meta diaria que se muestra en la barra de progreso (todavía no existe en el backend). */
-const META_DIA = 80000;
 /** Cada cuánto se reporta la ubicación y se preguntan solicitudes nuevas mientras está en línea. */
-const CADA_MS = 8000;
+/** Cada cuánto se actualiza "Horas en línea" (las solicitudes y el GPS los maneja ConductorEnLineaService). */
+const CADA_MS = 30000;
 
 /** $48.500 (sin el espacio que pone Intl con style 'currency'). */
 const miles = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
@@ -61,11 +59,19 @@ const pesos = { format: (n: number) => '$' + miles.format(n) };
 export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
   private readonly nav = inject(NavController);
   private readonly api = inject(ApiService);
+  private readonly avisos = inject(NotificacionesService);
+  /** Número de la campana (notificaciones sin leer). */
+  readonly notificacionesSinLeer = this.avisos.noLeidas;
   private readonly sesion = inject(SesionService);
   private readonly registro = inject(ConductorRegistroService);
   private readonly gps = inject(UbicacionService);
   private readonly viajeActivo = inject(ViajeActivoService);
+  /** En línea aunque la app esté en segundo plano: GPS nativo + solicitudes con sonido. */
+  private readonly enLineaSrv = inject(ConductorEnLineaService);
+  readonly sinPermisoGps = this.enLineaSrv.sinPermiso;
   private readonly reloj = new TiempoEnLinea();
+  /** Meta del día: la elige el conductor en Ganancias (se guarda en el celular). */
+  private readonly meta = inject(GananciasService).meta;
   private sondeo: ReturnType<typeof setInterval> | null = null;
 
   readonly barra = BARRA_CONDUCTOR;
@@ -100,11 +106,11 @@ export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
   readonly minutos = signal(this.reloj.minutosHoy());
 
   readonly ganadoTexto = computed(() => pesos.format(this.ganado()));
-  readonly metaTexto = pesos.format(META_DIA);
-  readonly avance = computed(() => Math.min(1, this.ganado() / META_DIA));
+  readonly metaTexto = computed(() => pesos.format(this.meta()));
+  readonly avance = computed(() => Math.min(1, this.ganado() / this.meta()));
   readonly porcentaje = computed(() => Math.round(this.avance() * 100));
   readonly falta = computed(() => {
-    const f = META_DIA - this.ganado();
+    const f = this.meta() - this.ganado();
     return f > 0 ? `Te faltan ${pesos.format(f)} para tu meta` : '¡Cumpliste tu meta de hoy!';
   });
   readonly horasTexto = computed(() => {
@@ -117,6 +123,7 @@ export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
   });
 
   ionViewDidEnter(): void {
+    this.avisos.contar();
     this.gps.seguir(); // su vehículo se mueve en el mapa en tiempo real
     this.retomarViaje();
     this.cargar();
@@ -192,34 +199,29 @@ export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
     this.enLinea.set(activo);
     if (activo) {
       this.reloj.conectar();
+      this.enLineaSrv.conectar();
       this.iniciarSondeo();
     } else {
       this.reloj.desconectar();
+      this.enLineaSrv.desconectar();
       this.detenerSondeo();
     }
     this.minutos.set(this.reloj.minutosHoy());
   }
 
-  /** Mientras está en línea: reporta dónde está y busca solicitudes nuevas. */
+  /**
+   * Mientras esta pantalla está abierta y en línea: refresca "Horas en línea". La ubicación y las solicitudes
+   * nuevas las maneja ConductorEnLineaService, también cuando el conductor está en otra pestaña o con la
+   * pantalla apagada.
+   */
   private iniciarSondeo(): void {
     if (this.sondeo) return;
-    const revisar = async () => {
-      this.minutos.set(this.reloj.minutosHoy());
-      try {
-        const pos = this.miPunto(); // la mantiene al día gps.seguir()
-        if (pos) await this.api.post('/conductor/ubicacion', pos);
-        const lista = await this.api.get<SolicitudDisponible[]>('/servicios/disponibles');
-        if (lista.length && this.enLinea()) {
-          this.detenerSondeo();
-          Haptics.vibrate({ duration: 400 }).catch(() => undefined);
-          this.nav.navigateForward('/conductor/viaje/solicitud', { queryParams: { id: lista[0].servicio_id } });
-        }
-      } catch {
-        /* sin señal: se vuelve a intentar en la próxima vuelta */
-      }
-    };
-    revisar();
-    this.sondeo = setInterval(revisar, CADA_MS);
+    this.sondeo = setInterval(() => this.minutos.set(this.reloj.minutosHoy()), CADA_MS);
+  }
+
+  /** Android no dejó usar la ubicación en segundo plano: abre los ajustes de MoviFY. */
+  darPermisoGps(): void {
+    this.enLineaSrv.abrirAjustes();
   }
 
   private detenerSondeo(): void {

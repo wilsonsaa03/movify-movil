@@ -23,9 +23,11 @@
         </span>
       </button>
 
-      <button type="button" class="campana entra" style="--d: 60ms" aria-label="Notificaciones" (click)="notificaciones()">
+      <button type="button" class="campana entra" style="--d: 60ms" [attr.aria-label]="notificacionesSinLeer() ? 'Notificaciones: ' + notificacionesSinLeer() + ' sin leer' : 'Notificaciones'" (click)="notificaciones()">
         <app-icono nombre="campana" />
-        <span class="aviso" aria-hidden="true"></span>
+        @if (notificacionesSinLeer()) {
+          <span class="aviso con-numero" aria-hidden="true">{{ notificacionesSinLeer() > 9 ? '9+' : notificacionesSinLeer() }}</span>
+        }
       </button>
 
       <div class="olas" aria-hidden="true">

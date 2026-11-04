@@ -22,7 +22,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
     </div>
   `,
   styles: `
-    .teclado { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .teclado { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
     .tecla {
       height: 58px; border: 0; border-radius: 18px; background: #eef3f8;
       font-family: 'Nunito', system-ui, sans-serif; font-size: 24px; font-weight: 800; color: #03274d;

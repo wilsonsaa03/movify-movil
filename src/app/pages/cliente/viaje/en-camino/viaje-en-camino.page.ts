@@ -113,6 +113,8 @@ export class ViajeEnCaminoPage implements ViewDidEnter, ViewWillLeave, AfterView
     if (!total || f === null) return 0;
     return Math.max(0.04, Math.min(1, 1 - f / total));
   });
+  /** Sus 3 elogios más repetidos ("Muy amable", "Manejó con cuidado"…). */
+  readonly elogios = computed(() => (this.v()?.conductor_elogios ?? '').split('|').filter(Boolean));
   readonly calificacion = computed(() => {
     const c = Number(this.v()?.conductor_calificacion);
     return c ? c.toFixed(1).replace('.', ',') : null;
@@ -193,7 +195,7 @@ export class ViajeEnCaminoPage implements ViewDidEnter, ViewWillLeave, AfterView
       await navigator.share({ text: texto }).catch(() => undefined);
       return;
     }
-    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
   }
 
   async cancelar(): Promise<void> {

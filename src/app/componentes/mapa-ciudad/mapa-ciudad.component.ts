@@ -262,12 +262,14 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
     if (!this.capaLibres) return;
     this.capaLibres.clearLayers();
     for (const v of libres) {
+      // El tipo llega del servidor y va dentro de HTML: solo se aceptan los dos valores conocidos
+      const tipo = v.tipo_vehiculo === 'taxi' ? 'taxi' : 'moto';
       L.marker([v.lat, v.lng], {
         interactive: false,
         keyboard: false,
         icon: L.divIcon({
           className: '',
-          html: `<span class="mv-mapa-libre ${v.tipo_vehiculo}"><svg viewBox="0 0 24 24" aria-hidden="true">${v.tipo_vehiculo === 'taxi' ? SVG_TAXI : SVG_MOTO}</svg></span>`,
+          html: `<span class="mv-mapa-libre ${tipo}"><svg viewBox="0 0 24 24" aria-hidden="true">${tipo === 'taxi' ? SVG_TAXI : SVG_MOTO}</svg></span>`,
           iconSize: [30, 30],
           iconAnchor: [15, 15],
         }),

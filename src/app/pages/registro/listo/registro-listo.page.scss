@@ -12,7 +12,7 @@ ion-content {
   position: relative;
   flex-shrink: 0;
   height: max(56vh, 440px);
-  padding-top: env(safe-area-inset-top);
+  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top));
   padding-bottom: 80px;
   display: flex;
   flex-direction: column;
@@ -133,7 +133,7 @@ ion-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 24px calc(20px + env(safe-area-inset-bottom));
+  padding: 0 24px calc(20px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
 }
 
 .tarjeta {

@@ -171,8 +171,27 @@ export const routes: Routes = [
   },
   // Siguen en el flujo del conductor (provisionales)
   { path: 'conductor/reportar', canActivate: [rolGuard], ...pendiente('Reportar usuario', ['conductor']) },
-  { path: 'conductor/ganancias', canActivate: [rolGuard], ...pendiente('Ganancias', ['conductor']) },
-  { path: 'conductor/notificaciones', canActivate: [rolGuard], ...pendiente('Notificaciones', ['conductor']) },
+  // Ganancias (barra inferior): hoy / semana / mes, gráfica, meta del día y desglose por tipo
+  {
+    path: 'conductor/ganancias',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'] },
+    loadComponent: () => import('./pages/conductor/ganancias/conductor-ganancias.page').then((m) => m.ConductorGananciasPage),
+  },
+  // Ayuda (PQRS) desde el perfil del conductor: la misma pantalla del cliente
+  {
+    path: 'conductor/ayuda',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'], enviado: '/conductor/reporte/enviado' },
+    loadComponent: () => import('./pages/cliente/ayuda/cliente-ayuda.page').then((m) => m.ClienteAyudaPage),
+  },
+  // Notificaciones (la campana): lo que llegó por push, guardado. La misma pantalla para los dos
+  {
+    path: 'conductor/notificaciones',
+    canActivate: [rolGuard],
+    data: { roles: ['conductor'], rol: 'conductor' },
+    loadComponent: () => import('./pages/notificaciones/notificaciones.page').then((m) => m.NotificacionesPage),
+  },
 
   // App del cliente (Viaje 1 · Inicio)
   {
@@ -320,7 +339,12 @@ export const routes: Routes = [
     data: { roles: CLIENTE },
     loadComponent: () => import('./pages/cliente/perfil/cliente-perfil.page').then((m) => m.ClientePerfilPage),
   },
-  { path: 'cliente/notificaciones', canActivate: [rolGuard], ...pendiente('Notificaciones', CLIENTE) },
+  {
+    path: 'cliente/notificaciones',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE, rol: 'cliente' },
+    loadComponent: () => import('./pages/notificaciones/notificaciones.page').then((m) => m.NotificacionesPage),
+  },
 
   // Pantallas que siguen (por ahora son provisionales)
   // Recuperar clave (4 pasos + listo): celular → código SMS → clave nueva → confirmar → listo

@@ -77,7 +77,7 @@ describe('ViajeService (pedir moto o taxi)', () => {
     req.flush({ distancia_km: '4.2', duracion_min: 12, nocturno: true, opciones: [{ tipo_vehiculo: 'moto', valor_estimado: '7800', recargo_nocturno_pct: '10', valor_maximo: '15600' }] });
     const c = await p;
     expect(c.nocturno).toBe(true);
-    expect(c.opciones[0]).toEqual({ tipo_vehiculo: 'moto', valor_estimado: 7800, recargo_nocturno_pct: 10, valor_maximo: 15600 });
+    expect(c.opciones[0]).toEqual({ tipo_vehiculo: 'moto', valor_estimado: 7800, recargo_nocturno_pct: 10, recargo_lluvia_pct: 0, valor_maximo: 15600 });
   });
 
   it('cancela con el motivo elegido y sube la tarifa sin cancelar', async () => {

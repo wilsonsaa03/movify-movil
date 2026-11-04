@@ -3,7 +3,7 @@
 // ---------- Cielo con el radar ----------
 .cielo {
   position: relative;
-  padding: calc(env(safe-area-inset-top) + 40px) 24px 120px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 40px) 24px 120px;
   text-align: center;
   background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 45%, #fe7b13 100%);
   overflow: hidden;
@@ -38,11 +38,11 @@
   }
   &.g1 {
     left: 8%;
-    top: calc(env(safe-area-inset-top) + 60px);
+    top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 60px);
   }
   &.g2 {
     right: 8%;
-    top: calc(env(safe-area-inset-top) + 110px);
+    top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 110px);
   }
 }
 .olas {
@@ -207,7 +207,7 @@
 }
 .digitos {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 
   span {
@@ -315,7 +315,7 @@
 }
 .montos {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .monto {

@@ -4,6 +4,7 @@ import { AlertController, IonContent, IonFooter, NavController, ToastController,
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { ErrorApi } from '../../../core/api.service';
 import { distancia, pesos } from '../../../core/formato';
+import { appNavegacion, navegarA, nombreAppNavegacion } from '../../../core/navegacion';
 import { IconoComponent } from '../../../componentes/icono/icono.component';
 import { MapaCiudadComponent, PuntoMapa } from '../../../componentes/mapa-ciudad/mapa-ciudad.component';
 import { BotonSosComponent } from '../../../componentes/boton-sos/boton-sos.component';
@@ -63,6 +64,7 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
     return v?.parada_lat != null && v.parada_lng != null ? { lat: Number(v.parada_lat), lng: Number(v.parada_lng) } : null;
   });
   readonly sinLeer = computed(() => Number(this.v()?.mensajes_sin_leer) || 0);
+  readonly appNav = computed(() => nombreAppNavegacion(appNavegacion()));
 
   /** Domicilio/encomienda en la tienda o donde se recoge: todavía falta recoger. */
   readonly porRecoger = computed(() => this.v()?.estado_codigo === 'en_origen');
@@ -265,4 +267,11 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
 
   readonly distancia = distancia;
   readonly miles = (n: number) => new Intl.NumberFormat('es-CO').format(Number(n));
+
+  /** Abre Google Maps o Waze: primero la parada (si falta), si no, a donde va ahora (recogida o destino). */
+  navegar(): void {
+    const p = !this.porRecoger() && !this.paradaHecha() ? this.parada() : null;
+    const m = p ?? this.meta();
+    navegarA(m?.lat, m?.lng);
+  }
 }

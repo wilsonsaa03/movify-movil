@@ -147,7 +147,7 @@ export class EncomiendaSeguimientoPage implements ViewDidEnter, ViewWillLeave, A
       return;
     }
     const tel = (this.paquete()?.destinatario_telefono ?? '').replace(/\D/g, '');
-    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(texto)}`, '_blank');
+    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
   }
 
   async cancelar(): Promise<void> {

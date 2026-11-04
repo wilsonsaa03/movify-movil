@@ -23,7 +23,7 @@ ion-content {
 .header-superior {
   position: relative;
   background: linear-gradient(135deg, #ffd05b 0%, #ff9e2c 50%, #fe7b13 100%);
-  padding: calc(16px + env(safe-area-inset-top)) 24px 50px 24px;
+  padding: calc(16px + var(--safe-area-inset-top, env(safe-area-inset-top))) 24px 50px 24px;
   color: $navy;
 
   .btn-regresar {

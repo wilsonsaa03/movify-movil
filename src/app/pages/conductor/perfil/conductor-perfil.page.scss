@@ -1,8 +1,9 @@
 @use '../../../../theme/viaje' as *;
 
+// ── Encabezado azul noche ──
 .noche {
   position: relative;
-  padding: calc(env(safe-area-inset-top) + 26px) 20px 70px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 26px) 20px 70px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -17,24 +18,121 @@
     font-family: 'Baloo 2', system-ui, sans-serif;
     font-size: 26px;
     font-weight: 800;
-  }
-  p {
-    position: relative;
-    margin: 0;
-    font-size: 14px;
-    font-weight: 700;
-    color: #c8d6e5;
+    line-height: 1.15;
   }
 }
 .avatar.grande {
   position: relative;
-  width: 84px;
-  height: 84px;
+  width: 88px;
+  height: 88px;
   font-size: 30px;
   background: #ffc94d;
   border: 4px solid #ffffff;
+  overflow: visible;
+  cursor: pointer;
+
+  img {
+    border-radius: 50%;
+  }
+  .camara {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 32px;
+    height: 32px;
+    border: 3px solid $navy;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: $teal;
+    color: #ffffff;
+
+    app-icono {
+      width: 16px;
+      height: 16px;
+    }
+  }
+  &.subiendo {
+    opacity: 0.6;
+  }
+  &:focus-within {
+    outline: 3px solid #ffc94d;
+    outline-offset: 3px;
+  }
+}
+.oculto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.linea {
+  position: relative;
+  margin: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #c8d6e5;
+
+  .calif {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #ffffff;
+
+    app-icono {
+      width: 15px;
+      height: 15px;
+      color: #ffc94d;
+      fill: currentColor;
+    }
+  }
+}
+.sellos {
+  position: relative;
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.sello {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 12.5px;
+  font-weight: 800;
+
+  app-icono {
+    width: 15px;
+    height: 15px;
+  }
+  &.verificado {
+    background: rgba($teal, 0.28);
+    color: #c9f4f6;
+  }
+  &.tipo {
+    background: #fe7b13;
+    color: #ffffff;
+  }
+  &.placa-mini {
+    background: #ffc94d;
+    color: $navy;
+    letter-spacing: 1px;
+  }
 }
 
+// ── Cuerpo ──
 .cuerpo {
   position: relative;
   z-index: 1;
@@ -44,59 +142,139 @@
   flex-direction: column;
   gap: 14px;
 }
-.numeros {
-  padding: 14px 8px;
+
+// Accesos rápidos
+.accesos {
+  padding: 10px 6px;
   border-radius: 22px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   background: #ffffff;
   box-shadow:
     0 6px 0 #e4ebf2,
     0 14px 30px rgba($navy, 0.14);
 
-  > span {
+  button {
+    min-height: 72px;
+    padding: 4px 2px;
+    border: 0;
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    justify-content: center;
+    gap: 6px;
+    background: none;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: $navy;
+    cursor: pointer;
 
-    &:not(:last-child) {
-      border-right: 1.5px solid #eef3f8;
+    &:active {
+      background: #f4f7fb;
+    }
+    &:focus-visible {
+      outline: 3px solid $teal;
+      outline-offset: -3px;
     }
   }
-  b {
-    font-family: 'Baloo 2', system-ui, sans-serif;
-    font-size: 22px;
-    line-height: 1.1;
-  }
-  small {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 12px;
-    font-weight: 700;
-    color: $gris;
+  .icono {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: #eef3f8;
 
     app-icono {
-      width: 13px;
-      height: 13px;
-      color: #f5a623;
+      width: 21px;
+      height: 21px;
     }
   }
-  .estado {
-    margin-top: 4px;
-    font-family: 'Nunito', system-ui, sans-serif;
-    font-size: 12px;
+  .numero {
+    position: absolute;
+    top: -5px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    background: #e5484d;
+    font-size: 10.5px;
+    color: #ffffff;
+  }
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+// Avisos urgentes
+.alerta {
+  padding: 12px 14px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff1e6;
+  color: #8a3f06;
+
+  > app-icono {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .textos span {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  &.rojo {
+    background: #fdecee;
+    color: #8f1c29;
+  }
+}
+.accion {
+  min-height: 40px;
+  padding: 0 14px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 20px;
+  background: $navy;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #ffffff;
+  cursor: pointer;
+
+  &.chica {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 12.5px;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
   }
 }
 
+// Tarjetas
 .tarjeta {
   padding: 14px 16px;
   border: 2px solid $borde;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  background: #ffffff;
 
   h2 {
     margin: 0;
@@ -113,6 +291,222 @@
     }
   }
 }
+.textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+
+  b {
+    font-size: 14.5px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+
+// Desempeño
+.calificacion {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.grande-calif {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 96px;
+
+  b {
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 40px;
+    line-height: 1;
+  }
+  small {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+.estrellitas {
+  display: inline-flex;
+  gap: 1px;
+
+  app-icono {
+    width: 14px;
+    height: 14px;
+    color: #d5dee8;
+
+    &.llena {
+      color: #ffb020;
+      fill: currentColor;
+    }
+  }
+}
+.barras-estrellas {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    color: $gris;
+  }
+  .riel {
+    flex: 1;
+    height: 7px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #eef3f8;
+
+    span {
+      display: block;
+      height: 100%;
+      background: #ffb020;
+      transform-origin: left;
+      transition: transform 500ms $ease-out;
+    }
+  }
+}
+.cancelacion {
+  padding: 12px;
+  border-radius: 14px;
+  background: #f4f7fb;
+
+  .fila {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  small {
+    display: block;
+    margin-top: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: $gris;
+  }
+  &.bien b {
+    color: #0b6e4f;
+  }
+  &.cuidado b {
+    color: #b4530a;
+  }
+  &.mal b {
+    color: #b42333;
+  }
+}
+.medidor {
+  position: relative;
+  margin-top: 8px;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #dfe7ef;
+
+  .lleno {
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    background: #12a36b;
+    transform-origin: left;
+    transition: transform 500ms $ease-out;
+  }
+  // El límite (20 %) queda en la mitad de la barra
+  .limite {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    background: $navy;
+  }
+}
+.cuidado .medidor .lleno {
+  background: $orange;
+}
+.mal .medidor .lleno {
+  background: #e5484d;
+}
+.favoritos {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+
+  app-icono {
+    width: 18px;
+    height: 18px;
+    color: #e5484d;
+  }
+}
+
+// Comentarios: carrusel horizontal
+.comentarios {
+  margin: 0 -16px;
+  padding: 2px 16px 4px;
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  li {
+    flex: 0 0 78%;
+    max-width: 280px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #f4f7fb;
+    scroll-snap-align: start;
+  }
+  p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  small {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+}
+.vacio-txt,
+.ayuda-txt,
+.nota-doc {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: $gris;
+}
+
+// Vehículo
 .vehiculo {
   display: flex;
   align-items: flex-start;
@@ -123,43 +517,56 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-  }
-  dt {
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: $gris;
-  }
-  dd {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 800;
+    gap: 8px;
   }
 }
-.placa b {
-  display: block;
-  padding: 6px 12px;
+dt {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: $gris;
+}
+dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}
+.placa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 12px 4px;
   border: 2.5px solid $navy;
   border-radius: 10px;
   background: #ffc94d;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 2px;
-}
-.categorias {
-  margin: 0;
-  display: flex;
-  gap: 8px;
 
-  span {
-    padding: 4px 12px;
-    border-radius: 10px;
-    background: #eef3f8;
+  b {
+    font-size: 20px;
     font-weight: 800;
+    letter-spacing: 2px;
+  }
+  small {
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
   }
 }
+.categorias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  span {
+    padding: 2px 10px;
+    border-radius: 8px;
+    background: #eef3f8;
+    font-size: 13px;
+  }
+}
+
+// Documentos
 .documentos {
   margin: 0;
   padding: 0;
@@ -168,14 +575,12 @@
   flex-direction: column;
 
   li {
-    min-height: 40px;
+    min-height: 56px;
+    padding: 6px 0;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 10px;
     border-bottom: 1.5px solid #eef3f8;
-    font-size: 14px;
-    font-weight: 700;
 
     &:last-child {
       border-bottom: 0;
@@ -183,9 +588,9 @@
   }
 }
 .estado {
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   white-space: nowrap;
 
@@ -197,10 +602,170 @@
     background: #fdecee;
     color: #b42333;
   }
-  &.espera {
+  &.espera,
+  &.pronto {
     background: #fff1e6;
     color: #b4530a;
   }
+}
+
+// Seguridad y cuenta
+.contactos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .disco {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+
+    app-icono {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+.quitar {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: none;
+  color: $gris;
+  cursor: pointer;
+
+  app-icono {
+    width: 18px;
+    height: 18px;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+  }
+}
+.fila-boton {
+  min-height: 48px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f4f7fb;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: $navy;
+  text-align: left;
+  cursor: pointer;
+
+  app-icono {
+    width: 19px;
+    height: 19px;
+    color: $teal-d;
+  }
+  &:active {
+    background: #e8eef4;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 800;
+  }
+}
+.entrada {
+  min-height: 48px;
+  padding: 0 12px;
+  border: 2px solid $borde;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 16px; // ≥16px: iOS no hace zoom
+  font-weight: 700;
+  color: $navy;
+  background: #ffffff;
+
+  &:focus {
+    outline: none;
+    border-color: $teal;
+  }
+  &.clave {
+    letter-spacing: 8px;
+  }
+}
+.error {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b42333;
+}
+.botones {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.primario,
+.secundario {
+  position: relative;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:focus-visible,
+  &:focus-within {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  &:disabled,
+  &.deshabilitado {
+    opacity: 0.6;
+  }
+}
+.primario {
+  border: 0;
+  background: $navy;
+  color: #ffffff;
+
+  app-icono {
+    width: 19px;
+    height: 19px;
+  }
+}
+.secundario {
+  border: 2px solid $borde;
+  background: #ffffff;
+  color: $navy;
+}
+.datos {
+  margin: 0;
 }
 
 .salir {
@@ -224,6 +789,86 @@
     height: 18px;
   }
 }
+.version {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a9bb0;
+}
+
+// ── Hoja de renovar documento ──
+.velo {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba($navy, 0.45);
+  animation: aparecer 200ms ease-out;
+}
+.hoja {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 21;
+  padding: 10px 20px calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 20px);
+  border-radius: 26px 26px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #ffffff;
+  color: $navy;
+  animation: subir 260ms $ease-out;
+
+  .agarre {
+    align-self: center;
+    width: 40px;
+    height: 5px;
+    border-radius: 3px;
+    background: #d5dee8;
+  }
+  h2 {
+    margin: 6px 0 0;
+    font-size: 19px;
+    font-weight: 800;
+  }
+  p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: $gris;
+  }
+  .rotulo {
+    font-size: 13px;
+    font-weight: 800;
+  }
+}
+.progreso {
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #eef3f8;
+
+  span {
+    display: block;
+    height: 100%;
+    background: $teal;
+    transform-origin: left;
+    transition: transform 200ms linear;
+  }
+}
+@keyframes subir {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
 .esqueleto {
   height: 300px;
   border-radius: 20px;
@@ -235,4 +880,188 @@
   to {
     background-position: -200% 0;
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto,
+  .hoja,
+  .velo {
+    animation: none;
+  }
+}
+
+// ── Perfil V17: sobre mí, elogios, servicios autorizados, seguridad y ajustes ──
+.sobre-mi {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.45;
+}
+.entrada.area {
+  min-height: 88px;
+  padding: 10px 12px;
+  resize: none;
+  line-height: 1.4;
+}
+.contador {
+  font-size: 12px;
+  font-weight: 700;
+  color: $gris;
+}
+.elogios {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  > small {
+    font-size: 12px;
+    font-weight: 800;
+    color: $gris;
+  }
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  li {
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fff4e0;
+    font-size: 13px;
+    font-weight: 800;
+
+    app-icono {
+      width: 13px;
+      height: 13px;
+      color: #ffb020;
+    }
+    b {
+      color: #b4530a;
+    }
+  }
+}
+.servicios {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .disco {
+    width: 40px;
+    height: 40px;
+
+    app-icono {
+      width: 20px;
+      height: 20px;
+    }
+  }
+  .ok {
+    width: 20px;
+    height: 20px;
+    color: #12a36b;
+  }
+}
+.sos-info {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: $gris;
+}
+.sos-punto {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e5484d;
+  font-size: 10.5px;
+  font-weight: 900;
+  color: #ffffff;
+}
+.subtitulo {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: $gris;
+}
+.accion.clara {
+  background: #eef3f8;
+  color: $navy;
+}
+.ajuste {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1.5px solid #eef3f8;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+  &.columna {
+    padding: 8px 0 4px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+.segmentos {
+  padding: 4px;
+  border-radius: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background: #eef3f8;
+
+  button {
+    min-height: 44px;
+    border: 0;
+    border-radius: 11px;
+    background: none;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 800;
+    color: $navy;
+    cursor: pointer;
+
+    &.elegido {
+      background: #ffffff;
+      color: $teal-d;
+      box-shadow: 0 2px 6px rgba($navy, 0.12);
+    }
+    &:focus-visible {
+      outline: 3px solid $teal;
+      outline-offset: 2px;
+    }
+  }
+}
+
+/* Cambiar celular y eliminar cuenta */
+.cambiar {
+  margin-left: 8px; padding: 2px 10px; border: 1px solid rgba(2, 170, 180, 0.5); border-radius: 999px;
+  background: transparent; font: inherit; font-size: 12.5px; font-weight: 800; color: #007c84;
+}
+.eliminar {
+  display: block; margin: 14px auto 0; padding: 8px 14px; border: 0; background: none;
+  font: inherit; font-size: 14px; font-weight: 700; color: #b42318; text-decoration: underline;
 }

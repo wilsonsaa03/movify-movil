@@ -1,0 +1,75 @@
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="refrescar($event)">
+    <ion-refresher-content />
+  </ion-refresher>
+
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver al inicio" (click)="volver()"><app-icono nombre="atras" /></button>
+        <h1>Notificaciones</h1>
+      </div>
+      <div class="filtros" role="tablist" aria-label="Qué mostrar">
+        <button type="button" role="tab" [class.elegido]="filtro() === 'todas'" [attr.aria-selected]="filtro() === 'todas'" (click)="filtro.set('todas')">Todas</button>
+        <button type="button" role="tab" [class.elegido]="filtro() === 'no-leidas'" [attr.aria-selected]="filtro() === 'no-leidas'" (click)="filtro.set('no-leidas')">
+          Sin leer
+          @if (servicio.noLeidas()) { <span class="num">{{ servicio.noLeidas() }}</span> }
+        </button>
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      @if (servicio.noLeidas() && filtro() === 'todas') {
+        <button type="button" class="leer-todas entra" [disabled]="marcando()" (click)="leerTodas()">
+          <app-icono nombre="check" /> {{ marcando() ? 'Marcando…' : 'Marcar todas como leídas' }}
+        </button>
+      }
+
+      @if (cargando() && !items().length) {
+        <div class="esqueleto" aria-label="Cargando notificaciones"></div>
+        <div class="esqueleto corto" aria-hidden="true"></div>
+      } @else if (grupos().length) {
+        @for (g of grupos(); track g.dia) {
+          <h2 class="dia">{{ g.dia }}</h2>
+          <ul class="lista">
+            @for (n of g.items; track n.id) {
+              <li>
+                <button type="button" class="aviso-item entra" [class.nueva]="!n.leida_en" (click)="abrir(n)"
+                        [attr.aria-label]="(n.leida_en ? '' : 'Sin leer. ') + n.titulo + '. ' + n.cuerpo">
+                  <span class="disco {{ icono(n).tono }}"><app-icono [nombre]="icono(n).nombre" /></span>
+                  <span class="textos">
+                    <b>{{ n.titulo }}</b>
+                    <span class="cuerpo-txt">{{ n.cuerpo }}</span>
+                    <small>{{ hace(n.creado_en) }}{{ n.servicio_id ? ' · Servicio #' + n.servicio_id : '' }}</small>
+                  </span>
+                  @if (!n.leida_en) { <span class="punto" aria-hidden="true"></span> }
+                </button>
+              </li>
+            }
+          </ul>
+        }
+        @if (hayMas() && filtro() === 'todas') {
+          <button type="button" class="mas" [disabled]="cargandoMas()" (click)="verMas()">{{ cargandoMas() ? 'Cargando…' : 'Ver anteriores' }}</button>
+        }
+      } @else if (!error()) {
+        <div class="vacio entra">
+          <span class="disco amarillo grande"><app-icono nombre="campana" /></span>
+          <b>{{ filtro() === 'no-leidas' ? 'Ya leíste todo' : 'Todavía no tienes notificaciones' }}</b>
+          <p>{{ rol === 'conductor'
+            ? 'Aquí verás las solicitudes, mensajes de pasajeros y avisos de soporte.'
+            : 'Aquí verás cuando un conductor acepte, llegue o te escriba, y las respuestas de soporte.' }}</p>
+        </div>
+      }
+
+      @if (error()) {
+        <p class="aviso" role="alert">{{ error() }}</p>
+      }
+    </main>
+  </div>
+</ion-content>

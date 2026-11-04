@@ -21,7 +21,7 @@ ion-content {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  padding: 8px 24px calc(20px + env(safe-area-inset-bottom));
+  padding: 8px 24px calc(20px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
 }
 
 .formulario {

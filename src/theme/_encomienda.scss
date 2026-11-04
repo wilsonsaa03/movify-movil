@@ -6,7 +6,7 @@
 // ---------- Cielo con título (Encomienda 1 y 2) ----------
 .cielo {
   position: relative;
-  padding: calc(env(safe-area-inset-top) + 22px) 18px 86px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 22px) 18px 86px;
   background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 50%, #fe7b13 100%);
   overflow: hidden;
 
@@ -32,7 +32,7 @@
 .gaviotas {
   position: absolute;
   right: 22%;
-  top: calc(env(safe-area-inset-top) + 10px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 10px);
   width: 56px;
   height: 22px;
   fill: none;

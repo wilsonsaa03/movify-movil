@@ -49,6 +49,9 @@
         </section>
 
         <p class="direccion entra" style="--d: 40ms">{{ s.origen }}{{ s.origen_barrio ? ', ' + s.origen_barrio : '' }}</p>
+        <button type="button" class="navegar entra" style="--d: 50ms" (click)="navegar()">
+          <app-icono nombre="navegar" /> Navegar con {{ appNav() }}
+        </button>
 
         @if (requisitos().length) {
           <ul class="requisitos entra" style="--d: 60ms" aria-label="Lo que pidió el pasajero">

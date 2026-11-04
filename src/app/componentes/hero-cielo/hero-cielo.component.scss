@@ -9,16 +9,16 @@ $ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
 .cielo {
   position: relative;
-  height: calc(300px + env(safe-area-inset-top));
-  padding: calc(env(safe-area-inset-top) + 92px) 24px 0;
+  height: calc(300px + var(--safe-area-inset-top, env(safe-area-inset-top)));
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 92px) 24px 0;
   background: linear-gradient(180deg, #ffd36e 0%, #ffae3d 45%, #fe7b13 100%);
   overflow: hidden;
 }
 
 // Versión con barra de pasos (registro)
 .cielo.compacto {
-  height: calc(236px + env(safe-area-inset-top));
-  padding-top: calc(env(safe-area-inset-top) + 86px);
+  height: calc(236px + var(--safe-area-inset-top, env(safe-area-inset-top)));
+  padding-top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 86px);
 
   .texto {
     max-width: none;
@@ -28,7 +28,7 @@ $ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   }
   .sol {
     right: -60px;
-    top: calc(env(safe-area-inset-top) - 70px);
+    top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) - 70px);
     width: 200px;
     height: 200px;
   }
@@ -42,7 +42,7 @@ $ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   z-index: 3;
   left: 76px;
   right: 24px;
-  top: calc(env(safe-area-inset-top) + 24px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 24px);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -89,7 +89,7 @@ $ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   position: absolute;
   z-index: 3;
   left: 20px;
-  top: calc(env(safe-area-inset-top) + 20px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 20px);
   width: 44px;
   height: 44px;
   border: 0;
@@ -125,7 +125,7 @@ $ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 .sol {
   position: absolute;
   right: -10px;
-  top: calc(env(safe-area-inset-top) + 18px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 18px);
   width: 230px;
   height: 230px;
   border-radius: 50%;
@@ -137,7 +137,7 @@ $ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 .gaviotas {
   position: absolute;
   left: 42%;
-  top: calc(env(safe-area-inset-top) + 34px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 34px);
   width: 64px;
   height: 24px;
   fill: none;
@@ -177,7 +177,7 @@ $ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   position: absolute;
   z-index: 2;
   right: 28px;
-  top: calc(env(safe-area-inset-top) + 76px);
+  top: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 76px);
   width: 108px;
   height: 108px;
   border-radius: 50%;

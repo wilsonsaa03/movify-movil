@@ -1,7 +1,7 @@
 @use '../../../../../theme/encomienda' as *;
 
 .cielo {
-  padding: calc(env(safe-area-inset-top) + 34px) 24px 96px;
+  padding: calc(var(--safe-area-inset-top, env(safe-area-inset-top)) + 34px) 24px 96px;
   text-align: center;
 
   h1 {

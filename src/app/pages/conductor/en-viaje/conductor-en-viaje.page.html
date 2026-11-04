@@ -51,6 +51,10 @@
           </button>
         </section>
 
+        <button type="button" class="navegar entra" style="--d: 20ms" (click)="navegar()">
+          <app-icono nombre="navegar" /> Navegar con {{ appNav() }}
+        </button>
+
         @if (destinoCambiado()) {
           <p class="cambio entra" role="status">
             <app-icono nombre="pin" />

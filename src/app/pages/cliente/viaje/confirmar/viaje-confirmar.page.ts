@@ -14,6 +14,7 @@ interface Opcion {
   cupo: string;
   precio: number;
   recargo: number;
+  lluvia: number;
   llegada: number | null;
 }
 
@@ -84,6 +85,7 @@ export class ViajeConfirmarPage implements ViewDidEnter, ViewWillLeave, AfterVie
         cupo: o.tipo_vehiculo === 'moto' ? '1 pasajero' : 'Hasta 4',
         precio: o.valor_estimado,
         recargo: o.recargo_nocturno_pct,
+        lluvia: o.recargo_lluvia_pct,
         llegada: this.llegadas()[o.tipo_vehiculo],
       }));
   });

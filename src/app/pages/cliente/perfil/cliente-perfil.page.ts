@@ -12,6 +12,7 @@ import { BuscadorLugarComponent } from '../../../componentes/buscador-lugar/busc
 import { Lugar } from '../../../servicios/lugares.service';
 import { ContactoEmergencia, LugarGuardado, Perfil, PerfilService, claveDebil } from '../../../servicios/perfil.service';
 import { BARRA_CLIENTE } from '../inicio/cliente-inicio.page';
+import { CambiarCelularComponent } from '../../../componentes/cambiar-celular/cambiar-celular.component';
 
 /** Etiquetas rápidas para un lugar nuevo (las mismas sugerencias del inicio). */
 const ETIQUETAS = ['Casa', 'Trabajo', 'Donde mi mamá'];
@@ -28,7 +29,7 @@ const ETIQUETAS = ['Casa', 'Trabajo', 'Donde mi mamá'];
   selector: 'app-cliente-perfil',
   templateUrl: 'cliente-perfil.page.html',
   styleUrls: ['cliente-perfil.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent, BarraInferiorComponent, BuscadorLugarComponent],
+  imports: [IonContent, IonFooter, IconoComponent, BarraInferiorComponent, BuscadorLugarComponent, CambiarCelularComponent],
 })
 export class ClientePerfilPage implements ViewDidEnter {
   private readonly perfiles = inject(PerfilService);
@@ -43,6 +44,8 @@ export class ClientePerfilPage implements ViewDidEnter {
   readonly pesos = pesos;
 
   readonly perfil = signal<Perfil | null>(null);
+  /** Hoja "Cambiar mi celular" abierta. */
+  readonly cambiandoCelular = signal(false);
   readonly lugares = signal<LugarGuardado[]>([]);
   readonly contactos = signal<ContactoEmergencia[]>([]);
   readonly error = signal('');
@@ -310,6 +313,12 @@ export class ClientePerfilPage implements ViewDidEnter {
     if (!(await this.confirmar('¿Cerrar sesión?', 'Para volver a pedir servicios tendrás que entrar con tu celular y tu clave.', 'Cerrar sesión'))) return;
     this.sesion.cerrar();
     this.nav.navigateRoot('/inicio', { animationDirection: 'back' });
+  }
+
+  celularCambiado(): void {
+    this.cambiandoCelular.set(false);
+    this.avisar('Listo: tu celular quedó cambiado y verificado.');
+    this.cargar();
   }
 
   async eliminarCuenta(): Promise<void> {

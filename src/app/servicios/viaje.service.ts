@@ -16,11 +16,15 @@ export interface Cotizacion {
   duracion_min: number;
   /** De noche (21:00 a 5:00) corre el recargo nocturno de la tarifa. */
   nocturno: boolean;
+  /** El admin prendió el recargo por lluvia. */
+  lluvia: boolean;
   opciones: {
     tipo_vehiculo: TipoVehiculo;
     valor_estimado: number;
     /** % de recargo nocturno incluido en el precio (0 de día). */
     recargo_nocturno_pct: number;
+    /** % de recargo por lluvia incluido en el precio (0 si no llueve). */
+    recargo_lluvia_pct: number;
     /** Lo máximo que se puede ofrecer por este viaje. */
     valor_maximo: number;
   }[];
@@ -186,10 +190,12 @@ export class ViajeService {
       distancia_km: Number(c.distancia_km),
       duracion_min: Number(c.duracion_min),
       nocturno: !!c.nocturno,
+      lluvia: !!c.lluvia,
       opciones: c.opciones.map((op) => ({
         tipo_vehiculo: op.tipo_vehiculo,
         valor_estimado: Number(op.valor_estimado),
         recargo_nocturno_pct: Number(op.recargo_nocturno_pct) || 0,
+        recargo_lluvia_pct: Number(op.recargo_lluvia_pct) || 0,
         valor_maximo: Number(op.valor_maximo) || Number(op.valor_estimado) * 2,
       })),
     };

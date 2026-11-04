@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Azul MoviFY: fondo de la pantalla de carga (igual que la bienvenida de la app) -->
+    <color name="movify_azul">#03274D</color>
+</resources>

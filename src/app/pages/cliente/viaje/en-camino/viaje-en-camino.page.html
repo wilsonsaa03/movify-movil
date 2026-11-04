@@ -46,13 +46,31 @@
               @if (calificacion(); as c) {
                 <span class="estrellas"><app-icono nombre="estrella" /> {{ c }}</span>
               }
-              <span class="verificada"><app-icono nombre="check" /> Verificado</span>
+              @if (s.conductor_verificado !== false) {
+                <span class="verificada"><app-icono nombre="escudo" /> Verificado por MoviFY</span>
+              }
             </span>
           </span>
           @if (s.conductor_placa) {
             <span class="placa"><b>{{ s.conductor_placa }}</b></span>
           }
         </section>
+
+        <!-- Cómo se presenta y lo que más le elogian (como el perfil de Uber) -->
+        @if (s.conductor_sobre_mi || elogios().length) {
+          <section class="presentacion entra" style="--d: 20ms" aria-label="Sobre tu conductor">
+            @if (s.conductor_sobre_mi) {
+              <p>“{{ s.conductor_sobre_mi }}”</p>
+            }
+            @if (elogios().length) {
+              <ul class="elogios" aria-label="Lo que más le elogian">
+                @for (e of elogios(); track e) {
+                  <li><app-icono nombre="estrella" /> {{ e }}</li>
+                }
+              </ul>
+            }
+          </section>
+        }
 
         @if (modelo() || foto()) {
           <section class="vehiculo entra" style="--d: 30ms" aria-label="Tu vehículo">

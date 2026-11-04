@@ -48,11 +48,11 @@ describe('ViajeActivoService', () => {
     await p;
   });
 
-  it('califica con estrellas y comentario', async () => {
-    const p = viajes.calificar(7, 5, 'Muy amable, Pagó completo');
+  it('califica con estrellas, comentario y los elogios aparte', async () => {
+    const p = viajes.calificar(7, 5, 'Puntual', ['Muy amable', 'Pagó completo']);
     await esperar();
     const req = http.expectOne(API + '/servicios/7/calificar');
-    expect(req.request.body).toEqual({ puntuacion: 5, comentario: 'Muy amable, Pagó completo' });
+    expect(req.request.body).toEqual({ puntuacion: 5, comentario: 'Puntual', elogios: ['Muy amable', 'Pagó completo'] });
     req.flush({ message: 'ok' });
     await p;
   });

@@ -36,7 +36,7 @@ export interface ItemBarra {
     :host { display: block; }
     .barra {
       display: flex; justify-content: space-around;
-      padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      padding: 8px 8px calc(8px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
       background: #ffffff; border-top: 1.5px solid #e4ebf2;
     }
     .item {

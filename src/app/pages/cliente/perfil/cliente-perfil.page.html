@@ -23,6 +23,7 @@
         <p class="entra" style="--d: 80ms">
           +57 {{ celular() }}
           @if (p.telefono_verificado) { <span class="verificado"><app-icono nombre="check" /> Verificado</span> }
+          <button type="button" class="cambiar-celular" (click)="cambiandoCelular.set(true)">Cambiar</button>
         </p>
       }
       <div class="olas" aria-hidden="true">
@@ -231,4 +232,8 @@
 
 @if (buscandoLugar()) {
   <app-buscador-lugar tipo="destino" titulo="¿Qué lugar guardas?" [conGps]="true" (elegido)="lugarElegido($event)" (cerrar)="buscandoLugar.set(false)" />
+}
+
+@if (cambiandoCelular()) {
+  <app-cambiar-celular (cerrar)="cambiandoCelular.set(false)" (cambiado)="celularCambiado()" />
 }

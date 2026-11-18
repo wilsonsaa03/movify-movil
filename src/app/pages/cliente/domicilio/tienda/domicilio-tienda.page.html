@@ -1,0 +1,116 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver" (click)="volver()"><app-icono nombre="atras" /></button>
+        <h1>{{ tienda()?.nombre ?? 'Tienda' }}</h1>
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo" #lista>
+      @if (tienda(); as t) {
+        <!-- Encabezado de la tienda -->
+        <section class="tarjeta-arriba entra" aria-label="Datos del comercio">
+          <div class="cabeza">
+            @if (urlFoto(t.foto_url); as f) {
+              <img class="logo" [src]="f" alt="" />
+            } @else {
+              <span class="logo letra" aria-hidden="true">{{ t.nombre.charAt(0) }}</span>
+            }
+            <span class="textos">
+              <b>{{ t.nombre }}</b>
+              <small>{{ t.direccion }}{{ t.barrio ? ' · ' + t.barrio : '' }}</small>
+            </span>
+          </div>
+          <div class="datos">
+            @if (t.abierto) {
+              <span class="estado abierto">Abierto · cierra {{ horaBonita(t.cierra) }}</span>
+            } @else {
+              <span class="estado cerrado">Cerrado · abre a las {{ horaBonita(t.abre) }}</span>
+            }
+            <span><app-icono nombre="reloj" /> Prepara en {{ t.minutos_preparacion }} min</span>
+            @if (t.pedido_minimo > 0) { <span><app-icono nombre="dinero" /> Mín. {{ pesos(t.pedido_minimo) }}</span> }
+          </div>
+          @if (t.tiene_mayores) {
+            <p class="aviso-18"><i class="mayores">+18</i> Algunos productos son solo para mayores de edad. El domiciliario te pedirá la cédula.</p>
+          }
+          @if (!t.entrega_aqui) {
+            <p class="error">Este comercio no entrega en tu dirección. Cámbiala en el inicio de Domicilios.</p>
+          }
+          <label class="buscar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
+            <span class="sr-only">Buscar en {{ t.nombre }}</span>
+            <input type="search" [placeholder]="'Buscar en ' + t.nombre" [value]="texto()" (input)="texto.set($any($event.target).value)" />
+          </label>
+        </section>
+
+        <!-- Secciones -->
+        @if (t.secciones.length > 1 && !texto().trim()) {
+          <nav class="categorias entra" style="--d: 40ms" aria-label="Secciones">
+            @for (s of t.secciones; track s.nombre) {
+              <button type="button" class="categoria" (click)="irA(s.nombre)">{{ s.nombre }}</button>
+            }
+          </nav>
+        }
+
+        @for (s of secciones(); track s.nombre) {
+          <section class="seccion" [attr.data-seccion]="s.nombre">
+            <h2 class="subtitulo">{{ s.nombre }}</h2>
+            <ul class="productos">
+              @for (p of s.productos; track p.id) {
+                <li>
+                  <button type="button" class="producto" [class.agotado]="!p.disponible" (click)="abrir(p)"
+                          [attr.aria-label]="p.nombre + ', ' + pesos(p.precio) + (p.disponible ? '' : ', agotado')">
+                    <span class="textos">
+                      <b>{{ p.nombre }} @if (p.solo_mayores) { <i class="mayores">+18</i> }</b>
+                      @if (p.descripcion) { <small>{{ p.descripcion }}</small> }
+                      <span class="precio">
+                        {{ pesos(p.precio) }}
+                        @if (!p.disponible) { <em>Agotado</em> }
+                        @else if (p.grupos.length) { <em class="opciones">Personalizable</em> }
+                      </span>
+                    </span>
+                    <span class="lado">
+                      @if (urlFoto(p.foto_url); as f) { <img [src]="f" alt="" loading="lazy" /> }
+                      @if (enCarrito().get(p.id); as n) {
+                        <span class="contador" aria-hidden="true">{{ n }}</span>
+                      } @else if (p.disponible) {
+                        <span class="mas" aria-hidden="true">+</span>
+                      }
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        } @empty {
+          <p class="vacio-lista">No encontramos "{{ texto().trim() }}" en {{ t.nombre }}.</p>
+        }
+      } @else if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      } @else {
+        <div class="esqueleto" aria-label="Cargando la tienda"></div>
+        <div class="esqueleto" aria-hidden="true"></div>
+        <div class="esqueleto" aria-hidden="true"></div>
+      }
+    </main>
+  </div>
+</ion-content>
+
+@if (cat.carrito()) {
+  <ion-footer class="ion-no-border">
+    <div class="pie">
+      <app-barra-carrito />
+    </div>
+  </ion-footer>
+}
+
+@if (abierta(); as p) {
+  <app-ficha-producto [producto]="p" [abierto]="!!tienda()?.abierto && !!tienda()?.entrega_aqui" (agregar)="agregar(p, $event)" (cerrar)="abierta.set(null)" />
+}

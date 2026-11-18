@@ -8,6 +8,7 @@
       [parada]="!porRecoger() && !paradaHecha() ? parada() : null"
       [encuadrar]="true"
       [margenInferior]="altoHoja()"
+      [simulacion]="sim.recorrido()"
     />
 
     <!-- LLEVANDO A ANA · Muelle turístico · 8 min · 2,9 km -->
@@ -31,6 +32,9 @@
     <main class="hoja" #hoja>
       <span class="asa" aria-hidden="true"></span>
 
+      <!-- Viaje simulado: iniciar, pausar, reiniciar, llegar ya y velocidad -->
+      <app-controles-simulacion [sim]="sim" />
+
       @if (v(); as s) {
         <section class="persona entra">
           <span class="avatar" aria-hidden="true">{{ inicial() }}</span>
@@ -45,6 +49,10 @@
               }
             </span>
           </span>
+          <!-- Número protegido: MoviFY te llama y te comunica con el pasajero -->
+          <button type="button" class="redondo" [disabled]="llamada.llamando()" aria-label="Llamar al pasajero sin mostrar tu número" (click)="llamar()">
+            <app-icono nombre="telefono" />
+          </button>
           <button type="button" class="redondo" aria-label="Abrir el chat con el pasajero" (click)="chat()">
             <app-icono nombre="mensaje" />
             @if (sinLeer()) { <i class="globo">{{ sinLeer() }}</i> }
@@ -68,6 +76,13 @@
           </p>
         }
 
+        <!-- Licor u otro producto +18: se entrega solo a un adulto -->
+        @if (s.solo_mayores) {
+          <p class="cambio entra" role="status"><app-icono nombre="alerta" /> Lleva productos +18: pide la cédula y entrégalo solo a un mayor de edad.</p>
+        }
+        @if (s.descuento && s.descuento > 0) {
+          <p class="pedido entra"><app-icono nombre="dinero" /> Cupón {{ s.cupon_codigo }}: el cliente paga {{ pesos(s.descuento) }} menos (lo asume MoviFY).</p>
+        }
         @if (tipo() !== 'transporte' && s.descripcion) {
           <p class="pedido entra" style="--d: 30ms"><app-icono [nombre]="tipo() === 'encomienda' ? 'encomienda' : 'domicilio'" /> {{ s.descripcion }}</p>
         }
@@ -91,8 +106,20 @@
           </label>
         }
 
+        <!-- Domicilio: la foto de la entrega es obligatoria para finalizar -->
+        @if (tipo() === 'domicilio' && !porRecoger()) {
+          <app-foto-entrega [servicioId]="id" (subida)="fotoLista.set(true); error.set('')" />
+        }
+
+        @if (s.metodo_pago && s.metodo_pago !== 'efectivo') {
+          <p class="pedido entra" style="--d: 60ms">
+            <app-icono nombre="check" />
+            Paga con {{ nombreMetodo(s.metodo_pago) }} en la app{{ s.pago?.estado === 'aprobado' ? ': ya pagó' : '' }}
+          </p>
+        }
+
         <div class="valor entra" style="--d: 70ms">
-          <span>{{ compra() && !porRecoger() ? 'Cobra en efectivo' : 'Valor del viaje' }}</span>
+          <span>{{ compra() && !porRecoger() ? (s.metodo_pago && s.metodo_pago !== 'efectivo' ? 'Total a pagar' : 'Cobra en efectivo') : 'Valor del viaje' }}</span>
           <span class="precio">{{ pesos(compra() && !porRecoger() ? cobrar() : s.tarifa) }}</span>
         </div>
       } @else {

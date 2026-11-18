@@ -5,6 +5,8 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ErrorApi } from '../../../../core/api.service';
 import { pesos } from '../../../../core/formato';
 import { IconoComponent } from '../../../../componentes/icono/icono.component';
+import { PagoServicioComponent } from '../../../../componentes/pago-servicio/pago-servicio.component';
+import { VerFotoEntregaComponent } from '../../../../componentes/foto-entrega/ver-foto-entrega.component';
 import { DatosPaquete, DetalleEnvio, EncomiendaService, PasoHistorial, hora, nombrePaquete } from '../../../../servicios/encomienda.service';
 
 /**
@@ -15,7 +17,7 @@ import { DatosPaquete, DetalleEnvio, EncomiendaService, PasoHistorial, hora, nom
   selector: 'app-encomienda-entregada',
   templateUrl: 'encomienda-entregada.page.html',
   styleUrls: ['encomienda-entregada.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent],
+  imports: [IonContent, IonFooter, IconoComponent, PagoServicioComponent, VerFotoEntregaComponent],
 })
 export class EncomiendaEntregadaPage implements ViewDidEnter {
   private readonly nav = inject(NavController);
@@ -30,7 +32,7 @@ export class EncomiendaEntregadaPage implements ViewDidEnter {
   readonly calificado = signal(false);
   readonly error = signal('');
   readonly pesos = pesos;
-  private id = 0;
+  id = 0;
 
   readonly titulo = computed(() => {
     const p = this.paquete();

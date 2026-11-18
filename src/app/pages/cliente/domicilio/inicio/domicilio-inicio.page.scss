@@ -1,0 +1,153 @@
+@use '../../../../../theme/domicilio-catalogo' as *;
+
+.libre {
+  min-height: 76px;
+  padding: 12px 14px;
+  border: 2px dashed #f5c8a3;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff8f1;
+  text-align: left;
+  font-family: inherit;
+  color: $navy;
+  cursor: pointer;
+
+  .textos {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  b {
+    font-size: 16px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $gris;
+    line-height: 1.35;
+  }
+  .flecha {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: $orange;
+  }
+  &:active {
+    transform: scale(0.99);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+}
+
+.comercios {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comercio {
+  width: 100%;
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 2px solid #e4ebf2;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  text-align: left;
+  font-family: inherit;
+  color: $navy;
+  cursor: pointer;
+  transition: transform 120ms $ease-out, border-color 150ms ease;
+
+  &:active {
+    transform: scale(0.99);
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  .logo {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    object-fit: cover;
+    background: #eef3f8;
+  }
+  .letra {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(160deg, #ffd36e, #fe7b13);
+    color: #ffffff;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+  }
+  .textos {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  b {
+    font-size: 16px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 13px;
+    font-weight: 700;
+    color: $gris;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .datos {
+    margin-top: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: 12.5px;
+    font-weight: 800;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    app-icono {
+      width: 14px;
+      height: 14px;
+      color: $teal-d;
+    }
+  }
+
+  // Cerrado: en gris con "abre a las…"
+  &.cerrado {
+    background: #f6f8fa;
+    border-color: #eef2f6;
+
+    .logo {
+      filter: grayscale(1);
+      opacity: 0.6;
+    }
+    b {
+      color: #6d7d90;
+    }
+    .abre {
+      color: #b42333;
+    }
+  }
+}

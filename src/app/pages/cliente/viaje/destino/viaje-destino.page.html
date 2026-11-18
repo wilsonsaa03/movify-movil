@@ -169,6 +169,13 @@
           <p class="aviso">{{ errorNota() }}</p>
         }
       </section>
+
+      <!-- Medio de pago: se elige aquí y al terminar el viaje se cobra por ese medio -->
+      @if (!cambiarId) {
+        <section class="pago-viaje">
+          <app-forma-pago />
+        </section>
+      }
     </main>
   </div>
 </ion-content>

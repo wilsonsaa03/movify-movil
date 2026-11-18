@@ -329,15 +329,59 @@
 }
 
 // Forma de pago
+.pagos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .pago {
+  width: 100%;
   min-height: 60px;
   padding: 8px 12px;
-  border: 2px solid $navy;
+  border: 2px solid #dfe6ee;
   border-radius: 16px;
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f7f9fc;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &.elegido {
+    border-color: $navy;
+    background: #f7f9fc;
+  }
+  &:focus-visible {
+    outline: 3px solid $teal;
+    outline-offset: 2px;
+  }
+  .disco span {
+    font-weight: 900;
+    font-size: 16px;
+  }
+  .disco.nequi {
+    background: #f3e6f3;
+    color: #200020;
+  }
+  .disco.daviplata {
+    background: #fde3e5;
+    color: #c4000f;
+  }
+  .disco.tarjeta {
+    background: #e3ecfb;
+    color: #1f4fa6;
+  }
+  .disco.pse {
+    background: #e0f0fb;
+    color: #0b5c99;
+  }
+  .disco.bancolombia {
+    background: #fff4c2;
+    color: #2c2a29;
+  }
 
   .marcado {
     width: 22px;

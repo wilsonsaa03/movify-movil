@@ -5,6 +5,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ApiService, ErrorApi } from '../../../core/api.service';
 import { pesos } from '../../../core/formato';
 import { IconoComponent } from '../../../componentes/icono/icono.component';
+import { PagoServicioComponent } from '../../../componentes/pago-servicio/pago-servicio.component';
 import { hora } from '../../../servicios/encomienda.service';
 import { ViajeActivo, ViajeActivoService, iniciales, primerNombre } from '../../../servicios/viaje-activo.service';
 
@@ -24,7 +25,7 @@ const ETIQUETAS: Record<Rol, string[]> = {
   selector: 'app-viaje-calificar',
   templateUrl: 'viaje-calificar.page.html',
   styleUrls: ['viaje-calificar.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent],
+  imports: [IonContent, IonFooter, IconoComponent, PagoServicioComponent],
 })
 export class ViajeCalificarPage implements ViewDidEnter {
   private readonly nav = inject(NavController);
@@ -45,7 +46,7 @@ export class ViajeCalificarPage implements ViewDidEnter {
   readonly favorito = signal(false);
   readonly bloquear = signal(false);
   readonly pesos = pesos;
-  private id = 0;
+  id = 0;
 
   readonly ofrecerFavorito = computed(() => this.rol === 'cliente' && this.estrellas() >= 4 && !this.v()?.es_favorito);
   /** Con 1–2 estrellas, cualquiera de los dos puede desvincular al otro (como DiDi). */

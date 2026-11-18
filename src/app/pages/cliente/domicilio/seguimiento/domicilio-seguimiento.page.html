@@ -7,6 +7,7 @@
       [destino]="meta()"
       [encuadrar]="true"
       [margenInferior]="altoHoja()"
+      [simulacion]="sim.recorrido()"
     />
 
     <!-- Tarjeta de arriba: fase, hora de llegada y los 4 pasos -->
@@ -56,12 +57,13 @@
         <p class="nota entra" style="--d: 60ms"><app-icono nombre="domicilio" /> {{ nota() }}</p>
 
         <nav class="acciones entra" style="--d: 100ms" aria-label="Acciones">
-          <a class="accion" [href]="telefono() ? 'tel:' + telefono() : null" [attr.aria-disabled]="!telefono()">
+          <!-- Número protegido: MoviFY te llama y te comunica con el conductor -->
+          <button type="button" class="accion" [disabled]="llamada.llamando()" (click)="llamar()">
             <span class="disco"><app-icono nombre="telefono" /></span>Llamar
-          </a>
-          <a class="accion" [href]="telefono() ? 'sms:' + telefono() : null" [attr.aria-disabled]="!telefono()">
+          </button>
+          <button type="button" class="accion" (click)="chat()">
             <span class="disco"><app-icono nombre="mensaje" /></span>Mensaje
-          </a>
+          </button>
           <button type="button" class="accion" (click)="compartir()">
             <span class="disco"><app-icono nombre="compartir" /></span>Compartir
           </button>

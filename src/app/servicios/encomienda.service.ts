@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { ApiService } from '../core/api.service';
+import { PagosService } from './pagos.service';
 import { SesionService } from '../core/sesion.service';
 import { Lugar } from './lugares.service';
 import { TipoVehiculo } from './viaje.service';
@@ -62,6 +63,9 @@ export interface DetalleEnvio {
   conductor_color: string | null;
   conductor_lat: number | null;
   conductor_lng: number | null;
+  // V22
+  metodo_pago?: 'efectivo' | 'nequi' | 'daviplata' | 'tarjeta' | 'pse' | 'bancolombia' | null;
+  foto_entrega_id?: number | null;
 }
 
 /** GET /api/servicios/{id}/encomienda */
@@ -89,6 +93,7 @@ export interface PasoHistorial {
 @Injectable({ providedIn: 'root' })
 export class EncomiendaService {
   private readonly api = inject(ApiService);
+  private readonly pagos = inject(PagosService);
   private readonly sesion = inject(SesionService);
 
   // Encomienda 1 · Destino
@@ -142,7 +147,8 @@ export class EncomiendaService {
     const s = await this.api.post<EncomiendaCreada>('/servicios', {
       tipo: 'encomienda',
       tipo_vehiculo: t.vehiculo,
-      metodo_pago: 'efectivo',
+      // Si paga quien recibe, es en efectivo (el backend lo exige)
+      metodo_pago: this.pagaDestinatario() ? 'efectivo' : this.pagos.preferida(),
       origen_lat: o.lat,
       origen_lng: o.lng,
       origen: o.detalle ?? o.nombre,

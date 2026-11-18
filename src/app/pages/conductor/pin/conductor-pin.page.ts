@@ -5,6 +5,7 @@ import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { ErrorApi } from '../../../core/api.service';
 import { IconoComponent } from '../../../componentes/icono/icono.component';
 import { TecladoNumericoComponent } from '../../../componentes/teclado-numerico/teclado-numerico.component';
+import { FotoEntregaComponent } from '../../../componentes/foto-entrega/foto-entrega.component';
 import { ViajeActivo, ViajeActivoService, primerNombre } from '../../../servicios/viaje-activo.service';
 
 /**
@@ -17,7 +18,7 @@ import { ViajeActivo, ViajeActivoService, primerNombre } from '../../../servicio
   selector: 'app-conductor-pin',
   templateUrl: 'conductor-pin.page.html',
   styleUrls: ['conductor-pin.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent, TecladoNumericoComponent],
+  imports: [IonContent, IonFooter, IconoComponent, TecladoNumericoComponent, FotoEntregaComponent],
 })
 export class ConductorPinPage implements ViewDidEnter, ViewWillLeave {
   private readonly nav = inject(NavController);
@@ -30,7 +31,9 @@ export class ConductorPinPage implements ViewDidEnter, ViewWillLeave {
   readonly enviando = signal(false);
   readonly error = signal('');
   readonly entrega = signal(false);
-  private id = 0;
+  /** Encomienda: ya subió la foto de la entrega. */
+  readonly fotoLista = signal(false);
+  id = 0;
 
   readonly ahora = signal(Date.now());
   readonly cancelando = signal(false);
@@ -70,7 +73,13 @@ export class ConductorPinPage implements ViewDidEnter, ViewWillLeave {
       return;
     }
     this.viajes.empezarReporte();
-    this.viajes.detalle(this.id).then((v) => this.v.set(v)).catch(() => undefined);
+    this.viajes
+      .detalle(this.id)
+      .then((v) => {
+        this.v.set(v);
+        if (v.foto_entrega_id) this.fotoLista.set(true);
+      })
+      .catch(() => undefined);
     clearInterval(this.reloj);
     this.reloj = setInterval(() => this.ahora.set(Date.now()), 1000);
   }
@@ -129,6 +138,10 @@ export class ConductorPinPage implements ViewDidEnter, ViewWillLeave {
 
   async confirmar(): Promise<void> {
     if (!this.completo() || this.enviando()) return;
+    if (this.entrega() && !this.fotoLista()) {
+      this.error.set('Toma la foto de la entrega antes de entregar.');
+      return;
+    }
     this.enviando.set(true);
     try {
       if (this.entrega()) {

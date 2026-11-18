@@ -3,6 +3,7 @@ import { AlertController, IonContent, IonFooter, NavController, ToastController,
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ErrorApi } from '../../../../core/api.service';
 import { IconoComponent } from '../../../../componentes/icono/icono.component';
+import { FormaPagoComponent } from '../../../../componentes/forma-pago/forma-pago.component';
 import { MapaCiudadComponent, PuntoMapa } from '../../../../componentes/mapa-ciudad/mapa-ciudad.component';
 import { LugaresService } from '../../../../servicios/lugares.service';
 import { TipoVehiculo, VehiculoCercano, ViajeService } from '../../../../servicios/viaje.service';
@@ -35,7 +36,7 @@ const MAX_PROGRAMAR_DIAS = 7;
   selector: 'app-viaje-confirmar',
   templateUrl: 'viaje-confirmar.page.html',
   styleUrls: ['viaje-confirmar.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent],
+  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent, FormaPagoComponent],
 })
 export class ViajeConfirmarPage implements ViewDidEnter, ViewWillLeave, AfterViewInit, OnDestroy {
   private readonly nav = inject(NavController);

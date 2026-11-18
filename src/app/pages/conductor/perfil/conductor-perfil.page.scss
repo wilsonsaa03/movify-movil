@@ -1065,3 +1065,21 @@ dd {
   display: block; margin: 14px auto 0; padding: 8px 14px; border: 0; background: none;
   font: inherit; font-size: 14px; font-weight: 700; color: #b42318; text-decoration: underline;
 }
+
+// Con mouse (PC) la fila que se desliza de lado muestra una barra delgada para poder moverla; en el celular sigue
+// sin barra (se desliza con el dedo).
+@media (pointer: fine) {
+  .comentarios {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(3, 39, 77, 0.35) transparent;
+
+    &::-webkit-scrollbar {
+      display: block;
+      height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      border-radius: 3px;
+      background: rgba(3, 39, 77, 0.35);
+    }
+  }
+}

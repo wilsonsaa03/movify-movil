@@ -9,18 +9,15 @@
     margin: 0 0 14px;
   }
 }
-// Todos / Viajes / Domicilios / Encomiendas
+// Todos / Viajes / Domicilios / Encomiendas: siempre se ven las cuatro (si no caben en una línea, bajan a la
+// siguiente). Antes se deslizaban de lado, pero sin barra visible "Encomiendas" quedaba cortada y en el PC no se movía.
 .filtros {
   position: relative;
   z-index: 1;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
   button {
     flex-shrink: 0;
     min-height: 40px;

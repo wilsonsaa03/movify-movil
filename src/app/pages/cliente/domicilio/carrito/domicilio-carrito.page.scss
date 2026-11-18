@@ -1,0 +1,253 @@
+@use '../../../../../theme/domicilio-catalogo' as *;
+
+.enlace {
+  border: 0;
+  background: none;
+  padding: 6px 2px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  color: $teal-d;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.comercio-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .textos {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  small {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $gris;
+  }
+  b {
+    font-size: 16px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.lineas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.linea {
+  padding: 12px 0;
+  border-top: 1px solid #eef2f6;
+  display: flex;
+  gap: 10px;
+
+  .info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  b {
+    font-size: 15px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $gris;
+  }
+  .nota {
+    font-style: italic;
+  }
+  .problema {
+    color: #b42333;
+    font-weight: 800;
+  }
+  .derecha {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .precio {
+    font-size: 15px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+  &.con-problema b {
+    color: #b42333;
+  }
+}
+
+.instrucciones {
+  margin-top: 8px;
+  min-height: 72px;
+}
+
+.fila-cupon {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+
+  .entrada {
+    text-transform: uppercase;
+  }
+}
+.aplicar {
+  min-width: 96px;
+  border: 0;
+  border-radius: 16px;
+  background: $navy;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+  }
+}
+.cupon-ok {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #e1f5e6;
+  color: #1d6b34;
+  font-size: 13.5px;
+  font-weight: 700;
+
+  app-icono {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  span {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.casilla {
+  position: relative;
+  font-size: 14px;
+  line-height: 1.35;
+
+  &.invalida {
+    border-color: #e5484d;
+    background: #fff5f5;
+  }
+}
+
+.desglose {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f6f9fc;
+
+  dl {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14.5px;
+    font-weight: 700;
+  }
+  dt,
+  dd {
+    margin: 0;
+  }
+  dd {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+  }
+  .descuento {
+    color: #1d6b34;
+  }
+  .total {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 2px dashed #d5dee8;
+    font-size: 16px;
+    font-weight: 900;
+
+    .precio {
+      font-family: 'Baloo 2', system-ui, sans-serif;
+      font-size: 22px;
+    }
+  }
+  .llega {
+    margin: 10px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 800;
+    color: $teal-d;
+
+    app-icono {
+      width: 16px;
+      height: 16px;
+    }
+  }
+  .esqueleto {
+    height: 110px;
+  }
+}
+
+.errores {
+  margin: 0;
+  padding: 12px 14px 12px 30px;
+  border-radius: 14px;
+  background: #fff5f5;
+  color: #b42333;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.vacio-carrito {
+  margin-top: -40px;
+  padding: 28px 18px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  text-align: center;
+  box-shadow: 0 14px 30px rgba($navy, 0.1);
+
+  b {
+    font-size: 18px;
+    font-weight: 800;
+  }
+  small {
+    font-size: 14px;
+    font-weight: 700;
+    color: $gris;
+    margin-bottom: 8px;
+  }
+  .grande {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+  }
+}

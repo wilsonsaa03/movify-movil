@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from '../core/api.service';
+import { PagosService } from './pagos.service';
 import { Lugar, distanciaKm } from './lugares.service';
 
 export type TipoVehiculo = 'moto' | 'taxi';
@@ -147,6 +148,7 @@ const MIN_POR_KM = 3;
 @Injectable({ providedIn: 'root' })
 export class ViajeService {
   private readonly api = inject(ApiService);
+  private readonly pagos = inject(PagosService);
 
   readonly tipo = signal<TipoVehiculo>('moto');
   readonly origen = signal<Lugar | null>(null);
@@ -246,7 +248,7 @@ export class ViajeService {
     return {
       tipo: 'transporte',
       tipo_vehiculo: tipo,
-      metodo_pago: 'efectivo',
+      metodo_pago: this.pagos.preferida(),
       pasajeros: tipo === 'taxi' ? this.pasajeros() : 1,
       necesita_casco: tipo === 'moto' && this.casco(),
       lleva_equipaje: tipo === 'taxi' && this.equipaje(),

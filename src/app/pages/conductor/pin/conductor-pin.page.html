@@ -13,6 +13,10 @@
     </header>
 
     <main class="cuerpo">
+      <!-- Encomienda: la foto de la entrega es obligatoria para finalizar -->
+      @if (entrega()) {
+        <app-foto-entrega class="foto" [servicioId]="id" (subida)="fotoLista.set(true); error.set('')" />
+      }
       <div class="casillas" [class.mal]="!!error()" role="group" [attr.aria-label]="'PIN: ' + pin().length + ' de 4 dígitos'">
         @for (c of casillas(); track $index) {
           <span class="casilla" [class.llena]="!!c" [class.actual]="$index === pin().length">{{ c }}</span>
@@ -21,6 +25,8 @@
       <p class="estado" aria-live="polite">
         @if (error()) {
           <span class="mal"><app-icono nombre="x" /> {{ error() }}</span>
+        } @else if (completo() && entrega() && !fotoLista()) {
+          <span>Falta la foto de la entrega</span>
         } @else if (completo()) {
           <span class="ok"><app-icono nombre="check" /> Listo, toca {{ entrega() ? '"Entregar"' : '"Iniciar viaje"' }}</span>
         } @else {
@@ -47,7 +53,7 @@
 
 <ion-footer class="ion-no-border">
   <div class="pie">
-    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!completo() || enviando()" (click)="confirmar()">
+    <button type="button" class="mv-boton mv-boton--naranja" [disabled]="!completo() || enviando() || (entrega() && !fotoLista())" (click)="confirmar()">
       @if (enviando()) {
         <span class="cargando" aria-hidden="true"></span> Revisando…
       } @else {

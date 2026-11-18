@@ -63,7 +63,17 @@
     <main class="hoja">
       <span class="asa" aria-hidden="true"></span>
 
-      @if (aviso()) {
+      <!-- Selfie antes de conectarse: confirma que quien maneja es el dueño de la cuenta -->
+      @if (pideSelfie()) {
+        <div class="aviso aviso-gps" role="alert">
+          <span>{{ selfieTexto() }}</span>
+          <button type="button" class="aviso-gps-btn" [disabled]="subiendoSelfie()" (click)="selfieInput.click()">
+            {{ subiendoSelfie() ? 'Subiendo…' : 'Tomarme la selfie' }}
+          </button>
+        </div>
+      }
+      <input #selfieInput type="file" accept="image/*" capture="user" hidden (change)="selfieElegida($event)" />
+      @if (aviso() && !pideSelfie()) {
         <p class="aviso" role="alert">{{ aviso() }}</p>
       }
       @if (enLinea() && sinPermisoGps()) {

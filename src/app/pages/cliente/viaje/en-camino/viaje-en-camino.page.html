@@ -8,6 +8,7 @@
       [parada]="enViaje() && !paradaHecha() ? parada() : null"
       [encuadrar]="true"
       [margenInferior]="altoHoja()"
+      [simulacion]="sim.recorrido()"
     />
 
     @if (enViaje()) {
@@ -121,9 +122,10 @@
             </span>
             Mensaje
           </button>
-          <a class="accion" [href]="telefono() ? 'tel:' + telefono() : null" [attr.aria-disabled]="!telefono()">
+          <!-- Número protegido: MoviFY te llama y te comunica con el conductor -->
+          <button type="button" class="accion" [disabled]="llamada.llamando()" (click)="llamar()">
             <span class="disco"><app-icono nombre="telefono" /></span>Llamar
-          </a>
+          </button>
           <button type="button" class="accion" [disabled]="compartiendo()" (click)="compartir()">
             <span class="disco"><app-icono nombre="compartir" /></span>Compartir
           </button>

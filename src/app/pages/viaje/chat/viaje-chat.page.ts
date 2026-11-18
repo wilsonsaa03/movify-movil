@@ -5,7 +5,9 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ErrorApi } from '../../../core/api.service';
 import { IconoComponent } from '../../../componentes/icono/icono.component';
 import { hora } from '../../../servicios/encomienda.service';
-import { Mensaje, ViajeActivo, ViajeActivoService, iniciales, primerNombre, telefonoLimpio } from '../../../servicios/viaje-activo.service';
+import { Mensaje, ViajeActivo, ViajeActivoService, iniciales, primerNombre } from '../../../servicios/viaje-activo.service';
+import { TiempoRealService } from '../../../core/tiempo-real.service';
+import { LlamadaService } from '../../../servicios/llamada.service';
 
 type Rol = 'conductor' | 'cliente';
 
@@ -48,6 +50,10 @@ export class ViajeChatPage implements ViewDidEnter, ViewWillLeave {
   readonly error = signal('');
   private id = 0;
   private sondeo?: ReturnType<typeof setInterval>;
+  private vueltas = 0;
+  private dejarDeSeguir: () => void = () => undefined;
+  private readonly tiempoReal = inject(TiempoRealService);
+  readonly llamada = inject(LlamadaService);
 
   /** Con quién se habla. Si el viaje es para otra persona, el conductor ve el nombre de quien viaja. */
   readonly otro = computed(() => {
@@ -64,7 +70,6 @@ export class ViajeChatPage implements ViewDidEnter, ViewWillLeave {
     return v.origen;
   });
   readonly activo = computed(() => ['asignado', 'en_origen', 'en_curso'].includes(this.v()?.estado_codigo ?? 'asignado'));
-  readonly telefono = computed(() => telefonoLimpio(this.rol === 'cliente' ? this.v()?.conductor_telefono : this.v()?.usuario_telefono));
   readonly puedeEnviar = computed(() => !!this.texto().trim() && !this.enviando() && this.activo());
   readonly hora = hora;
 
@@ -76,11 +81,23 @@ export class ViajeChatPage implements ViewDidEnter, ViewWillLeave {
     }
     this.viajes.detalle(this.id).then((v) => this.v.set(v)).catch(() => undefined);
     this.cargar(true);
-    this.sondeo = setInterval(() => this.cargar(false), CADA_MS);
+    // Los mensajes llegan al instante por WebSocket; el sondeo queda de respaldo (más lento si hay conexión)
+    this.dejarDeSeguir = this.tiempoReal.seguir(this.id, (e) => {
+      if (e.tipo === 'mensaje') this.cargar(false);
+      if (e.tipo === 'estado') this.viajes.detalle(this.id).then((v) => this.v.set(v)).catch(() => undefined);
+    });
+    this.sondeo = setInterval(() => {
+      if (!this.tiempoReal.conectado() || ++this.vueltas % 5 === 0) this.cargar(false);
+    }, CADA_MS);
   }
 
   ionViewWillLeave(): void {
     clearInterval(this.sondeo);
+    this.dejarDeSeguir();
+  }
+
+  llamar(): void {
+    if (!this.llamada.llamando()) this.llamada.llamar(this.id);
   }
 
   volver(): void {

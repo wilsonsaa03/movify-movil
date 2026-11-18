@@ -39,12 +39,15 @@
         </dl>
       }
 
+      <!-- Efectivo, Nequi o Daviplata -->
+      <app-forma-pago class="entra" style="--d: 150ms" />
+
       <p class="info entra" style="--d: 160ms">
         <app-icono nombre="dinero" />
         @if (pedido.pagaDomiciliario()) {
           El domiciliario te mostrará la factura. Pagas lo que diga la factura más el domicilio.
         } @else {
-          El pedido ya está pago: solo pagas el domicilio, en efectivo, al recibir.
+          El pedido ya está pago: solo pagas el domicilio al recibir.
         }
       </p>
 

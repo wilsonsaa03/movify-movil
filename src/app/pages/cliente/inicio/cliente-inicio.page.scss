@@ -462,3 +462,21 @@ h1 {
     color: $teal-d;
   }
 }
+
+// Con mouse (PC) la fila que se desliza de lado muestra una barra delgada para poder moverla; en el celular sigue
+// sin barra (se desliza con el dedo).
+@media (pointer: fine) {
+  .lugares {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(3, 39, 77, 0.35) transparent;
+
+    &::-webkit-scrollbar {
+      display: block;
+      height: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      border-radius: 3px;
+      background: rgba(3, 39, 77, 0.35);
+    }
+  }
+}

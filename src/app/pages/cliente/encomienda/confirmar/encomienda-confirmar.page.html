@@ -51,9 +51,12 @@
         </div>
       }
 
+      <!-- Efectivo, Nequi o Daviplata (si paga quien recibe, solo efectivo) -->
+      <app-forma-pago class="entra" style="--d: 170ms" [soloEfectivo]="envio.pagaDestinatario()" />
+
       <p class="info entra" style="--d: 180ms">
         <app-icono nombre="dinero" />
-        Se paga en efectivo al conductor. El precio no cambia en el camino.
+        {{ envio.pagaDestinatario() ? 'Quien recibe le paga en efectivo al conductor.' : 'El precio no cambia en el camino.' }}
       </p>
 
       @if (error()) {

@@ -13,6 +13,7 @@ import { Lugar } from '../../../servicios/lugares.service';
 import { ContactoEmergencia, LugarGuardado, Perfil, PerfilService, claveDebil } from '../../../servicios/perfil.service';
 import { BARRA_CLIENTE } from '../inicio/cliente-inicio.page';
 import { CambiarCelularComponent } from '../../../componentes/cambiar-celular/cambiar-celular.component';
+import { FormasPago, PagosService } from '../../../servicios/pagos.service';
 
 /** Etiquetas rápidas para un lugar nuevo (las mismas sugerencias del inicio). */
 const ETIQUETAS = ['Casa', 'Trabajo', 'Donde mi mamá'];
@@ -32,6 +33,21 @@ const ETIQUETAS = ['Casa', 'Trabajo', 'Donde mi mamá'];
   imports: [IonContent, IonFooter, IconoComponent, BarraInferiorComponent, BuscadorLugarComponent, CambiarCelularComponent],
 })
 export class ClientePerfilPage implements ViewDidEnter {
+  /** Forma de pago preferida (efectivo, Nequi o Daviplata): queda marcada al pedir. */
+  readonly pagos = inject(PagosService);
+  private readonly formasPago = signal<FormasPago | null>(null);
+  readonly pruebaPagos = computed(() => !!this.formasPago()?.de_prueba && this.formasPago()!.metodos.length > 1);
+  readonly metodosPago = computed(() => {
+    const disponibles = this.formasPago()?.metodos ?? ['efectivo'];
+    return [
+      { id: 'efectivo' as const, nombre: 'Efectivo', inicial: '$', clase: 'verde', detalle: 'Le pagas al conductor al terminar el servicio' },
+      { id: 'nequi' as const, nombre: 'Nequi', inicial: 'N', clase: 'nequi', detalle: 'Apruebas el pago en tu app Nequi al terminar' },
+      { id: 'daviplata' as const, nombre: 'Daviplata', inicial: 'D', clase: 'daviplata', detalle: 'Confirmas con el código que te llega por SMS' },
+      { id: 'tarjeta' as const, nombre: 'Tarjeta débito o crédito', inicial: 'T', clase: 'tarjeta', detalle: 'Visa, Mastercard y más; los datos van directo a Wompi' },
+      { id: 'pse' as const, nombre: 'PSE', inicial: 'P', clase: 'pse', detalle: 'Pagas desde la página de tu banco' },
+      { id: 'bancolombia' as const, nombre: 'Botón Bancolombia', inicial: 'B', clase: 'bancolombia', detalle: 'Transferencia desde tu cuenta Bancolombia' },
+    ].filter((m) => disponibles.includes(m.id));
+  });
   private readonly perfiles = inject(PerfilService);
   private readonly sesion = inject(SesionService);
   private readonly nav = inject(NavController);
@@ -100,6 +116,14 @@ export class ClientePerfilPage implements ViewDidEnter {
 
   ionViewDidEnter(): void {
     this.cargar();
+    this.pagos
+      .formas()
+      .then((f) => {
+        this.formasPago.set(f);
+        // Si los pagos digitales se apagaron en el backend, vuelve a efectivo
+        if (!f.metodos.includes(this.pagos.preferida())) this.pagos.elegir('efectivo');
+      })
+      .catch(() => undefined);
     App.getInfo()
       .then((i) => this.version.set(i.version))
       .catch(() => undefined);

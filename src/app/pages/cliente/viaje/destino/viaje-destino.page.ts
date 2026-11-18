@@ -8,6 +8,7 @@ import { pesos } from '../../../../core/formato';
 import { ViajeActivoService } from '../../../../servicios/viaje-activo.service';
 import { IconoComponent, NombreIcono } from '../../../../componentes/icono/icono.component';
 import { NotaVozComponent, formatear } from '../../../../componentes/nota-voz/nota-voz.component';
+import { FormaPagoComponent } from '../../../../componentes/forma-pago/forma-pago.component';
 import { SelectorPuntoComponent } from '../../../../componentes/selector-punto/selector-punto.component';
 import { Grabadora, MAX_SEGUNDOS_NOTA } from '../../../../servicios/grabadora';
 import { Lugar, LugaresService, Parte, distanciaKm, normalizar, resaltar } from '../../../../servicios/lugares.service';
@@ -49,7 +50,7 @@ const MAX_OPCIONES = 8;
   selector: 'app-viaje-destino',
   templateUrl: 'viaje-destino.page.html',
   styleUrls: ['viaje-destino.page.scss'],
-  imports: [IonContent, IonFooter, FormsModule, IconoComponent, NotaVozComponent, SelectorPuntoComponent],
+  imports: [IonContent, IonFooter, FormsModule, IconoComponent, NotaVozComponent, SelectorPuntoComponent, FormaPagoComponent],
 })
 export class ViajeDestinoPage implements ViewDidEnter, ViewWillLeave, OnDestroy {
   private readonly nav = inject(NavController);

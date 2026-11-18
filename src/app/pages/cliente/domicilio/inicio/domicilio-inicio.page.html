@@ -1,0 +1,129 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver" (click)="volver()"><app-icono nombre="atras" /></button>
+        <h1>Domicilios</h1>
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      <!-- ENTREGAR EN + buscador (tarjeta montada sobre las olas, como en Domicilio 1) -->
+      <section class="tarjeta-arriba entra" aria-label="Entrega y búsqueda">
+        <button type="button" class="punto" (click)="eligiendoEntrega.set(true)">
+          <small>Entregar en</small>
+          @if (entregar(); as e) {
+            <b>{{ e.titulo }}</b>
+            @if (e.detalle) { <span>{{ e.detalle }}</span> }
+          } @else {
+            <b class="vacio">Buscando tu ubicación…</b>
+          }
+        </button>
+        <label class="buscar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
+          <span class="sr-only">Buscar comercios o productos</span>
+          <input type="search" enterkeyhint="search" placeholder="¿Qué se te antoja? Pizza, suero, arroz…" [value]="texto()" (input)="escribir($any($event.target).value)" />
+        </label>
+      </section>
+
+      <!-- Categorías -->
+      <div class="categorias entra" style="--d: 40ms" role="radiogroup" aria-label="Categorías">
+        @for (c of categorias; track c.nombre) {
+          <button type="button" role="radio" class="categoria" [class.elegida]="categoria() === c.id" [attr.aria-checked]="categoria() === c.id" (click)="elegirCategoria(c.id)">
+            <app-icono [nombre]="c.icono" /> {{ c.nombre }}
+          </button>
+        }
+      </div>
+
+      <!-- Pedido libre (lo de siempre) -->
+      <button type="button" class="libre entra" style="--d: 70ms" (click)="pedidoLibre()">
+        <span class="disco"><app-icono nombre="diligencia" /></span>
+        <span class="textos">
+          <b>Pídelo como quieras</b>
+          <small>Lo que sea, de la tienda que sea, o una diligencia. El domiciliario lo compra por ti.</small>
+        </span>
+        <app-icono nombre="adelante" class="flecha" />
+      </button>
+
+      <!-- Comercios aliados -->
+      <h2 class="subtitulo entra" style="--d: 90ms">Comercios aliados</h2>
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+      @if (comercios() === null) {
+        <div class="esqueleto" aria-label="Cargando comercios"></div>
+        <div class="esqueleto" aria-hidden="true"></div>
+      } @else if (!comercios()!.length) {
+        <p class="vacio-lista">
+          @if (texto().trim()) {
+            No encontramos "{{ texto().trim() }}". Pídelo como quieras y el domiciliario lo consigue.
+          } @else {
+            Todavía no hay comercios aliados que entreguen en tu dirección.
+          }
+        </p>
+      } @else {
+        <ul class="comercios" [attr.aria-busy]="cargando()">
+          @for (c of abiertos(); track c.id) {
+            <li>
+              <button type="button" class="comercio" (click)="abrir(c)">
+                @if (urlFoto(c.foto_url); as f) {
+                  <img class="logo" [src]="f" alt="" loading="lazy" />
+                } @else {
+                  <span class="logo letra" aria-hidden="true">{{ inicial(c) }}</span>
+                }
+                <span class="textos">
+                  <b>{{ c.nombre }} @if (c.tiene_mayores) { <i class="mayores">+18</i> }</b>
+                  <small>{{ c.descripcion || c.barrio || c.direccion }}</small>
+                  <span class="datos">
+                    <span><app-icono nombre="reloj" /> {{ c.minutos_min }}–{{ c.minutos_max }} min</span>
+                    @if (c.distancia_km !== null) { <span><app-icono nombre="pin" /> {{ c.distancia_km }} km</span> }
+                    @if (c.pedido_minimo > 0) { <span>Mín. {{ pesos(c.pedido_minimo) }}</span> }
+                  </span>
+                </span>
+              </button>
+            </li>
+          }
+          @for (c of cerrados(); track c.id) {
+            <li>
+              <button type="button" class="comercio cerrado" (click)="abrir(c)" [attr.aria-label]="c.nombre + ', cerrado. Abre a las ' + horaBonita(c.abre)">
+                @if (urlFoto(c.foto_url); as f) {
+                  <img class="logo" [src]="f" alt="" loading="lazy" />
+                } @else {
+                  <span class="logo letra" aria-hidden="true">{{ inicial(c) }}</span>
+                }
+                <span class="textos">
+                  <b>{{ c.nombre }}</b>
+                  <small class="abre">Cerrado · abre a las {{ horaBonita(c.abre) }}</small>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </main>
+  </div>
+</ion-content>
+
+@if (cat.carrito()) {
+  <ion-footer class="ion-no-border">
+    <div class="pie">
+      <app-barra-carrito />
+    </div>
+  </ion-footer>
+}
+
+@if (eligiendoEntrega()) {
+  <app-buscador-lugar
+    tipo="destino"
+    [conGps]="true"
+    titulo="¿A dónde lo llevamos?"
+    (elegido)="entregaElegida($event)"
+    (cerrar)="eligiendoEntrega.set(false)"
+  />
+}

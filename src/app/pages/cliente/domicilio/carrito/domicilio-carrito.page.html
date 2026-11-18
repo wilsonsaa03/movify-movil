@@ -1,0 +1,161 @@
+<ion-content [fullscreen]="true">
+  <div class="pantalla">
+    <header class="cielo">
+      <div class="sol" aria-hidden="true"></div>
+      <svg class="gaviotas" viewBox="0 0 70 26" aria-hidden="true"><path d="M2 12q6-8 12 0q6-8 12 0" /><path class="lejos" d="M40 20q5-6 10 0q5-6 10 0" /></svg>
+      <div class="barra">
+        <button type="button" class="volver" aria-label="Volver" (click)="volver()"><app-icono nombre="atras" /></button>
+        <h1>Tu carrito</h1>
+      </div>
+      <div class="olas" aria-hidden="true">
+        <svg class="ola o1" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+        <svg class="ola o2" viewBox="0 0 804 140" preserveAspectRatio="none"><path d="M0 50C67 20 134 20 201 50S335 80 402 50S536 20 603 50S737 80 804 50V140H0Z" /></svg>
+      </div>
+    </header>
+
+    <main class="cuerpo">
+      @if (cat.carrito(); as c) {
+        <!-- Productos -->
+        <section class="tarjeta-arriba entra" aria-label="Productos">
+          <div class="comercio-fila">
+            <span class="disco"><app-icono nombre="domicilio" /></span>
+            <span class="textos"><small>Pedido en</small><b>{{ c.comercio.nombre }}</b></span>
+            <button type="button" class="enlace" (click)="seguirComprando()">Agregar más</button>
+          </div>
+          <ul class="lineas">
+            @for (l of c.lineas; track l.clave; let i = $index) {
+              <li class="linea" [class.con-problema]="problemas(i).length">
+                <div class="info">
+                  <b>{{ l.nombre }} @if (l.solo_mayores) { <i class="mayores">+18</i> }</b>
+                  @if (l.opciones.length) { <small>{{ opcionesTexto(l) }}</small> }
+                  @if (l.nota) { <small class="nota">"{{ l.nota }}"</small> }
+                  @for (p of problemas(i); track p) { <small class="problema">{{ p }}</small> }
+                </div>
+                <div class="derecha">
+                  <span class="precio">{{ pesos(totalLinea(l, i)) }}</span>
+                  <div class="cantidad" role="group" [attr.aria-label]="'Cantidad de ' + l.nombre">
+                    <button type="button" [attr.aria-label]="l.cantidad === 1 ? 'Quitar ' + l.nombre : 'Quitar uno'" (click)="cantidad(l, l.cantidad - 1)">
+                      {{ l.cantidad === 1 ? '×' : '−' }}
+                    </button>
+                    <output>{{ l.cantidad }}</output>
+                    <button type="button" aria-label="Agregar uno" [disabled]="l.cantidad >= 20" (click)="cantidad(l, l.cantidad + 1)">+</button>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+
+        <!-- Entregar en -->
+        <div class="entra" style="--d: 40ms">
+          <h2 class="subtitulo"><app-icono nombre="pin" /> Entregar en</h2>
+          <button type="button" class="punto" (click)="eligiendoEntrega.set(true)">
+            <small>Dirección</small>
+            @if (entregar(); as e) {
+              <b>{{ e.titulo }}</b>
+              @if (e.detalle) { <span>{{ e.detalle }}</span> }
+            } @else {
+              <b class="vacio">Elige a dónde lo llevamos</b>
+            }
+          </button>
+          <label class="sr-only" for="instrucciones">Instrucciones para el domiciliario</label>
+          <textarea id="instrucciones" class="entrada area instrucciones" rows="2" maxlength="300" placeholder="Instrucciones: casa azul, timbre dañado, dejar en portería…"
+                    [class.invalida]="!!instruccionesProhibidas()" [value]="cat.instrucciones()" (input)="cat.instrucciones.set($any($event.target).value)"></textarea>
+          @if (instruccionesProhibidas(); as x) {
+            <p class="error" role="alert">Las instrucciones mencionan {{ x }}: no podemos llevar eso.</p>
+          }
+        </div>
+
+        <!-- Cupón -->
+        <div class="entra" style="--d: 60ms">
+          <h2 class="subtitulo"><app-icono nombre="dinero" /> Cupón</h2>
+          @if (cat.cupon() && cot()?.cupon?.valido) {
+            <p class="cupon-ok">
+              <app-icono nombre="check" />
+              <span><b>{{ cat.cupon() }}</b> · {{ cot()!.cupon!.mensaje }} (−{{ pesos(cot()!.cupon!.descuento) }})</span>
+              <button type="button" class="enlace" (click)="quitarCupon()">Quitar</button>
+            </p>
+          } @else {
+            <div class="fila-cupon">
+              <label class="sr-only" for="cupon">Código del cupón</label>
+              <input id="cupon" class="entrada" autocapitalize="characters" maxlength="30" placeholder="Escribe tu código" [value]="cuponEscrito()"
+                     (input)="cuponEscrito.set($any($event.target).value)" (keydown.enter)="aplicarCupon()" />
+              <button type="button" class="aplicar" [disabled]="!cuponEscrito().trim()" (click)="aplicarCupon()">Aplicar</button>
+            </div>
+            @if (cat.cupon() && cot()?.cupon && !cot()!.cupon!.valido) {
+              <p class="error" role="alert">{{ cot()!.cupon!.mensaje }} <button type="button" class="enlace" (click)="quitarCupon()">Quitar</button></p>
+            }
+          }
+        </div>
+
+        <!-- Cómo vas a pagar -->
+        <div class="entra" style="--d: 80ms">
+          <app-forma-pago />
+          <p class="info"><app-icono nombre="dinero" /> El domiciliario paga en el comercio y tú pagas al terminar, en efectivo o por el medio que elegiste.</p>
+        </div>
+
+        <!-- +18 -->
+        @if (pideMayorEdad()) {
+          <label class="casilla entra" [class.marcada]="mayorEdad()" [class.invalida]="intento() && !mayorEdad()">
+            <input type="checkbox" [checked]="mayorEdad()" (change)="mayorEdad.set($any($event.target).checked)" />
+            <span class="caja"><app-icono nombre="check" /></span>
+            <span>Confirmo que soy <b>mayor de 18 años</b>. El domiciliario me pedirá la cédula al entregar.</span>
+          </label>
+        }
+
+        <!-- Desglose (lo calcula el backend) -->
+        <section class="desglose entra" style="--d: 100ms" aria-label="Resumen del pago" [attr.aria-busy]="cotizando()">
+          @if (cot(); as k) {
+            <dl>
+              <div><dt>Productos</dt><dd>{{ pesos(k.subtotal) }}</dd></div>
+              @if (k.descuento > 0) { <div class="descuento"><dt>Cupón {{ k.cupon?.codigo }}</dt><dd>−{{ pesos(k.descuento) }}</dd></div> }
+              <div><dt>Domicilio</dt><dd>{{ pesos(k.domicilio) }}</dd></div>
+              <div class="total"><dt>Total</dt><dd class="precio">{{ pesos(k.total) }}</dd></div>
+            </dl>
+            <p class="llega"><app-icono nombre="reloj" /> Llega en {{ k.minutos_min }}–{{ k.minutos_max }} min</p>
+          } @else {
+            <div class="esqueleto" aria-label="Calculando"></div>
+          }
+        </section>
+
+        @if (errores().length) {
+          <ul class="errores" role="alert">
+            @for (e of errores(); track e) { <li>{{ e }}</li> }
+          </ul>
+        }
+        @if (error()) {
+          <p class="error" role="alert">
+            {{ error() }}
+            @if (error().includes('servicio') || error().includes('curso')) { <button type="button" class="enlace" (click)="verActivo()">Ver mi pedido</button> }
+          </p>
+        }
+      } @else {
+        <div class="vacio-carrito entra">
+          <span class="disco grande"><app-icono nombre="domicilio" /></span>
+          <b>Tu carrito está vacío</b>
+          <small>Elige un comercio y agrega lo que se te antoje.</small>
+          <button type="button" class="mv-boton mv-boton--navy" (click)="seguirComprando()">Ver comercios</button>
+        </div>
+      }
+    </main>
+  </div>
+</ion-content>
+
+@if (cat.carrito()) {
+  <ion-footer class="ion-no-border">
+    <div class="pie">
+      <button type="button" class="mv-boton mv-boton--naranja" [disabled]="pidiendo()" (click)="pedir()">
+        @if (pidiendo()) {
+          Pidiendo…
+        } @else {
+          Pedir domicilio{{ cot() ? ' · ' + pesos(cot()!.total) : '' }}
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        }
+      </button>
+    </div>
+  </ion-footer>
+}
+
+@if (eligiendoEntrega()) {
+  <app-buscador-lugar tipo="destino" [conGps]="true" titulo="¿A dónde lo llevamos?" (elegido)="entregaElegida($event)" (cerrar)="eligiendoEntrega.set(false)" />
+}

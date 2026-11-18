@@ -35,10 +35,17 @@
             </li>
           </ol>
           <p class="total">
-            <span>{{ paquete()?.paga_destinatario ? 'Lo pagó quien recibe, en efectivo' : 'Pagaste en efectivo' }}</span>
+            <span>{{ paquete()?.paga_destinatario ? 'Lo pagó quien recibe, en efectivo' : s.metodo_pago && s.metodo_pago !== 'efectivo' ? 'Total del envío' : 'Pagaste en efectivo' }}</span>
             <span class="precio">{{ pesos(s.tarifa) }}</span>
           </p>
         </section>
+
+        <!-- Foto que tomó el conductor al entregar -->
+        <app-ver-foto-entrega [servicioId]="id" [evidenciaId]="s.foto_entrega_id" />
+        <!-- Pago con Nequi/Daviplata (si paga quien recibe, es en efectivo) -->
+        @if (!paquete()?.paga_destinatario) {
+          <app-pago-servicio class="entra" style="--d: 180ms" [servicioId]="id" rol="cliente" />
+        }
 
         <section class="calificar entra" style="--d: 200ms">
           <h2>

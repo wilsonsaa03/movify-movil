@@ -158,7 +158,8 @@
   position: relative;
   z-index: 1;
   margin-top: -78px;
-  padding: 0 18px 24px;
+  // Abajo va el botón fijo "Confirmar destino": este espacio deja ver completo lo último (la forma de pago)
+  padding: 0 18px calc(112px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -546,4 +547,9 @@ mark {
   transform: rotate(45deg);
   border-radius: 3px;
   background: $orange;
+}
+
+/* Medio de pago (se cobra por ese medio al terminar el viaje) */
+.pago-viaje {
+  margin-top: 18px;
 }

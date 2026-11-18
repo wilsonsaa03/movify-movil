@@ -4,6 +4,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ApiService, ErrorApi } from '../../../../core/api.service';
 import { pesos } from '../../../../core/formato';
 import { IconoComponent } from '../../../../componentes/icono/icono.component';
+import { FormaPagoComponent } from '../../../../componentes/forma-pago/forma-pago.component';
 import { MapaCiudadComponent, PuntoMapa } from '../../../../componentes/mapa-ciudad/mapa-ciudad.component';
 import { LugaresService } from '../../../../servicios/lugares.service';
 import { DomicilioService, MIN_COMPRA, iconoPedido, tituloPedido } from '../../../../servicios/domicilio.service';
@@ -17,7 +18,7 @@ import { DomicilioService, MIN_COMPRA, iconoPedido, tituloPedido } from '../../.
   selector: 'app-domicilio-confirmar',
   templateUrl: 'domicilio-confirmar.page.html',
   styleUrls: ['domicilio-confirmar.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent],
+  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent, FormaPagoComponent],
 })
 export class DomicilioConfirmarPage implements ViewDidEnter, AfterViewInit, OnDestroy {
   private readonly nav = inject(NavController);
@@ -55,7 +56,7 @@ export class DomicilioConfirmarPage implements ViewDidEnter, AfterViewInit, OnDe
 
   ionViewDidEnter(): void {
     if (!this.pedido.tienda() || !this.pedido.entrega() || !this.pedido.descripcion().trim()) {
-      this.nav.navigateRoot('/cliente/domicilio', { animationDirection: 'back' });
+      this.nav.navigateRoot('/cliente/domicilio/libre', { animationDirection: 'back' });
       return;
     }
     this.cargar();

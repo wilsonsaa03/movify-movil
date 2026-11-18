@@ -4,6 +4,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ApiService, ErrorApi } from '../../../../core/api.service';
 import { pesos } from '../../../../core/formato';
 import { IconoComponent } from '../../../../componentes/icono/icono.component';
+import { FormaPagoComponent } from '../../../../componentes/forma-pago/forma-pago.component';
 import { MapaCiudadComponent, PuntoMapa } from '../../../../componentes/mapa-ciudad/mapa-ciudad.component';
 import { LugaresService } from '../../../../servicios/lugares.service';
 import { EncomiendaService, nombrePaquete } from '../../../../servicios/encomienda.service';
@@ -17,7 +18,7 @@ import { EncomiendaService, nombrePaquete } from '../../../../servicios/encomien
   selector: 'app-encomienda-confirmar',
   templateUrl: 'encomienda-confirmar.page.html',
   styleUrls: ['encomienda-confirmar.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent],
+  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent, FormaPagoComponent],
 })
 export class EncomiendaConfirmarPage implements ViewDidEnter, AfterViewInit, OnDestroy {
   private readonly nav = inject(NavController);

@@ -6,6 +6,7 @@ import { NotificacionesService } from '../../../servicios/notificaciones.service
 import { GananciasService } from '../../../servicios/ganancias.service';
 import { SesionService } from '../../../core/sesion.service';
 import { urlFoto } from '../../../core/formato';
+import { reducirFoto } from '../../../core/foto';
 import { ConductorRegistroService } from '../../../servicios/conductor-registro.service';
 import { UbicacionService } from '../../../servicios/ubicacion.service';
 import { ViajeActivoService, pantallaConductor } from '../../../servicios/viaje-activo.service';
@@ -98,6 +99,10 @@ export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
   readonly enLinea = signal(false);
   readonly cambiando = signal(false);
   readonly aviso = signal('');
+  /** El backend pidió una selfie para conectarse (428). */
+  readonly pideSelfie = signal(false);
+  readonly selfieTexto = signal('');
+  readonly subiendoSelfie = signal(false);
   readonly zonas = signal<ZonaDemanda[]>([]);
 
   readonly ganado = signal(0);
@@ -145,12 +150,41 @@ export class ConductorInicioPage implements ViewDidEnter, ViewDidLeave {
       if (activo) await this.gps.actualizar();
       const pos = activo ? this.miPunto() : null;
       await this.api.post('/conductor/disponibilidad', { activo, lat: pos?.lat ?? null, lng: pos?.lng ?? null });
+      this.pideSelfie.set(false);
       this.aplicarEstado(activo);
       if (activo && !pos) this.aviso.set('Activa la ubicación para que te lleguen viajes cerca de ti.');
     } catch (e) {
-      this.aviso.set((e as ErrorApi).message);
+      const err = e as ErrorApi;
+      // 428: hace falta una selfie (vence cada pocas horas o soporte rechazó la anterior)
+      if (err.status === 428) {
+        this.selfieTexto.set(err.message);
+        this.pideSelfie.set(true);
+      } else {
+        this.aviso.set(err.message);
+      }
     } finally {
       this.cambiando.set(false);
+    }
+  }
+
+  /** Foto de la cámara frontal → POST /api/conductor/selfie → vuelve a intentar conectarse. */
+  async selfieElegida(ev: Event): Promise<void> {
+    const campo = ev.target as HTMLInputElement;
+    const archivo = campo.files?.[0];
+    campo.value = '';
+    if (!archivo || this.subiendoSelfie()) return;
+    this.subiendoSelfie.set(true);
+    try {
+      const form = new FormData();
+      form.append('foto', await reducirFoto(archivo, 1080), 'selfie.jpg');
+      await this.api.subir('/conductor/selfie', form, () => undefined);
+      this.pideSelfie.set(false);
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
+      await this.alternar();
+    } catch (e) {
+      this.selfieTexto.set((e as ErrorApi).message || 'No pudimos subir la selfie. Intenta de nuevo.');
+    } finally {
+      this.subiendoSelfie.set(false);
     }
   }
 

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild, effect, untracked } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { IonContent, IonFooter, NavController, ToastController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
@@ -11,7 +11,11 @@ import { NotaVozComponent } from '../../../componentes/nota-voz/nota-voz.compone
 import { BotonSosComponent } from '../../../componentes/boton-sos/boton-sos.component';
 import { LugaresService, distanciaKm } from '../../../servicios/lugares.service';
 import { UbicacionService } from '../../../servicios/ubicacion.service';
-import { ViajeActivo, ViajeActivoService, iniciales, primerNombre, telefonoLimpio } from '../../../servicios/viaje-activo.service';
+import { ViajeActivo, ViajeActivoService, iniciales, primerNombre } from '../../../servicios/viaje-activo.service';
+import { TiempoRealService } from '../../../core/tiempo-real.service';
+import { LlamadaService } from '../../../servicios/llamada.service';
+import { SimulacionViajeService } from '../../../servicios/simulacion-viaje.service';
+import { ControlesSimulacionComponent } from '../../../componentes/controles-simulacion/controles-simulacion.component';
 
 /** Cada cuánto se revisa si el pasajero canceló. */
 const CADA_MS = 5000;
@@ -28,13 +32,16 @@ const RECALCULAR_KM = 0.1;
   selector: 'app-conductor-recogida',
   templateUrl: 'conductor-recogida.page.html',
   styleUrls: ['conductor-recogida.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent, NotaVozComponent, BotonSosComponent],
+  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent, NotaVozComponent, BotonSosComponent, ControlesSimulacionComponent],
+  // Una simulación por pantalla (se detiene al salir)
+  providers: [SimulacionViajeService],
 })
 export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, AfterViewInit, OnDestroy {
   private readonly nav = inject(NavController);
   private readonly ruta = inject(ActivatedRoute);
   private readonly avisos = inject(ToastController);
   private readonly lugares = inject(LugaresService);
+  readonly sim = inject(SimulacionViajeService);
   private readonly gps = inject(UbicacionService);
   readonly viajes = inject(ViajeActivoService);
   private readonly hojaRef = viewChild.required<ElementRef<HTMLElement>>('hoja');
@@ -51,6 +58,10 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
 
   id = 0;
   private sondeo?: ReturnType<typeof setInterval>;
+  private vueltas = 0;
+  private dejarDeSeguir: () => void = () => undefined;
+  private readonly tiempoReal = inject(TiempoRealService);
+  readonly llamada = inject(LlamadaService);
   private ultimaRuta: PuntoMapa | null = null;
 
   readonly yo = computed<PuntoMapa | null>(() => {
@@ -98,7 +109,16 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
     return c ? c.toFixed(1).replace('.', ',') : null;
   });
   /** Se llama a quien viaja (si lo pidió otra persona, a ese celular). */
-  readonly telefono = computed(() => telefonoLimpio(this.v()?.pasajero_telefono || this.v()?.usuario_telefono));
+
+  constructor() {
+    // Viaje simulado: la ruta, los minutos y los metros salen de la simulación (backend), no del GPS
+    effect(() => {
+      if (!this.sim.enFase('recogida')) return;
+      this.camino.set(this.sim.ruta());
+      this.minutos.set(this.sim.minutos());
+      this.metros.set(this.sim.restanteKm());
+    });
+  }
 
   ngAfterViewInit(): void {
     this.medidor = new ResizeObserver(() => this.altoHoja.set(this.hojaRef().nativeElement.offsetHeight));
@@ -118,14 +138,28 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
     }
     this.viajes.empezarReporte();
     this.revisar();
-    this.sondeo = setInterval(() => this.revisar(), CADA_MS);
+    this.sim.seguir(this.id);
+    // Chat, cancelación del pasajero o cambio de destino llegan al instante (WebSocket); el sondeo queda de respaldo
+    this.dejarDeSeguir = this.tiempoReal.seguir(this.id, (e) => {
+      if (e.tipo !== 'ubicacion' && e.tipo !== 'simulacion') this.revisar();
+    });
+    this.sondeo = setInterval(() => {
+      if (!this.tiempoReal.conectado() || ++this.vueltas % 3 === 0) this.revisar();
+    }, CADA_MS);
   }
 
   ionViewWillLeave(): void {
+    this.sim.detener();
+    this.dejarDeSeguir();
     clearInterval(this.sondeo);
     const url = this.notaUrl();
     if (url) URL.revokeObjectURL(url);
     this.notaUrl.set(null);
+  }
+
+  /** Llamada con número protegido: ninguno ve el celular del otro. */
+  llamar(): void {
+    this.llamada.llamar(this.id);
   }
 
   chat(): void {
@@ -185,6 +219,8 @@ export class ConductorRecogidaPage implements ViewDidEnter, ViewWillLeave, After
   }
 
   private async actualizarRuta(): Promise<void> {
+    // Con viaje simulado la ruta y el tiempo los pone el efecto de la simulación
+    if (this.sim.activa()) return;
     const desde = this.yo();
     const meta = this.recogida();
     if (!desde || !meta) return;

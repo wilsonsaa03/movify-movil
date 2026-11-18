@@ -1,5 +1,7 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, ViewEncapsulation, effect, inject, input, output, untracked } from '@angular/core';
 import * as L from 'leaflet';
+import { Punto, caminoPorRuta, largo, metros, puntoEn } from './animar-por-ruta';
+import type { RecorridoSimulado } from '../../servicios/simulacion-viaje.service';
 
 export interface PuntoMapa {
   lat: number;
@@ -9,6 +11,14 @@ export interface PuntoMapa {
 export interface ZonaDemanda extends PuntoMapa {
   pedidos: number;
 }
+
+/** Lo más que tarda el vehículo en ir de una posición a la siguiente (al pasajero le llegan cada 6-8 s). */
+const DURACION_MS = 5500;
+/** Más lejos que esto no se anima (se perdió la señal un rato): se pone directo en la posición nueva. */
+const SALTO_MAXIMO_M = 1500;
+/** Viaje simulado: cada cuánto se repinta el tramo recorrido y se revisa si la cámara debe seguir al vehículo. */
+const LINEA_MS = 250;
+const SEGUIR_MS = 900;
 
 /** Centro de Buenaventura: el mismo con el que abre el mapa de la web (home-conductor). */
 export const BUENAVENTURA: PuntoMapa = { lat: 3.8821, lng: -77.0253 };
@@ -55,6 +65,14 @@ const SVG_TAXI =
     .mv-mapa-vehiculo {
       width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; box-sizing: border-box;
       background: #fe7b13; border: 3px solid #ffffff; box-shadow: 0 6px 14px rgba(3, 39, 77, 0.35);
+    }
+    /* Vehículo con flecha de rumbo (viaje simulado): la flecha gira, el ícono queda derecho */
+    .mv-mapa-vehiculo-caja { position: relative; display: block; width: 44px; height: 44px; }
+    .mv-mapa-rumbo { position: absolute; inset: -11px; display: block; pointer-events: none; will-change: transform; }
+    .mv-mapa-rumbo::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 11px solid #03274d;
+      filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.9));
     }
     .mv-mapa-vehiculo svg {
       width: 24px; height: 24px; fill: none; stroke: #03274d; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
@@ -127,6 +145,12 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
   readonly vehiculos = input<(PuntoMapa & { tipo_vehiculo: 'moto' | 'taxi' })[]>([]);
   /** Una parada en el camino. */
   readonly parada = input<PuntoMapa | null>(null);
+  /**
+   * Viaje simulado (SimulacionViajeService): el vehículo avanza cuadro a cuadro sobre la polilínea de la ruta,
+   * con su rumbo, el tramo recorrido en gris y la cámara siguiéndolo. Mientras haya simulación se ignoran
+   * `centro` y `ruta` para el vehículo (manda la simulación).
+   */
+  readonly simulacion = input<RecorridoSimulado | null>(null);
   /** Punto que tocó el usuario en el mapa. */
   readonly toque = output<PuntoMapa>();
 
@@ -138,13 +162,32 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
   private capaLibres?: L.LayerGroup;
   private observador?: ResizeObserver;
   private centrado = false;
+  /** Animación del vehículo en curso (requestAnimationFrame) y dónde se ve ahora mismo. */
+  private animacion: number | null = null;
+  private visible: Punto | null = null;
+  private ultimaPosicion = 0;
+  /** Lo que dura la animación actual: el mapa se desplaza al mismo ritmo que el vehículo. */
+  private duracionActual = DURACION_MS;
+  /** Viaje simulado: marcador propio, línea gris de lo recorrido y el bucle de animación. */
+  private simMarcador?: L.Marker;
+  private simRecorrida?: L.Polyline;
+  private simBucle: number | null = null;
+  private simVersion = -1;
+  private simRumbo: number | null = null;
+  private simUltimaLinea = 0;
+  private simUltimoSeguir = 0;
+  private simVisible: Punto | null = null;
 
   constructor() {
     // Cada vez que cambian las entradas se actualiza el mapa (si ya existe)
     effect(() => this.pintarMarcador(this.centro(), this.marcador()));
     effect(() => this.pintarPrecision(this.centro(), this.precision()));
     effect(() => this.pintarZonas(this.zonas()));
-    effect(() => this.pintarRuta(this.ruta(), this.destino(), this.etiquetaRuta(), this.parada()));
+    effect(() => this.pintarRuta(this.simulacion()?.ruta.puntos ?? this.ruta(), this.destino(), this.etiquetaRuta(), this.parada()));
+    effect(() => {
+      const s = this.simulacion();
+      untracked(() => this.cambiarSimulacion(s));
+    });
     effect(() => this.pintarLibres(this.vehiculos()));
     // Si la hoja sube o baja, el punto se desliza al centro de la parte visible
     effect(() => {
@@ -186,12 +229,13 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
     this.pintarMarcador(this.centro(), this.marcador());
     this.pintarZonas(this.zonas());
     this.pintarLibres(this.vehiculos());
-    this.pintarRuta(this.ruta(), this.destino(), this.etiquetaRuta(), this.parada());
+    this.pintarRuta(this.simulacion()?.ruta.puntos ?? this.ruta(), this.destino(), this.etiquetaRuta(), this.parada());
+    this.cambiarSimulacion(this.simulacion());
   }
 
   /** Vuelve a centrar el mapa en el punto (botón "mi ubicación"). */
   recentrar(): void {
-    const c = this.centro();
+    const c = this.simVisible ?? this.centro();
     if (this.mapa && c) this.mapa.flyTo(this.vista(c, this.zoom()), this.zoom(), { duration: 0.6 });
   }
 
@@ -229,6 +273,8 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.animacion !== null) cancelAnimationFrame(this.animacion);
+    if (this.simBucle !== null) cancelAnimationFrame(this.simBucle);
     this.observador?.disconnect();
     this.mapa?.remove();
     this.mapa = undefined;
@@ -236,6 +282,13 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
 
   private pintarMarcador(c: PuntoMapa | null, tipo: 'usuario' | 'moto' | 'taxi' | null): void {
     if (!this.mapa) return;
+    // Viaje simulado: el vehículo lo mueve el bucle de la simulación (aquí solo se cambia el ícono si hace falta)
+    if (untracked(this.simulacion) && tipo !== 'usuario') {
+      this.punto?.remove();
+      this.punto = undefined;
+      this.simMarcador?.setIcon(this.iconoVehiculo(tipo === 'taxi' ? 'taxi' : 'moto', true));
+      return;
+    }
     if (!c || !tipo) {
       this.punto?.remove();
       this.punto = undefined;
@@ -243,19 +296,67 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
     }
     const icono = tipo === 'usuario' ? this.iconoUsuario() : this.iconoVehiculo(tipo);
     if (this.punto) {
-      this.punto.setLatLng([c.lat, c.lng]).setIcon(icono);
+      this.punto.setIcon(icono);
+      // El vehículo no salta: avanza despacio por la ruta hasta la posición nueva
+      if (tipo !== 'usuario' && this.visible) this.avanzar(this.visible, c);
+      else this.ponerEn(c);
     } else {
       this.punto = L.marker([c.lat, c.lng], { icon: icono, keyboard: false, interactive: false }).addTo(this.mapa);
+      this.visible = { lat: c.lat, lng: c.lng };
     }
     if (this.encuadrar()) {
       this.encuadre();
       this.centrado = true;
       return;
     }
-    // La primera vez salta directo; después se desliza suave para seguir al usuario
-    if (this.centrado) this.mapa.panTo(this.vista(c, this.mapa.getZoom()));
+    // La primera vez salta directo; después se desliza suave para seguir al usuario (al ritmo del vehículo)
+    if (this.centrado) {
+      this.mapa.panTo(this.vista(c, this.mapa.getZoom()), tipo === 'usuario' ? undefined : { animate: true, duration: this.duracionActual / 1000 });
+    }
     else this.mapa.setView(this.vista(c, this.zoom()), this.zoom());
     this.centrado = true;
+  }
+
+  private ponerEn(c: Punto): void {
+    if (this.animacion !== null) cancelAnimationFrame(this.animacion);
+    this.animacion = null;
+    this.punto?.setLatLng([c.lat, c.lng]);
+    this.visible = { lat: c.lat, lng: c.lng };
+  }
+
+  /**
+   * Desliza el vehículo desde donde se ve ahora hasta `hasta`, siguiendo la línea de la ruta (dobla en las
+   * esquinas). Dura casi lo que tarda en llegar la próxima posición (cada 6-8 s), así se ve en movimiento
+   * continuo y despacio. Saltos enormes (volvió la señal) o "reducir movimiento" → se pone directo.
+   */
+  private avanzar(desde: Punto, hasta: Punto): void {
+    const distancia = metros(desde, hasta);
+    const sinAnimar = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (distancia < 1 || distancia > SALTO_MAXIMO_M || sinAnimar) {
+      this.ponerEn(hasta);
+      return;
+    }
+    const camino = caminoPorRuta(desde, hasta, untracked(this.ruta));
+    const total = largo(camino);
+    if (total > SALTO_MAXIMO_M * 1.5) {
+      this.ponerEn(hasta); // por la ruta queda demasiado lejos: mejor no dar la vuelta animada
+      return;
+    }
+    if (this.animacion !== null) cancelAnimationFrame(this.animacion);
+    // Dura lo que tardó en llegar esta posición: el pasajero recibe una cada 6-8 s (va despacio y continuo);
+    // el GPS del propio conductor da una por segundo (sigue su ritmo sin quedarse atrás)
+    const inicio = performance.now();
+    const duracion = this.ultimaPosicion ? Math.min(DURACION_MS, Math.max(600, (inicio - this.ultimaPosicion) * 0.95)) : DURACION_MS;
+    this.ultimaPosicion = inicio;
+    this.duracionActual = duracion;
+    const paso = (ahora: number) => {
+      const f = Math.min(1, (ahora - inicio) / duracion);
+      const p = puntoEn(camino, f);
+      this.punto?.setLatLng([p.lat, p.lng]);
+      this.visible = p;
+      this.animacion = f < 1 ? requestAnimationFrame(paso) : null;
+    };
+    this.animacion = requestAnimationFrame(paso);
   }
 
   private pintarLibres(libres: (PuntoMapa & { tipo_vehiculo: 'moto' | 'taxi' })[]): void {
@@ -298,6 +399,12 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
       // Borde azul + línea naranja encima (como en el Figma)
       L.polyline(linea, { color: '#03274d', weight: 9, opacity: 0.95, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(this.capaRuta);
       L.polyline(linea, { color: '#fe7b13', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(this.capaRuta);
+      // Viaje simulado: lo que ya recorrió se pinta gris encima (el bucle lo va alargando)
+      if (untracked(this.simulacion)) {
+        this.simRecorrida = L.polyline([], { color: '#9aa7b4', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false })
+          .addTo(this.capaRuta);
+        this.simUltimaLinea = 0;
+      }
       if (etiqueta) {
         const medio = linea[Math.floor(linea.length / 2)];
         L.marker(medio, {
@@ -326,8 +433,9 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
   /** Muestra el punto, la ruta y el destino completos, dejando libre lo que tapa la hoja de abajo. */
   private encuadre(): void {
     if (!this.mapa) return;
-    const puntos: L.LatLngExpression[] = this.ruta().map((p) => [p.lat, p.lng] as [number, number]);
-    const c = this.centro();
+    const sim = this.simulacion();
+    const puntos: L.LatLngExpression[] = (sim?.ruta.puntos ?? this.ruta()).map((p) => [p.lat, p.lng] as [number, number]);
+    const c = sim ? this.simVisible : this.centro();
     const d = this.destino();
     const p = this.parada();
     if (c) puntos.push([c.lat, c.lng]);
@@ -374,14 +482,95 @@ export class MapaCiudadComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private iconoVehiculo(tipo: 'moto' | 'taxi'): L.DivIcon {
+  private iconoVehiculo(tipo: 'moto' | 'taxi', conRumbo = false): L.DivIcon {
+    const vehiculo = `<span class="mv-mapa-vehiculo"><svg viewBox="0 0 24 24" aria-hidden="true">${tipo === 'taxi' ? SVG_TAXI : SVG_MOTO}</svg></span>`;
     return L.divIcon({
       className: '',
-      html: `<span class="mv-mapa-vehiculo"><svg viewBox="0 0 24 24" aria-hidden="true">${tipo === 'taxi' ? SVG_TAXI : SVG_MOTO}</svg></span>`,
+      html: conRumbo ? `<span class="mv-mapa-vehiculo-caja"><span class="mv-mapa-rumbo"></span>${vehiculo}</span>` : vehiculo,
       iconSize: [44, 44],
       iconAnchor: [22, 22],
     });
   }
+
+  // ───────────── Viaje simulado ─────────────
+
+  /** Entra, cambia de ruta o sale el viaje simulado. */
+  private cambiarSimulacion(s: RecorridoSimulado | null): void {
+    if (!this.mapa) return;
+    if (!s) {
+      if (this.simBucle !== null) cancelAnimationFrame(this.simBucle);
+      this.simBucle = null;
+      this.simMarcador?.remove();
+      this.simMarcador = undefined;
+      this.simRecorrida = undefined;
+      this.simVersion = -1;
+      this.simVisible = null;
+      this.simRumbo = null;
+      this.pintarMarcador(this.centro(), this.marcador());
+      return;
+    }
+    // El marcador normal (GPS) se quita: manda la simulación
+    if (this.animacion !== null) cancelAnimationFrame(this.animacion);
+    this.animacion = null;
+    this.punto?.remove();
+    this.punto = undefined;
+    const tipo = this.marcador() === 'taxi' ? 'taxi' : 'moto';
+    const p = s.posicion(performance.now());
+    if (!this.simMarcador) {
+      this.simMarcador = L.marker([p.punto.lat, p.punto.lng], {
+        icon: this.iconoVehiculo(tipo, true),
+        keyboard: false,
+        interactive: false,
+        zIndexOffset: 600,
+      }).addTo(this.mapa);
+    }
+    this.simVisible = p.punto;
+    if (s.version !== this.simVersion) {
+      this.simVersion = s.version;
+      this.simRumbo = null;
+      if (this.encuadrar()) this.encuadre();
+      else this.mapa.setView(this.vista(p.punto, this.zoom()), this.zoom());
+    }
+    if (this.simBucle === null) this.simBucle = requestAnimationFrame(this.cuadroSimulado);
+  }
+
+  /** Un cuadro (60 por segundo): posición sobre la polilínea, rumbo suave, tramo recorrido y cámara. */
+  private readonly cuadroSimulado = (t: number): void => {
+    const s = untracked(this.simulacion);
+    if (!s || !this.mapa || !this.simMarcador) {
+      this.simBucle = null;
+      return;
+    }
+    const p = s.posicion(performance.now());
+    this.simMarcador.setLatLng([p.punto.lat, p.punto.lng]);
+    this.simVisible = p.punto;
+
+    // Rumbo: gira por el camino más corto y sin brusquedad
+    this.simRumbo = this.simRumbo === null ? p.rumbo : girarHacia(this.simRumbo, p.rumbo, 0.18);
+    const flecha = this.simMarcador.getElement()?.querySelector<HTMLElement>('.mv-mapa-rumbo');
+    if (flecha) flecha.style.transform = `rotate(${this.simRumbo.toFixed(1)}deg)`;
+
+    if (t - this.simUltimaLinea > LINEA_MS && this.simRecorrida) {
+      this.simUltimaLinea = t;
+      this.simRecorrida.setLatLngs(s.ruta.hasta(p.recorrido).map((q) => L.latLng(q.lat, q.lng)));
+    }
+    // Cámara: si el vehículo se acerca al borde de lo visible, se desliza para seguirlo
+    if (t - this.simUltimoSeguir > SEGUIR_MS) {
+      this.simUltimoSeguir = t;
+      const aqui = L.latLng(p.punto.lat, p.punto.lng);
+      if (!this.mapa.getBounds().pad(-0.2).contains(aqui)) {
+        const z = this.mapa.getZoom();
+        this.mapa.panTo(this.vista(p.punto, z), { animate: true, duration: 0.8 });
+      }
+    }
+    this.simBucle = requestAnimationFrame(this.cuadroSimulado);
+  };
+}
+
+/** Acerca el ángulo `actual` a `meta` (grados) por el lado más corto, una fracción `f` cada cuadro. */
+export function girarHacia(actual: number, meta: number, f: number): number {
+  const dif = ((meta - actual + 540) % 360) - 180;
+  return (actual + dif * f + 360) % 360;
 }
 
 /** Los nombres vienen de OpenStreetMap o del usuario: se escapan antes de meterlos en el HTML del marcador. */

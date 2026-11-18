@@ -238,10 +238,29 @@ export const routes: Routes = [
     data: { roles: CLIENTE, rol: 'cliente' },
     loadComponent: () => import('./pages/viaje/chat/viaje-chat.page').then((m) => m.ViajeChatPage),
   },
-  // Pedir un domicilio: Domicilio 1 (Pedido) → 2 (Confirmar) → Buscando (la de Viaje 4)
+  // Domicilios: inicio con comercios aliados (catálogo) → Tienda (?id=comercio) → Carrito/confirmar → Buscando
+  // o "Pídelo como quieras" (pedido libre): Domicilio 1 (Pedido) → 2 (Confirmar) → Buscando (la de Viaje 4)
   // → 4 (Seguimiento, ?id=servicio) → 5 (Entregado, ?id=servicio)
   {
     path: 'cliente/domicilio',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/domicilio/inicio/domicilio-inicio.page').then((m) => m.DomicilioInicioPage),
+  },
+  {
+    path: 'cliente/domicilio/tienda',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/domicilio/tienda/domicilio-tienda.page').then((m) => m.DomicilioTiendaPage),
+  },
+  {
+    path: 'cliente/domicilio/carrito',
+    canActivate: [rolGuard],
+    data: { roles: CLIENTE },
+    loadComponent: () => import('./pages/cliente/domicilio/carrito/domicilio-carrito.page').then((m) => m.DomicilioCarritoPage),
+  },
+  {
+    path: 'cliente/domicilio/libre',
     canActivate: [rolGuard],
     data: { roles: CLIENTE },
     loadComponent: () => import('./pages/cliente/domicilio/pedido/domicilio-pedido.page').then((m) => m.DomicilioPedidoPage),

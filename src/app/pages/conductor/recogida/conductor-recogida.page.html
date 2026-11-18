@@ -7,6 +7,7 @@
       [destino]="recogida()"
       [encuadrar]="true"
       [margenInferior]="altoHoja()"
+      [simulacion]="sim.recorrido()"
     />
 
     <!-- RECOGE A ANA · 3 min · 600 m -->
@@ -21,6 +22,9 @@
 
     <main class="hoja" #hoja>
       <span class="asa" aria-hidden="true"></span>
+
+      <!-- Viaje simulado: iniciar, pausar, reiniciar, llegar ya y velocidad -->
+      <app-controles-simulacion [sim]="sim" />
 
       @if (v(); as s) {
         <section class="persona pasajero entra">
@@ -39,9 +43,10 @@
               }
             </span>
           </span>
-          <a class="redondo" [href]="telefono() ? 'tel:' + telefono() : null" [attr.aria-disabled]="!telefono()" aria-label="Llamar al pasajero">
+          <!-- Número protegido: MoviFY te llama y te comunica con el pasajero -->
+          <button type="button" class="redondo" [disabled]="llamada.llamando()" aria-label="Llamar al pasajero sin mostrar tu número" (click)="llamar()">
             <app-icono nombre="telefono" />
-          </a>
+          </button>
           <button type="button" class="redondo" aria-label="Escribirle al pasajero por el chat" (click)="chat()">
             <app-icono nombre="mensaje" />
             @if (sinLeer()) { <i class="globo">{{ sinLeer() }}</i> }

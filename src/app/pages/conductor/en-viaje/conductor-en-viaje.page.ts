@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild, effect, untracked } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AlertController, IonContent, IonFooter, NavController, ToastController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
@@ -10,7 +10,13 @@ import { MapaCiudadComponent, PuntoMapa } from '../../../componentes/mapa-ciudad
 import { BotonSosComponent } from '../../../componentes/boton-sos/boton-sos.component';
 import { LugaresService, distanciaKm } from '../../../servicios/lugares.service';
 import { UbicacionService } from '../../../servicios/ubicacion.service';
-import { ViajeActivo, ViajeActivoService, iniciales, primerNombre, telefonoLimpio } from '../../../servicios/viaje-activo.service';
+import { ViajeActivo, ViajeActivoService, iniciales, primerNombre } from '../../../servicios/viaje-activo.service';
+import { SimulacionViajeService } from '../../../servicios/simulacion-viaje.service';
+import { ControlesSimulacionComponent } from '../../../componentes/controles-simulacion/controles-simulacion.component';
+import { FotoEntregaComponent } from '../../../componentes/foto-entrega/foto-entrega.component';
+import { TiempoRealService } from '../../../core/tiempo-real.service';
+import { LlamadaService } from '../../../servicios/llamada.service';
+import { MetodoPago, NOMBRE_METODO } from '../../../servicios/pagos.service';
 
 const CADA_MS = 5000;
 const RECALCULAR_KM = 0.1;
@@ -28,7 +34,9 @@ const PARADA_HECHA_KM = 0.12;
   selector: 'app-conductor-en-viaje',
   templateUrl: 'conductor-en-viaje.page.html',
   styleUrls: ['conductor-en-viaje.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent, BotonSosComponent],
+  imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent, BotonSosComponent, ControlesSimulacionComponent, FotoEntregaComponent],
+  // Una simulación por pantalla (se detiene al salir)
+  providers: [SimulacionViajeService],
 })
 export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterViewInit, OnDestroy {
   private readonly nav = inject(NavController);
@@ -36,6 +44,7 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
   private readonly alertas = inject(AlertController);
   private readonly avisos = inject(ToastController);
   private readonly lugares = inject(LugaresService);
+  readonly sim = inject(SimulacionViajeService);
   private readonly gps = inject(UbicacionService);
   private readonly viajes = inject(ViajeActivoService);
   private readonly hojaRef = viewChild.required<ElementRef<HTMLElement>>('hoja');
@@ -54,6 +63,12 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
 
   id = 0;
   private sondeo?: ReturnType<typeof setInterval>;
+  private vueltas = 0;
+  private dejarDeSeguir: () => void = () => undefined;
+  private readonly tiempoReal = inject(TiempoRealService);
+  readonly llamada = inject(LlamadaService);
+  /** Domicilio: ya subió la foto de la entrega (o ya había una). */
+  readonly fotoLista = signal(false);
   private ultimaRuta: { desde: PuntoMapa; fase: string } | null = null;
 
   /** El pasajero cambió el destino durante el viaje (se resalta hasta terminar). */
@@ -87,7 +102,6 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
     const c = Number(this.v()?.usuario_calificacion);
     return c ? c.toFixed(1).replace('.', ',') : null;
   });
-  readonly telefono = computed(() => telefonoLimpio(this.v()?.pasajero_telefono || this.v()?.usuario_telefono));
   /** "LLEVANDO A ANA", "LLEVANDO EL PEDIDO"… */
   readonly etiqueta = computed(() => {
     if (this.porRecoger()) return this.tipo() === 'domicilio' ? (this.compra() ? 'Compra el pedido' : 'Recoge el pedido') : 'Recoge el paquete';
@@ -104,13 +118,31 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
     return Math.max(0.04, Math.min(1, 1 - f / total));
   });
   /** Lo que cobra en efectivo al entregar. */
-  readonly cobrar = computed(() => Number(this.v()?.tarifa ?? 0) + (this.compra() ? this.factura() ?? 0 : 0));
+  /** Domicilio + factura − cupón (el cupón del catálogo lo asume MoviFY). */
+  readonly cobrar = computed(() =>
+    Math.max(0, Number(this.v()?.tarifa ?? 0) + (this.compra() ? this.factura() ?? 0 : 0) - Number(this.v()?.descuento ?? 0)),
+  );
   readonly textoBoton = computed(() => {
     if (this.porRecoger()) return this.compra() ? 'Ya lo compré' : 'Ya lo recogí';
     if (this.tipo() === 'encomienda') return 'Entregar paquete';
     if (this.tipo() === 'domicilio') return 'Entregar pedido';
     return 'Finalizar viaje';
   });
+
+  constructor() {
+    // Viaje simulado: la ruta, los minutos y los metros salen de la simulación (backend), no del GPS
+    effect(() => {
+      const e = this.sim.estado();
+      if (!e || !this.v() || e.fase !== (this.porRecoger() ? 'recogida' : 'destino')) return;
+      this.camino.set(this.sim.ruta());
+      this.minutos.set(this.sim.minutos());
+      this.falta.set(this.sim.restanteKm());
+      const parada = this.parada();
+      if (parada && e.fase === 'destino' && !untracked(this.paradaHecha) && distanciaKm({ lat: e.lat, lng: e.lng }, parada) < PARADA_HECHA_KM) {
+        this.paradaHecha.set(true);
+      }
+    });
+  }
 
   ngAfterViewInit(): void {
     this.medidor = new ResizeObserver(() => this.altoHoja.set(this.hojaRef().nativeElement.offsetHeight));
@@ -130,10 +162,19 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
     }
     this.viajes.empezarReporte();
     this.revisar();
-    this.sondeo = setInterval(() => this.revisar(), CADA_MS);
+    this.sim.seguir(this.id);
+    // Chat, cambio de destino o cancelación llegan al instante (WebSocket); el sondeo queda de respaldo
+    this.dejarDeSeguir = this.tiempoReal.seguir(this.id, (e) => {
+      if (e.tipo !== 'ubicacion' && e.tipo !== 'simulacion') this.revisar();
+    });
+    this.sondeo = setInterval(() => {
+      if (!this.tiempoReal.conectado() || ++this.vueltas % 3 === 0) this.revisar();
+    }, CADA_MS);
   }
 
   ionViewWillLeave(): void {
+    this.sim.detener();
+    this.dejarDeSeguir();
     clearInterval(this.sondeo);
   }
 
@@ -160,9 +201,14 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
       this.error.set('Escribe cuánto pagaste en la tienda (lo que dice la factura).');
       return;
     }
+    // Domicilio: la foto de la entrega es obligatoria (la encomienda la pide en la pantalla del código)
+    if (this.tipo() === 'domicilio' && !this.fotoLista()) {
+      this.error.set('Toma la foto de la entrega antes de finalizar.');
+      return;
+    }
     const alerta = await this.alertas.create({
       header: this.tipo() === 'domicilio' ? '¿Entregaste el pedido?' : '¿Terminaste el viaje?',
-      message: `Cóbrale ${pesos(this.cobrar())} en efectivo.`,
+      message: this.textoCobro(),
       buttons: [
         { text: 'Todavía no', role: 'cancel' },
         { text: 'Sí, finalizar', role: 'confirmar' },
@@ -176,6 +222,26 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
       Haptics.notification({ type: NotificationType.Success }).catch(() => undefined);
       this.nav.navigateRoot('/conductor/viaje/calificar', { queryParams: { id: this.id } });
     }
+  }
+
+  /** Efectivo: "Cóbrale $X". Nequi/Daviplata: el cliente paga en la app; si no se aprueba, en efectivo. */
+  textoCobro(): string {
+    const m = this.v()?.metodo_pago;
+    const total = pesos(this.cobrar());
+    if (m && m !== 'efectivo') {
+      const app = NOMBRE_METODO[m];
+      return `El cliente paga ${total} con ${app} desde la app. Te avisamos cuando se apruebe; si no se aprueba, cóbrale en efectivo.`;
+    }
+    return `Cóbrale ${total} en efectivo.`;
+  }
+
+  nombreMetodo(m: MetodoPago): string {
+    return NOMBRE_METODO[m];
+  }
+
+  /** Llamada con número protegido: ninguno ve el celular del otro. */
+  llamar(): void {
+    this.llamada.llamar(this.id);
   }
 
   private async avanzar(a: Parameters<ViajeActivoService['avanzar']>[1]): Promise<boolean> {
@@ -203,6 +269,7 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
       const v = await this.viajes.detalle(this.id);
       const antes = this.v();
       this.v.set(v);
+      if (v.foto_entrega_id) this.fotoLista.set(true);
       // El pasajero cambió el destino o la parada: aviso fuerte y ruta nueva (Uber hace lo mismo)
       if (antes && v.destino_cambiado_en && v.destino_cambiado_en !== antes.destino_cambiado_en) {
         Haptics.notification({ type: NotificationType.Warning }).catch(() => undefined);
@@ -246,6 +313,8 @@ export class ConductorEnViajePage implements ViewDidEnter, ViewWillLeave, AfterV
   }
 
   private async actualizarRuta(): Promise<void> {
+    // Con viaje simulado la ruta y el tiempo los pone el efecto de la simulación
+    if (this.sim.activa()) return;
     const desde = this.yo();
     const meta = this.meta();
     const fase = this.v()?.estado_codigo ?? '';

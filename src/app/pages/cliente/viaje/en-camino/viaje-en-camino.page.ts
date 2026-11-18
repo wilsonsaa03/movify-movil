@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild, effect, untracked } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AlertController, IonContent, IonFooter, NavController, ToastController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
 import { Haptics, NotificationType } from '@capacitor/haptics';
@@ -11,7 +11,10 @@ import { LugaresService, distanciaKm } from '../../../../servicios/lugares.servi
 import { hora } from '../../../../servicios/encomienda.service';
 import { MOTIVOS_CLIENTE } from '../../../../servicios/viaje.service';
 import { Alerta, VigilanciaViaje } from '../../../../servicios/vigilancia-viaje';
-import { ViajeActivo, ViajeActivoService, iniciales, primerNombre, telefonoLimpio } from '../../../../servicios/viaje-activo.service';
+import { ViajeActivo, ViajeActivoService, iniciales, primerNombre } from '../../../../servicios/viaje-activo.service';
+import { EventoTiempoReal, TiempoRealService } from '../../../../core/tiempo-real.service';
+import { LlamadaService } from '../../../../servicios/llamada.service';
+import { SimulacionViajeService } from '../../../../servicios/simulacion-viaje.service';
 
 const CADA_MS = 4000;
 const RECALCULAR_KM = 0.1;
@@ -32,6 +35,8 @@ const PARADA_HECHA_KM = 0.12;
   templateUrl: 'viaje-en-camino.page.html',
   styleUrls: ['viaje-en-camino.page.scss'],
   imports: [IonContent, IonFooter, IconoComponent, MapaCiudadComponent, BotonSosComponent],
+  // Una simulación por pantalla (se detiene al salir)
+  providers: [SimulacionViajeService],
 })
 export class ViajeEnCaminoPage implements ViewDidEnter, ViewWillLeave, AfterViewInit, OnDestroy {
   private readonly nav = inject(NavController);
@@ -39,6 +44,9 @@ export class ViajeEnCaminoPage implements ViewDidEnter, ViewWillLeave, AfterView
   private readonly alertas = inject(AlertController);
   private readonly avisos = inject(ToastController);
   private readonly lugares = inject(LugaresService);
+  readonly sim = inject(SimulacionViajeService);
+  /** Versión de la ruta simulada con la que se armó la vigilancia del viaje. */
+  private versionVigilada = -1;
   private readonly viajes = inject(ViajeActivoService);
   private readonly hojaRef = viewChild.required<ElementRef<HTMLElement>>('hoja');
   private readonly sos = viewChild(BotonSosComponent);
@@ -65,13 +73,16 @@ export class ViajeEnCaminoPage implements ViewDidEnter, ViewWillLeave, AfterView
   private ultimaRuta: { desde: PuntoMapa; fase: string; destino: string } | null = null;
   private vigilancia: VigilanciaViaje | null = null;
   private fotoPedida = false;
+  private vueltas = 0;
+  private dejarDeSeguir: () => void = () => undefined;
+  private readonly tiempoReal = inject(TiempoRealService);
+  readonly llamada = inject(LlamadaService);
 
   readonly enViaje = computed(() => this.v()?.estado_codigo === 'en_curso');
   readonly llego = computed(() => this.v()?.estado_codigo === 'en_origen');
   readonly conductor = computed(() => this.v()?.conductor_nombre ?? 'Tu conductor');
   readonly corto = computed(() => primerNombre(this.v()?.conductor_nombre, 'Tu conductor'));
   readonly iniciales = computed(() => iniciales(this.v()?.conductor_nombre));
-  readonly telefono = computed(() => telefonoLimpio(this.v()?.conductor_telefono));
   readonly pin = computed(() => (this.v()?.codigo_abordaje ?? '').split(''));
   readonly sinLeer = computed(() => Number(this.v()?.mensajes_sin_leer) || 0);
   readonly vehiculo = computed<PuntoMapa | null>(() => {
@@ -128,6 +139,26 @@ export class ViajeEnCaminoPage implements ViewDidEnter, ViewWillLeave, AfterView
   /** Pidió casco y la moto lo lleva. */
   readonly conCasco = computed(() => this.v()?.tipo_vehiculo === 'moto' && !!this.v()?.necesita_casco && !!this.v()?.conductor_casco);
 
+  constructor() {
+    // Viaje simulado: la ruta y el tiempo salen de la simulación (lo mismo que ve el conductor)
+    effect(() => {
+      const e = this.sim.estado();
+      if (!e || !this.v() || e.fase !== (this.enViaje() ? 'destino' : 'recogida')) return;
+      const ruta = this.sim.ruta();
+      this.camino.set(ruta);
+      this.minutos.set(this.sim.minutos());
+      this.falta.set(this.sim.restanteKm());
+      const meta = untracked(this.meta);
+      if (e.fase === 'destino' && meta && e.version !== this.versionVigilada) {
+        this.versionVigilada = e.version;
+        const parada = untracked(this.parada);
+        const metas = [meta, ...(parada ? [parada] : [])];
+        if (this.vigilancia) this.vigilancia.replanear(ruta, metas);
+        else this.vigilancia = new VigilanciaViaje(ruta, metas);
+      }
+    });
+  }
+
   ngAfterViewInit(): void {
     this.medidor = new ResizeObserver(() => this.altoHoja.set(this.hojaRef().nativeElement.offsetHeight));
     this.medidor.observe(this.hojaRef().nativeElement);
@@ -147,13 +178,36 @@ export class ViajeEnCaminoPage implements ViewDidEnter, ViewWillLeave, AfterView
       return;
     }
     this.revisar();
-    this.sondeo = setInterval(() => this.revisar(), CADA_MS);
+    this.sim.seguir(this.id);
+    // GPS del conductor, chat y estados llegan al instante (WebSocket); el sondeo queda de respaldo
+    this.dejarDeSeguir = this.tiempoReal.seguir(this.id, (e) => this.alEvento(e));
+    this.sondeo = setInterval(() => {
+      if (!this.tiempoReal.conectado() || ++this.vueltas % 3 === 0) this.revisar();
+    }, CADA_MS);
     this.reloj = setInterval(() => this.tic(), 1000);
   }
 
   ionViewWillLeave(): void {
+    this.sim.detener();
+    this.dejarDeSeguir();
     clearInterval(this.sondeo);
     clearInterval(this.reloj);
+  }
+
+  llamar(): void {
+    this.llamada.llamar(this.id);
+  }
+
+  private alEvento(e: EventoTiempoReal): void {
+    if (e.tipo === 'ubicacion') {
+      // Con viaje simulado el vehículo lo mueve la simulación
+      if (this.sim.activa() || typeof e['lat'] !== 'number' || typeof e['lng'] !== 'number') return;
+      this.v.update((v) => (v ? { ...v, conductor_lat: e['lat'] as number, conductor_lng: e['lng'] as number } : v));
+      this.vigilar();
+      this.actualizarRuta();
+      return;
+    }
+    if (e.tipo !== 'simulacion') this.revisar();
   }
 
   alInicio(): void {
@@ -321,6 +375,8 @@ export class ViajeEnCaminoPage implements ViewDidEnter, ViewWillLeave, AfterView
   }
 
   private async actualizarRuta(): Promise<void> {
+    // Con viaje simulado la ruta y el tiempo los pone el efecto de la simulación
+    if (this.sim.activa()) return;
     const desde = this.vehiculo();
     const meta = this.meta();
     const v = this.v();

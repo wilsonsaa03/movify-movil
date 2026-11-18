@@ -29,9 +29,15 @@
               <div><dt>Pedido {{ s.valor_compra_real !== null ? '(según factura)' : '(aproximado)' }}</dt><dd>{{ pesos(valorPedido()) }}</dd></div>
             }
             <div><dt>Domicilio</dt><dd>{{ pesos(s.tarifa) }}</dd></div>
-            <div class="total"><dt>Pagaste en efectivo</dt><dd class="precio">{{ pesos(total()) }}</dd></div>
+            @if (descuento() > 0) { <div><dt>Cupón {{ s.cupon_codigo }}</dt><dd>−{{ pesos(descuento()) }}</dd></div> }
+            <div class="total"><dt>{{ s.metodo_pago && s.metodo_pago !== 'efectivo' ? 'Total' : 'Pagaste en efectivo' }}</dt><dd class="precio">{{ pesos(total()) }}</dd></div>
           </dl>
         </section>
+
+        <!-- Foto que tomó el domiciliario al entregar -->
+        <app-ver-foto-entrega [servicioId]="id" [evidenciaId]="s.foto_entrega_id" />
+        <!-- Pago con Nequi/Daviplata (si no se aprueba, se paga en efectivo) -->
+        <app-pago-servicio class="entra" style="--d: 180ms" [servicioId]="id" rol="cliente" />
 
         <section class="calificar entra" style="--d: 200ms">
           <h2>

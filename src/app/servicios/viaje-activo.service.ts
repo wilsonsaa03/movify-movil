@@ -47,6 +47,20 @@ export interface ViajeActivo extends DetalleServicio {
   mensajes_sin_leer?: number | null;
   destino_cambiado_en?: string | null;
   pasajero_telefono?: string | null;
+  // V22
+  /** efectivo | nequi | daviplata (lo que eligió el cliente al pedir). */
+  metodo_pago?: 'efectivo' | 'nequi' | 'daviplata' | 'tarjeta' | 'pse' | 'bancolombia' | null;
+  /** Último cobro digital (null si paga en efectivo o aún no paga). */
+  pago?: { estado: 'pendiente' | 'aprobado' | 'rechazado' | 'error' | 'cancelado'; metodo: string; monto: number } | null;
+  /** Foto de la entrega (domicilio y encomienda). */
+  foto_entrega_id?: number | null;
+  /** Los celulares no llegan: se llama con número protegido (POST /servicios/{id}/llamar). */
+  llamada_protegida?: boolean;
+  // V24: domicilio con catálogo
+  comercio_id?: number | null;
+  descuento?: number | null;
+  cupon_codigo?: string | null;
+  solo_mayores?: boolean | null;
 }
 
 /** GET /api/servicios/{id}/mensajes */

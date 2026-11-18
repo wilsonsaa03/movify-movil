@@ -7,6 +7,7 @@
       [destino]="meta()"
       [encuadrar]="true"
       [margenInferior]="altoHoja()"
+      [simulacion]="sim.recorrido()"
     />
 
     <button type="button" class="flotante" aria-label="Ir al inicio" (click)="alInicio()">
@@ -65,15 +66,16 @@
 
         <!-- Acciones -->
         <nav class="acciones entra" style="--d: 140ms" aria-label="Acciones">
-          <a class="accion" [href]="telefonoConductor() ? 'tel:' + telefonoConductor() : null" [attr.aria-disabled]="!telefonoConductor()">
+          <!-- Número protegido: MoviFY te llama y te comunica con el conductor -->
+          <button type="button" class="accion" [disabled]="llamada.llamando()" (click)="llamar()">
             <span class="disco"><app-icono nombre="telefono" /></span>Llamar
-          </a>
+          </button>
           <button type="button" class="accion" (click)="enviarCodigo()">
             <span class="disco"><app-icono nombre="compartir" /></span>Enviar código
           </button>
-          <a class="accion" [href]="telefonoConductor() ? 'sms:' + telefonoConductor() : null" [attr.aria-disabled]="!telefonoConductor()">
+          <button type="button" class="accion" (click)="chat()">
             <span class="disco"><app-icono nombre="mensaje" /></span>Mensaje
-          </a>
+          </button>
         </nav>
 
         @if (puedeCancelar()) {

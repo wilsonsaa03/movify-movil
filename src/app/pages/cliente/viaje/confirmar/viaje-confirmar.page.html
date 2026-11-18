@@ -126,6 +126,9 @@
         </p>
       }
 
+      <!-- El medio de pago se eligió en "¿A dónde vas?": aquí solo se recuerda (y se puede cambiar) -->
+      <app-forma-pago class="entra" style="--d: 210ms" [resumen]="true" />
+
       <p class="garantia entra" style="--d: 220ms">
         <app-icono [nombre]="elegida()?.recargo || elegida()?.lluvia ? 'reloj' : 'candado'" />
         @if (elegida()?.lluvia) {
@@ -133,7 +136,7 @@
         } @else if (elegida()?.recargo) {
           De noche (9 p. m. a 5 a. m.) el precio incluye un recargo del {{ elegida()!.recargo }} %. No cambia en el camino.
         } @else {
-          El precio no cambia en el camino, llueva o no. Pagas en efectivo.
+          El precio no cambia en el camino, llueva o no.
         }
       </p>
 

@@ -16,7 +16,7 @@
       @if (recibo(); as r) {
         <section class="recibo entra" style="--d: 140ms" aria-label="Resumen del viaje">
           <div class="total">
-            <span><small>Pagas en efectivo</small><b class="precio">{{ pesos(r.valor) }}</b></span>
+            <span><small>{{ v()?.metodo_pago && v()?.metodo_pago !== 'efectivo' ? 'Total del viaje' : 'Pagas en efectivo' }}</small><b class="precio">{{ pesos(r.valor) }}</b></span>
             @if (r.detalle) { <small>{{ r.detalle }}</small> }
           </div>
           <p class="ruta">
@@ -26,6 +26,11 @@
             <span>{{ r.destino }}</span>
           </p>
         </section>
+      }
+
+      <!-- Pago con Nequi/Daviplata (el cliente paga aquí; el conductor ve si ya pagó) -->
+      @if (id && v()) {
+        <app-pago-servicio class="entra" style="--d: 150ms" [servicioId]="id" [rol]="rol" />
       }
 
       <h2 class="pregunta entra" style="--d: 160ms">

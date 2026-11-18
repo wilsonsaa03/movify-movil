@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild, effect, untracked } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { AlertController, IonContent, NavController, ViewDidEnter, ViewWillLeave } from '@ionic/angular';
 import { Haptics, NotificationType } from '@capacitor/haptics';
@@ -8,6 +8,9 @@ import { MapaCiudadComponent, PuntoMapa } from '../../../../componentes/mapa-ciu
 import { LugaresService, distanciaKm } from '../../../../servicios/lugares.service';
 import { hora } from '../../../../servicios/encomienda.service';
 import { DetalleDomicilio, DomicilioService, MIN_COMPRA } from '../../../../servicios/domicilio.service';
+import { SimulacionViajeService } from '../../../../servicios/simulacion-viaje.service';
+import { EventoTiempoReal, TiempoRealService } from '../../../../core/tiempo-real.service';
+import { LlamadaService } from '../../../../servicios/llamada.service';
 
 /** Cada cuánto se pregunta dónde va el domiciliario. */
 const CADA_MS = 4000;
@@ -27,12 +30,15 @@ type EstadoPaso = 'hecho' | 'actual' | 'pendiente';
   templateUrl: 'domicilio-seguimiento.page.html',
   styleUrls: ['domicilio-seguimiento.page.scss'],
   imports: [IonContent, IconoComponent, MapaCiudadComponent],
+  // Una simulación por pantalla (se detiene al salir)
+  providers: [SimulacionViajeService],
 })
 export class DomicilioSeguimientoPage implements ViewDidEnter, ViewWillLeave, AfterViewInit, OnDestroy {
   private readonly nav = inject(NavController);
   private readonly ruta = inject(ActivatedRoute);
   private readonly alertas = inject(AlertController);
   private readonly lugares = inject(LugaresService);
+  readonly sim = inject(SimulacionViajeService);
   private readonly domicilios = inject(DomicilioService);
   private readonly hojaRef = viewChild.required<ElementRef<HTMLElement>>('hoja');
   private medidor?: ResizeObserver;
@@ -46,6 +52,10 @@ export class DomicilioSeguimientoPage implements ViewDidEnter, ViewWillLeave, Af
 
   private id = 0;
   private sondeo?: ReturnType<typeof setInterval>;
+  private vueltas = 0;
+  private dejarDeSeguir: () => void = () => undefined;
+  private readonly tiempoReal = inject(TiempoRealService);
+  readonly llamada = inject(LlamadaService);
   private ultimaRuta: { desde: PuntoMapa; fase: string } | null = null;
   /** Minutos de la tienda a la casa (se calcula una vez). */
   private tramoFinal: number | null = null;
@@ -102,8 +112,22 @@ export class DomicilioSeguimientoPage implements ViewDidEnter, ViewWillLeave, Af
       .map((p) => p.charAt(0).toUpperCase())
       .join(''),
   );
-  readonly telefono = computed(() => (this.servicio()?.conductor_telefono ?? '').replace(/[^\d+]/g, ''));
   readonly puedeCancelar = computed(() => this.servicio()?.estado_codigo === 'asignado');
+
+  constructor() {
+    // Viaje simulado: la ruta y el tiempo del tramo salen de la simulación (lo mismo que ve el domiciliario)
+    effect(() => {
+      const e = this.sim.estado();
+      const s = this.servicio();
+      if (!e || !s || e.fase !== (this.recogido() ? 'destino' : 'recogida')) return;
+      this.camino.set(this.sim.ruta());
+      const m = this.sim.minutos() ?? 0;
+      if (this.recogido()) this.minutos.set(m);
+      else if (this.tramoFinal !== null) {
+        this.minutos.set((s.estado_codigo === 'en_origen' ? 0 : m) + (this.compra() ? MIN_COMPRA : 2) + this.tramoFinal);
+      }
+    });
+  }
 
   ngAfterViewInit(): void {
     this.medidor = new ResizeObserver(() => this.altoHoja.set(this.hojaRef().nativeElement.offsetHeight));
@@ -122,11 +146,39 @@ export class DomicilioSeguimientoPage implements ViewDidEnter, ViewWillLeave, Af
       return;
     }
     this.revisar();
-    this.sondeo = setInterval(() => this.revisar(), CADA_MS);
+    this.sim.seguir(this.id);
+    // GPS del conductor, estados y foto de la entrega llegan al instante (WebSocket); el sondeo queda de respaldo
+    this.dejarDeSeguir = this.tiempoReal.seguir(this.id, (e) => this.alEvento(e));
+    this.sondeo = setInterval(() => {
+      if (!this.tiempoReal.conectado() || ++this.vueltas % 3 === 0) this.revisar();
+    }, CADA_MS);
   }
 
   ionViewWillLeave(): void {
+    this.sim.detener();
+    this.dejarDeSeguir();
     clearInterval(this.sondeo);
+  }
+
+  /** Llamada con número protegido: MoviFY llama y comunica con el conductor. */
+  llamar(): void {
+    this.llamada.llamar(this.id);
+  }
+
+  /** Chat de la app (el número del conductor no se muestra). */
+  chat(): void {
+    this.nav.navigateForward('/cliente/viaje/chat', { queryParams: { id: this.id } });
+  }
+
+  private alEvento(e: EventoTiempoReal): void {
+    if (e.tipo === 'ubicacion') {
+      // Con viaje simulado el vehículo lo mueve la simulación
+      if (this.sim.activa() || typeof e['lat'] !== 'number' || typeof e['lng'] !== 'number') return;
+      this.servicio.update((s) => (s ? { ...s, conductor_lat: e['lat'] as number, conductor_lng: e['lng'] as number } : s));
+      this.actualizarRuta();
+      return;
+    }
+    if (e.tipo !== 'simulacion') this.revisar();
   }
 
   alInicio(): void {
@@ -206,6 +258,18 @@ export class DomicilioSeguimientoPage implements ViewDidEnter, ViewWillLeave, Af
    * (y la compra); después, solo lo que le falta.
    */
   private async actualizarRuta(): Promise<void> {
+    if (this.sim.activa()) {
+      // La simulación da la ruta; aquí solo falta el tramo tienda → casa para sumar a la hora de llegada
+      const s = this.servicio()!;
+      if (!this.recogido() && this.tramoFinal === null) {
+        const final = await this.lugares.ruta(
+          { lat: Number(s.origen_lat), lng: Number(s.origen_lng) },
+          { lat: Number(s.destino_lat), lng: Number(s.destino_lng) },
+        );
+        this.tramoFinal = final.duracionMin;
+      }
+      return;
+    }
     const s = this.servicio()!;
     const desde = this.moto();
     const meta = this.meta();

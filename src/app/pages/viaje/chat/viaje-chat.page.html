@@ -7,15 +7,17 @@
         <b>{{ otro() }}</b>
         @if (detalle()) { <small>{{ detalle() }}</small> }
       </span>
-      @if (telefono()) {
-        <a class="llamar" [href]="'tel:' + telefono()" [attr.aria-label]="'Llamar a ' + otroCorto()"><app-icono nombre="telefono" /></a>
+      @if (activo()) {
+        <!-- Llamada con número protegido: MoviFY te llama y te comunica (ninguno ve el número del otro) -->
+        <button type="button" class="llamar" [disabled]="llamada.llamando()" [attr.aria-label]="'Llamar a ' + otroCorto() + ' sin mostrar tu número'"
+                (click)="llamar()"><app-icono nombre="telefono" /></button>
       }
     </header>
 
     <main class="mensajes" aria-live="polite" aria-label="Mensajes">
       <p class="privado">
         <app-icono nombre="candado" />
-        Tu número no se muestra en el chat. Soporte de MoviFY puede revisarlo si hay un reporte.
+        Tu número no se muestra en el chat ni en las llamadas. Soporte de MoviFY puede revisarlo si hay un reporte.
       </p>
 
       @if (cargando()) {

@@ -5,6 +5,8 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { ErrorApi } from '../../../../core/api.service';
 import { pesos } from '../../../../core/formato';
 import { IconoComponent } from '../../../../componentes/icono/icono.component';
+import { PagoServicioComponent } from '../../../../componentes/pago-servicio/pago-servicio.component';
+import { VerFotoEntregaComponent } from '../../../../componentes/foto-entrega/ver-foto-entrega.component';
 import { PasoHistorial, hora } from '../../../../servicios/encomienda.service';
 import { DetalleDomicilio, DomicilioService, iconoPedido, tituloPedido } from '../../../../servicios/domicilio.service';
 
@@ -16,7 +18,7 @@ import { DetalleDomicilio, DomicilioService, iconoPedido, tituloPedido } from '.
   selector: 'app-domicilio-entregado',
   templateUrl: 'domicilio-entregado.page.html',
   styleUrls: ['domicilio-entregado.page.scss'],
-  imports: [IonContent, IonFooter, IconoComponent],
+  imports: [IonContent, IonFooter, IconoComponent, PagoServicioComponent, VerFotoEntregaComponent],
 })
 export class DomicilioEntregadoPage implements ViewDidEnter {
   private readonly nav = inject(NavController);
@@ -30,7 +32,7 @@ export class DomicilioEntregadoPage implements ViewDidEnter {
   readonly calificado = signal(false);
   readonly error = signal('');
   readonly pesos = pesos;
-  private id = 0;
+  id = 0;
 
   readonly icono = computed(() => iconoPedido(this.servicio()?.categoria));
   readonly lugar = computed(() => this.servicio()?.establecimiento ?? tituloPedido(this.servicio()?.categoria));
@@ -41,7 +43,8 @@ export class DomicilioEntregadoPage implements ViewDidEnter {
     if (!s?.requiere_compra) return null;
     return Number(s.valor_compra_real ?? s.valor_productos_aprox ?? 0);
   });
-  readonly total = computed(() => Number(this.servicio()?.tarifa ?? 0) + (this.valorPedido() ?? 0));
+  readonly descuento = computed(() => Number(this.servicio()?.descuento ?? 0));
+  readonly total = computed(() => Math.max(0, Number(this.servicio()?.tarifa ?? 0) + (this.valorPedido() ?? 0) - this.descuento()));
   readonly conductor = computed(() => (this.servicio()?.conductor_nombre ?? 'tu domiciliario').split(/\s+/)[0]);
   readonly iniciales = computed(() =>
     (this.servicio()?.conductor_nombre ?? '')

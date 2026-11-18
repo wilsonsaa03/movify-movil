@@ -114,17 +114,29 @@
           }
         </section>
 
-        <!-- Forma de pago: por ahora solo efectivo -->
+        <!-- Forma de pago: efectivo, Nequi o Daviplata (la elegida queda marcada al pedir) -->
         <section class="tarjeta entra" style="--d: 100ms" aria-labelledby="t-pago">
           <div class="cabeza">
             <h2 id="t-pago"><app-icono nombre="dinero" /> Forma de pago</h2>
           </div>
-          <div class="pago">
-            <span class="disco verde"><app-icono nombre="dinero" /></span>
-            <span class="textos"><b>Efectivo</b><small>Le pagas al conductor al terminar el servicio</small></span>
-            <app-icono nombre="check" class="marcado" />
+          <div class="pagos" role="radiogroup" aria-labelledby="t-pago">
+            @for (m of metodosPago(); track m.id) {
+              <button type="button" class="pago" role="radio" [class.elegido]="pagos.preferida() === m.id"
+                      [attr.aria-checked]="pagos.preferida() === m.id" (click)="pagos.elegir(m.id)">
+                <span class="disco" [class]="'disco ' + m.clase"><span aria-hidden="true">{{ m.inicial }}</span></span>
+                <span class="textos"><b>{{ m.nombre }}</b><small>{{ m.detalle }}</small></span>
+                @if (pagos.preferida() === m.id) { <app-icono nombre="check" class="marcado" /> }
+              </button>
+            }
           </div>
-          <p class="ayuda-pie">Ten el valor exacto o billetes pequeños: así es más fácil recibir el cambio.</p>
+          <p class="ayuda-pie">
+            @if (pagos.preferida() === 'efectivo') {
+              Ten el valor exacto o billetes pequeños: así es más fácil recibir el cambio.
+            } @else {
+              Al terminar el servicio pagas desde la app. Si el pago no se aprueba, le pagas al conductor en efectivo.
+            }
+            @if (pruebaPagos()) { <br />Modo de prueba: no se cobra plata real. }
+          </p>
         </section>
 
         <!-- Contactos de emergencia -->

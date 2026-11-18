@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { ApiService } from '../core/api.service';
+import { PagosService } from './pagos.service';
 import { NombreIcono } from '../componentes/icono/icono.component';
 import { Lugar } from './lugares.service';
 import { PasoHistorial } from './encomienda.service';
@@ -54,6 +55,14 @@ export interface DetalleDomicilio {
   conductor_color: string | null;
   conductor_lat: number | null;
   conductor_lng: number | null;
+  // V22
+  metodo_pago?: 'efectivo' | 'nequi' | 'daviplata' | 'tarjeta' | 'pse' | 'bancolombia' | null;
+  foto_entrega_id?: number | null;
+  // V24: domicilio con catálogo
+  comercio_id?: number | null;
+  descuento?: number | null;
+  cupon_codigo?: string | null;
+  solo_mayores?: boolean | null;
 }
 
 /**
@@ -63,6 +72,7 @@ export interface DetalleDomicilio {
 @Injectable({ providedIn: 'root' })
 export class DomicilioService {
   private readonly api = inject(ApiService);
+  private readonly pagos = inject(PagosService);
 
   readonly tienda = signal<Lugar | null>(null);
   readonly entrega = signal<Lugar | null>(null);
@@ -98,7 +108,7 @@ export class DomicilioService {
     const s = await this.api.post<DomicilioCreado>('/servicios', {
       tipo: 'domicilio',
       tipo_vehiculo: 'moto',
-      metodo_pago: 'efectivo',
+      metodo_pago: this.pagos.preferida(),
       origen_lat: o.lat,
       origen_lng: o.lng,
       origen: o.detalle ?? o.nombre,

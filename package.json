@@ -10,7 +10,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "apk:pruebas": "ng build --configuration movil && npx cap sync android && cd android && gradlew.bat assembleDebug"
+    "apk:pruebas": "ng build --configuration movil && npx cap sync android && cd android && gradlew.bat assembleDebug",
+    "apk:deploy": "ng build --configuration production && npx cap sync android && cd android && gradlew.bat assembleDebug"
   },
   "private": true,
   "dependencies": {

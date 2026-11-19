@@ -1,6 +1,7 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://movify.ds2.eleueleo.com/api',
+  // Backend desplegado en Dokploy (APK: npm run apk:deploy)
+  apiUrl: 'https://movify.sarriatech.tech/api',
   /**
    * Cliente OAuth "MoviFY Web" de Google Cloud (el mismo de la web y del backend: app.google.client-id).
    * No es secreto: Google lo exige visible en el navegador. El "secreto del cliente" NUNCA va aquí.

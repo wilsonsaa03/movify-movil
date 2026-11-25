@@ -7,4 +7,9 @@ export const environment = {
    * No es secreto: Google lo exige visible en el navegador. El "secreto del cliente" NUNCA va aquí.
    */
   googleClientId: '613651963678-99u5b1boql9q6fj65l0kairjh8ptdk4h.apps.googleusercontent.com',
+  /**
+   * Notificaciones push (Firebase). Ponerlo en true SOLO cuando exista android/app/google-services.json:
+   * sin Firebase, PushNotifications.register() cierra la app en Android (falla nativa que el try/catch no atrapa).
+   */
+  pushFirebase: false,
 };

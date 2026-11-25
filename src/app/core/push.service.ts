@@ -3,6 +3,7 @@ import { NavController, ToastController } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { ActionPerformed, PushNotificationSchema, PushNotifications, Token } from '@capacitor/push-notifications';
+import { environment } from '../../environments/environment';
 import { ApiService } from './api.service';
 import { SesionService } from './sesion.service';
 
@@ -33,6 +34,8 @@ export class PushService {
   private iniciado = false;
 
   async iniciar(): Promise<void> {
+    // Sin Firebase (google-services.json) PushNotifications.register() cierra la app en Android: no se intenta
+    if (!environment.pushFirebase) return;
     if (this.iniciado || !Capacitor.isNativePlatform() || !this.sesion.datos()) return;
     this.iniciado = true;
     try {
@@ -68,7 +71,7 @@ export class PushService {
 
   /** Para Perfil › Ajustes: si las notificaciones están permitidas en este celular. */
   async permiso(): Promise<'permitidas' | 'bloqueadas' | 'preguntar' | 'no-disponible'> {
-    if (!Capacitor.isNativePlatform()) return 'no-disponible';
+    if (!Capacitor.isNativePlatform() || !environment.pushFirebase) return 'no-disponible';
     try {
       const p = await PushNotifications.checkPermissions();
       return p.receive === 'granted' ? 'permitidas' : p.receive === 'denied' ? 'bloqueadas' : 'preguntar';

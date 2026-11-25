@@ -12,4 +12,6 @@ export const environment = {
    * No es secreto: Google lo exige visible en el navegador. El "secreto del cliente" NUNCA va aquí.
    */
   googleClientId: '613651963678-99u5b1boql9q6fj65l0kairjh8ptdk4h.apps.googleusercontent.com',
+  /** true solo con android/app/google-services.json (ver environment.prod.ts). */
+  pushFirebase: false,
 };

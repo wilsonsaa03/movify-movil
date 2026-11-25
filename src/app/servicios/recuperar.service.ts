@@ -22,6 +22,8 @@ export class RecuperarService {
   readonly claveCambiada = signal(false);
   /** Solo en desarrollo (SMS_CONSOLA=true): el código llega en la respuesta. */
   readonly codigoDesarrollo = signal<string | null>(null);
+  /** Solo en desarrollo: por qué no llegó código (p. ej. el celular no tiene cuenta en ese servidor). */
+  readonly avisoDesarrollo = signal<string | null>(null);
   private verificacionToken: string | null = null;
 
   readonly celularVisible = computed(() => formatearCelular(this.celular()));
@@ -31,15 +33,20 @@ export class RecuperarService {
     this.codigoVerificado.set(false);
     this.claveCambiada.set(false);
     this.codigoDesarrollo.set(null);
+    this.avisoDesarrollo.set(null);
     this.verificacionToken = null;
   }
 
   async enviarCodigo(celular: string): Promise<void> {
-    const r = await this.api.post<{ codigoDesarrollo?: string }>('/auth/codigo', { celular, proposito: 'login' });
+    const r = await this.api.post<{ codigoDesarrollo?: string; avisoDesarrollo?: string }>('/auth/codigo', {
+      celular,
+      proposito: 'login',
+    });
     this.celular.set(celular);
     this.codigoVerificado.set(false);
     this.verificacionToken = null;
     this.codigoDesarrollo.set(r.codigoDesarrollo ?? null);
+    this.avisoDesarrollo.set(r.avisoDesarrollo ?? null);
   }
 
   /** Lanza ErrorApi si el código no es correcto (el mensaje dice cuántos intentos quedan). */

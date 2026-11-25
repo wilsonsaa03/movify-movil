@@ -31,6 +31,8 @@
           <span class="ayuda error">{{ error() }}</span>
         } @else if (recuperar.codigoDesarrollo()) {
           <span class="ayuda pista-dev">Modo desarrollo · código: <b>{{ recuperar.codigoDesarrollo() }}</b></span>
+        } @else if (recuperar.avisoDesarrollo()) {
+          <span class="ayuda pista-dev">Modo desarrollo · {{ recuperar.avisoDesarrollo() }}</span>
         }
       </p>
 

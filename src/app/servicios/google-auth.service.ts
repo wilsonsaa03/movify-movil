@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, NotificationType } from '@capacitor/haptics';
 import { NavController } from '@ionic/angular';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import { environment } from '../../environments/environment';
 import { ApiService } from '../core/api.service';
 import { RespuestaSesion, SesionService } from '../core/sesion.service';
@@ -43,6 +44,25 @@ export class GoogleAuthService {
   private readonly sesion = inject(SesionService);
   private readonly nav = inject(NavController);
   private carga: Promise<GoogleId> | null = null;
+  private nativoListo: Promise<void> | null = null;
+
+  /**
+   * En el APK: selector de cuentas de Android (Credential Manager, plugin @capgo/capacitor-social-login).
+   * Usa el cliente WEB como webClientId para que el id_token tenga la misma audiencia que valida el backend.
+   * En Google Cloud debe existir además un cliente OAuth tipo Android (paquete co.movify.app + SHA-1 de la firma).
+   * Lanza Error si la persona cancela o si Google Cloud no está configurado.
+   */
+  async entrarNativo(servicio: string | null): Promise<void> {
+    this.nativoListo ??= SocialLogin.initialize({ google: { webClientId: environment.googleClientId } }).catch((e) => {
+      this.nativoListo = null;
+      throw e;
+    });
+    await this.nativoListo;
+    const res = await SocialLogin.login({ provider: 'google', options: { scopes: ['email', 'profile'] } });
+    const r = res.result as { idToken?: string | null };
+    if (!r?.idToken) throw new Error('Google no devolvió la cuenta. Intenta de nuevo.');
+    await this.entrar(r.idToken, servicio);
+  }
 
   /** false dentro del APK (todavía sin plugin nativo) o si no hay Client ID configurado. */
   disponible(): boolean {

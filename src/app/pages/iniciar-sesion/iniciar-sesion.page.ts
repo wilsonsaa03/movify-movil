@@ -117,9 +117,26 @@ export class IniciarSesionPage implements AfterViewInit, ViewDidEnter, ViewWillL
     }
   }
 
-  /** Solo en el APK (sin botón oficial todavía): pantalla que explica y ofrece entrar con el celular. */
-  conGoogle(): void {
-    this.router.navigate(['/login/google'], { queryParams: this.servicio ? { servicio: this.servicio } : {} });
+  /** Solo en el APK: selector de cuentas de Android (Google nativo) → misma sesión que en la web. */
+  async conGoogle(): Promise<void> {
+    if (this.estadoGoogle() === 'entrando') return;
+    this.estadoGoogle.set('entrando');
+    this.errorGoogle.set('');
+    try {
+      await this.google.entrarNativo(this.servicio);
+    } catch (e) {
+      const msg = String((e as { message?: string })?.message ?? '');
+      // Cancelar el selector de cuentas no es un error que haya que mostrar
+      if (!/cancel/i.test(msg)) {
+        Haptics.notification({ type: NotificationType.Error }).catch(() => undefined);
+        this.errorGoogle.set(
+          /28444|developer console|10:/i.test(msg)
+            ? 'Google todavía no está configurado para esta app. Entra con tu celular.'
+            : msg || 'No pudimos entrar con Google.',
+        );
+      }
+      this.estadoGoogle.set('nativo');
+    }
   }
 
   irARegistro(): void {

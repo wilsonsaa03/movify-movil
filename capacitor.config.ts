@@ -21,6 +21,10 @@ const config: CapacitorConfig = {
     useLegacyBridge: true,
   },
   plugins: {
+    // Solo Google: sin el SDK de Facebook (y sin el permiso AD_ID que pide la Play Store)
+    SocialLogin: {
+      providers: { google: true, facebook: false, apple: false, twitter: false },
+    },
     LocalNotifications: {
       // Ícono blanco de la barra de estado (res/drawable/ic_movify_aviso.xml)
       smallIcon: 'ic_movify_aviso',

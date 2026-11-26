@@ -45,6 +45,23 @@
     line-height: 1.1;
     font-weight: 800;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+// Celulares angostos: el selector deja solo el ícono para que el título se lea completo
+@media (max-width: 380px) {
+  .tipo {
+    padding: 0 8px 0 5px;
+    gap: 4px;
+  }
+  .nombre-tipo {
+    display: none;
+  }
+  .barra h1 {
+    font-size: 21px;
+    white-space: normal; // si aun así no cabe, baja a dos líneas en vez de cortarse
+    overflow: visible;
   }
 }
 .volver {
@@ -505,13 +522,19 @@ mark {
 // ---------- Parada y atajos ----------
 .atajos {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  // minmax(0, 1fr): cada atajo cede espacio en vez de empujar al otro fuera de la pantalla
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
 
   .opcion {
     gap: 10px;
+    min-width: 0;
+  }
+  .textos {
+    min-width: 0;
   }
   .disco {
+    flex-shrink: 0;
     width: 42px;
     height: 42px;
     border-radius: 14px;
@@ -552,4 +575,11 @@ mark {
 /* Medio de pago (se cobra por ese medio al terminar el viaje) */
 .pago-viaje {
   margin-top: 18px;
+}
+
+// Celulares muy angostos: los dos atajos uno debajo del otro, con el texto completo
+@media (max-width: 360px) {
+  .atajos {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

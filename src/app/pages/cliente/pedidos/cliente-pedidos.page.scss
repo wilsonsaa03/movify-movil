@@ -148,10 +148,14 @@
   b {
     max-width: 100%;
     font-size: 15px;
+    line-height: 1.25;
     font-weight: 800;
-    white-space: nowrap;
+    // "Origen → Destino": hasta dos líneas para que se lean las dos direcciones
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
   }
 }
 .estado {

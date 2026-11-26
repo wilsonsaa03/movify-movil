@@ -15,9 +15,10 @@
         <h1>{{ cambiarId ? 'Cambiar destino' : '¿A dónde vas?' }}</h1>
 
         <div class="selector" [hidden]="!!cambiarId">
-          <button type="button" class="tipo" [attr.aria-expanded]="menuTipo()" aria-haspopup="listbox" (click)="menuTipo.set(!menuTipo())">
+          <button type="button" class="tipo" [attr.aria-expanded]="menuTipo()" aria-haspopup="listbox" (click)="menuTipo.set(!menuTipo())"
+                  [attr.aria-label]="'Vehículo: ' + (viaje.tipo() === 'moto' ? 'Moto' : 'Taxi')">
             <span class="disco"><app-icono [nombre]="viaje.tipo()" /></span>
-            {{ viaje.tipo() === 'moto' ? 'Moto' : 'Taxi' }}
+            <span class="nombre-tipo">{{ viaje.tipo() === 'moto' ? 'Moto' : 'Taxi' }}</span>
             <app-icono nombre="abajo" class="flecha" />
           </button>
           @if (menuTipo()) {

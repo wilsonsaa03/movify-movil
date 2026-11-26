@@ -69,39 +69,82 @@ h1 {
     animation: brillo 1.2s linear infinite;
   }
 }
+// El texto del medio es el que cede espacio, pero nunca por debajo de una palabra: Ionic pone
+// overflow-wrap: break-word en toda la app y, si la columna queda más angosta que "Moto", la parte en dos.
 .textos {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 auto;
+  min-width: 4.5em;
   display: flex;
   flex-direction: column;
+  overflow-wrap: normal;
 
   b {
     font-family: 'Baloo 2', system-ui, sans-serif;
     font-size: 22px;
     line-height: 1.1;
     font-weight: 800;
+    white-space: nowrap;
   }
   small {
     font-size: 13px;
+    line-height: 1.25;
     font-weight: 700;
     color: $gris;
   }
 }
+// El precio no se encoge, pero su etiqueta ("Tarifa nocturna") sí puede bajar a dos líneas
 .valor {
+  flex: 0 0 auto;
+  max-width: 42%;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  text-align: right;
+  overflow-wrap: normal;
 
   .precio {
     font-size: 24px;
     line-height: 1.1;
+    white-space: nowrap;
   }
   small {
     font-size: 11px;
+    line-height: 1.2;
     font-weight: 800;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     color: $teal-d;
+  }
+}
+
+// Celulares angostos (320–380 px): todo un poco más compacto, sin cambiar el diseño
+@media (max-width: 380px) {
+  .opcion {
+    gap: 10px;
+    padding: 12px;
+
+    .disco {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+
+      app-icono {
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+  .textos b {
+    font-size: 20px;
+  }
+  .valor {
+    .precio {
+      font-size: 20px;
+    }
+    small {
+      font-size: 10px;
+      letter-spacing: 0.3px;
+    }
   }
 }
 
@@ -269,6 +312,7 @@ h1 {
   }
   &.cuando {
     cursor: default;
+    flex-wrap: wrap; // en pantallas angostas "Ahora / Programar" baja a su propia línea
   }
   .disco {
     width: 38px;
@@ -304,6 +348,7 @@ h1 {
   }
 }
 .segmento {
+  margin-left: auto;
   padding: 3px;
   border-radius: 14px;
   display: flex;

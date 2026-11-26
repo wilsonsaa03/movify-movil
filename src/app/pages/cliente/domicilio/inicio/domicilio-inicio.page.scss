@@ -108,11 +108,15 @@
   }
   small {
     font-size: 13px;
+    line-height: 1.3;
     font-weight: 700;
     color: $gris;
-    white-space: nowrap;
+    // Hasta dos líneas: la descripción se lee casi completa sin deformar la tarjeta
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
   }
   .datos {
     margin-top: 2px;
